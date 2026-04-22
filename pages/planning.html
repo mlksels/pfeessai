@@ -1,0 +1,613 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <script src="../assets/js/sync.js"></script>
+    <title>Planning - Association Sportive Manar Oran</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../assets/css/planning.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+    <style>
+        .my-bookings,
+        .bookings-container,
+        .booking-actions,
+        .btn-cancel-booking,
+        .direct-booking-btn,
+        .fallback-booking-btn,
+        #bookingActionBtn,
+        #persistentBookingActionBtn,
+        #noBookingsMessage {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        <div class="logo-icon">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <div class="logo-text">
+                            <h1>MANAR SPORT</h1>
+                            <p>Usto Oran - Association Sportive</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <nav class="nav-menu" id="navMenu">
+                    <ul>
+                        <li><a href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+                        <li><a href="historique.html"><i class="fas fa-history"></i> Historique</a></li>
+                        <li><a href="equipes.html"><i class="fas fa-users"></i> Équipes</a></li>
+                        <li><a href="planning.html" class="active"><i class="fas fa-calendar-alt"></i> Planning</a></li>
+                        <li><a href="tarifs.html"><i class="fas fa-tags"></i> Tarifs</a></li>
+                        <li><a href="actualites.html"><i class="fas fa-newspaper"></i> Actualités</a></li>
+                        <li><a href="galerie.html"><i class="fas fa-images"></i> Galerie</a></li>
+                        <!-- Liens de connexion (cach&eacute;s si connect&eacute;) -->
+                        <li class="auth-links">
+                            <a href="connexion.html" class="btn-login" id="loginLink">
+                                <i class="fas fa-sign-in-alt"></i> Connexion
+                            </a>
+                        </li>
+                        <li class="auth-links">
+                            <a href="inscription.html" class="btn-register" id="registerLink">
+                                <i class="fas fa-user-plus"></i> Inscription
+                            </a>
+                        </li>
+                        <!-- Menu utilisateur connectà (cachà par d&eacute;faut) -->
+                        <li class="user-menu-item" id="userMenuItem" style="display: none;">
+                            <div class="user-dropdown-container">
+                                <a href="#" class="btn-user" id="userMenuToggle">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span id="userName">Mon Compte</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </a>
+                                <div class="user-dropdown" id="userDropdown">
+                                    <div class="dropdown-header">
+                                        <strong id="userFullName"></strong>
+                                        <span id="userRole"></span>
+                                    </div>
+                                    <div class="dropdown-divider"></div>
+                                    <a href="profil.html" id="profileLink">
+                                        <i class="fas fa-id-card"></i> Mon Profil
+                                    </a>
+                                    <a href="planning.html" id="planningLink">
+                                        <i class="fas fa-calendar-alt"></i> Planning
+                                    </a>
+                                    <div class="dropdown-divider" id="adminDivider" style="display: none;"></div>
+                                    <a href="../admin/dashboard.html" id="adminDashboardLink" style="display: none;">
+                                        <i class="fas fa-tachometer-alt"></i> Dashboard Admin
+                                    </a>
+                                    <div class="dropdown-divider"></div>
+                                    <a href="#" id="logoutBtn">
+                                        <i class="fas fa-sign-out-alt"></i> D&eacute;connexion
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section Planning -->
+    <section class="page-hero" style="background: linear-gradient(rgba(59, 130, 246, 0.9), rgba(59, 130, 246, 0.9)), url('../assets/images/planning-hero.jpg');">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Planning des Activit&eacute;s</h1>
+                <p>Consultez les séances et les activités de l'association</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Navigation Planning -->
+    <section class="planning-nav">
+        <div class="container">
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-view="calendar">
+                    <i class="fas fa-calendar"></i> Calendrier
+                </button>
+                <button class="nav-tab" data-view="weekly">
+                    <i class="fas fa-calendar-week"></i> Semaine
+                </button>
+                <button class="nav-tab" data-view="daily">
+                    <i class="fas fa-calendar-day"></i> Jour
+                </button>
+                <button class="nav-tab" data-view="list">
+                    <i class="fas fa-list"></i> Liste
+                </button>
+            </div>
+            
+            <!-- Actions - VISIBLES UNIQUEMENT POUR ADMIN -->
+            <div class="planning-actions" id="planningAdminActions" style="display: none;">
+                <button class="btn btn-primary" id="addEventBtn">
+                    <i class="fas fa-plus"></i> Ajouter un àv?nement
+                </button>
+                <button class="btn btn-secondary" id="printPlanning">
+                    <i class="fas fa-print"></i> Imprimer
+                </button>
+                <button class="btn btn-outline" id="exportPlanning">
+                    <i class="fas fa-download"></i> Exporter
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filtres -->
+    <section class="planning-filters">
+        <div class="container">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label for="sportFilter"><i class="fas fa-futbol"></i> Sport</label>
+                    <select id="sportFilter" class="form-select">
+                        <option value="all">Tous les sports</option>
+                        <option value="football">Football</option>
+                        <option value="basketball">Basketball</option>
+                        <option value="volleyball">Volleyball</option>
+                        <option value="natation">Natation</option>
+                        <option value="athletisme">Athl&eacute;tisme</option>
+                        <option value="arts-martiaux">Arts Martiaux</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="levelFilter"><i class="fas fa-signal"></i> Niveau</label>
+                    <select id="levelFilter" class="form-select">
+                        <option value="all">Tous niveaux</option>
+                        <option value="debutant">Débutant</option>
+                        <option value="intermediaire">Intermédiaire</option>
+                        <option value="avance">Avancé</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="coachFilter"><i class="fas fa-user-tie"></i> Coach</label>
+                    <select id="coachFilter" class="form-select">
+                        <option value="all">Tous les coaches</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="dateFilter"><i class="fas fa-calendar"></i> Date</label>
+                    <input type="date" id="dateFilter" class="form-control">
+                </div>
+                
+                <div class="filter-group">
+                    <button class="btn btn-secondary" id="applyFilters">
+                        <i class="fas fa-filter"></i> Appliquer
+                    </button>
+                    <button class="btn btn-outline" id="resetFilters">
+                        <i class="fas fa-redo"></i> R&eacute;initialiser
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Calendrier -->
+    <section class="calendar-section active" id="calendarView">
+        <div class="container">
+            <div id="calendar"></div>
+        </div>
+    </section>
+
+    <!-- Section Vue Semaine -->
+    <section class="weekly-section" id="weeklyView">
+        <div class="container">
+            <div class="weekly-header">
+                <h3><i class="fas fa-calendar-week"></i> Planning Hebdomadaire</h3>
+                <div class="week-navigation">
+                    <button class="btn-week-nav" id="prevWeek">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="currentWeek"></span>
+                    <button class="btn-week-nav" id="nextWeek">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="weekly-grid" id="weeklyGrid">
+                <!-- Chargà dynamiquement -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Vue Jour -->
+    <section class="daily-section" id="dailyView">
+        <div class="container">
+            <div class="daily-header">
+                <h3><i class="fas fa-calendar-day"></i> Planning du Jour</h3>
+                <div class="day-navigation">
+                    <button class="btn-day-nav" id="prevDay">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <input type="date" id="currentDay" class="form-control">
+                    <button class="btn-day-nav" id="nextDay">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="daily-timeline" id="dailyTimeline">
+                <!-- Chargà dynamiquement -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Vue Liste -->
+    <section class="list-section" id="listView">
+        <div class="container">
+            <div class="list-header">
+                <h3><i class="fas fa-list"></i> Liste des Événements</h3>
+                <div class="list-actions">
+                    <button class="btn btn-outline" id="sortByDate">
+                        <i class="fas fa-sort-amount-down"></i> Trier par date
+                    </button>
+                    <button class="btn btn-outline" id="sortBySport">
+                        <i class="fas fa-sort-alpha-down"></i> Trier par sport
+                    </button>
+                </div>
+            </div>
+            
+            <div class="events-list" id="eventsList">
+                <!-- Chargà dynamiquement -->
+            </div>
+            
+            <div class="pagination" id="listPagination">
+                <!-- Pagination dynamique -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Statistiques -->
+    <section class="planning-stats">
+        <div class="container">
+            <div class="section-title">
+                <h2><i class="fas fa-chart-pie"></i> Statistiques</h2>
+                <p>Consultez les tendances et fr&eacute;quentations</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalParticipants">0</div>
+                        <div class="stat-label">Participants cette semaine</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="totalSessions">0</div>
+                        <div class="stat-label">S&eacute;ances programm&eacute;es</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="mostPopularSport">-</div>
+                        <div class="stat-label">Sport le plus populaire</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="attendanceRate">0%</div>
+                        <div class="stat-label">Taux de fr&eacute;quentation</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <i class="fas fa-running"></i>
+                        <h3>MANAR SPORT</h3>
+                    </div>
+                    <p>Association Sportive Manar<br>
+                    Usto, Oran - Algérie<br>
+                    Tél: +213 41 12 34 56</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Liens Rapides</h4>
+                    <ul>
+                        <li><a href="../index.html">Accueil</a></li>
+                        <li><a href="historique.html">Historique</a></li>
+                        <li><a href="equipes.html">Équipes</a></li>
+                        <li><a href="planning.html">Planning</a></li>
+                        <li><a href="tarifs.html">Tarifs</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Informations</h4>
+                    <ul>
+                        <li><a href="#" data-modal="conditions">Conditions d'utilisation</a></li>
+                        <li><a href="#" data-modal="confidentialite">Politique de confidentialit&eacute;</a></li>
+                        <li><a href="#" data-modal="cookies">Politique des cookies</a></li>
+                        <li><a href="#contact">Contactez-nous</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Horaires d'Ouverture</h4>
+                    <p>Lundi - Vendredi: 8h - 22h<br>
+                    Samedi: 9h - 20h<br>
+                    Dimanche: 9h - 18h</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Association Sportive Manar Oran. Tous droits r&eacute;serv&eacute;s.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal Ajout à&eacute;v&eacute;nement (Admin seulement) -->
+    <div id="addEventModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus-circle"></i> Nouvel à&eacute;v&eacute;nement</h3>
+                <button class="modal-close" id="closeEventModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addEventForm">
+                    <div class="form-group">
+                        <label class="form-label">Titre *</label>
+                        <input type="text" id="eventTitle" name="title" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label class="form-label">Date *</label>
+                            <input type="date" id="eventDate" name="date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Heure d&eacute;but *</label>
+                            <input type="time" id="eventStartTime" name="startTime" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Heure fin</label>
+                            <input type="time" id="eventEndTime" name="endTime" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Sport *</label>
+                        <select id="eventSport" name="sport" class="form-select" required>
+                            <option value="">S&eacute;lectionnez un sport</option>
+                            <option value="football">Football</option>
+                            <option value="basketball">Basketball</option>
+                            <option value="volleyball">Volleyball</option>
+                            <option value="natation">Natation</option>
+                            <option value="athletisme">Athl&eacute;tisme</option>
+                            <option value="arts-martiaux">Arts Martiaux</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label class="form-label">Type *</label>
+                            <select id="eventType" name="type" class="form-select" required>
+                                <option value="training">Entraînement</option>
+                                <option value="competition">Comp&eacute;tition</option>
+                                <option value="event">?&eacute;v&eacute;nement</option>
+                                <option value="meeting">R&eacute;union</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Niveau</label>
+                            <select id="eventLevel" name="level" class="form-select">
+                                <option value="all">Tous niveaux</option>
+                                <option value="debutant">Débutant</option>
+                                <option value="intermediaire">Intermédiaire</option>
+                                <option value="avance">Avancé</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Coach</label>
+                        <input type="text" id="eventCoach" name="coach" class="form-control" placeholder="Nom du coach">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Lieu</label>
+                        <input type="text" id="eventLocation" name="location" class="form-control" placeholder="Lieu de l'&eacute;v&eacute;nement">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea id="eventDescription" name="description" class="form-textarea" rows="3" placeholder="Description de l'&eacute;v&eacute;nement..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Participants maximum</label>
+                        <input type="number" id="eventMaxParticipants" name="maxParticipants" class="form-control" min="1" max="100" value="20">
+                    </div>
+                    
+                    <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Enregistrer
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="cancelEventBtn">
+                            Annuler
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Détails àv?nement -->
+    <div id="eventDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="detailModalTitle"><i class="fas fa-calendar-alt"></i> Détails de l'&eacute;v&eacute;nement</h3>
+                <button class="modal-close" id="closeDetailModal">&times;</button>
+            </div>
+            <div class="modal-body" id="eventDetailBody">
+                <!-- Contenu chargà dynamiquement -->
+            </div>
+            <div class="modal-footer" id="eventDetailFooter" style="padding: 15px 20px; border-top: 1px solid var(--gray-300); display: flex; gap: 10px; justify-content: flex-end;">
+                <!-- Actions admin dans les d&eacute;tails -->
+                <div id="detailAdminActions" style="display: none;">
+                    <button class="btn btn-primary" id="editEventFromDetail">
+                        <i class="fas fa-edit"></i> Modifier
+                    </button>
+                    <button class="btn btn-danger" id="deleteEventFromDetail">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </div>
+                <button class="btn btn-secondary" id="closeDetailBtn">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Modification à&eacute;v&eacute;nement (Admin seulement) -->
+    <div id="editEventModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Modifier l'&eacute;v&eacute;nement</h3>
+                <button class="modal-close" id="closeEditModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editEventForm">
+                    <input type="hidden" id="editEventId">
+                    <div class="form-group">
+                        <label class="form-label">Titre *</label>
+                        <input type="text" id="editEventTitle" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label class="form-label">Date *</label>
+                            <input type="date" id="editEventDate" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Heure d&eacute;but *</label>
+                            <input type="time" id="editEventStartTime" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Heure fin</label>
+                            <input type="time" id="editEventEndTime" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Sport *</label>
+                        <select id="editEventSport" class="form-select" required>
+                            <option value="football">Football</option>
+                            <option value="basketball">Basketball</option>
+                            <option value="volleyball">Volleyball</option>
+                            <option value="natation">Natation</option>
+                            <option value="athletisme">Athl&eacute;tisme</option>
+                            <option value="arts-martiaux">Arts Martiaux</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label class="form-label">Type *</label>
+                            <select id="editEventType" class="form-select" required>
+                                <option value="training">Entraînement</option>
+                                <option value="competition">Comp&eacute;tition</option>
+                                <option value="event">?&eacute;v&eacute;nement</option>
+                                <option value="meeting">R&eacute;union</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Niveau</label>
+                            <select id="editEventLevel" class="form-select">
+                                <option value="all">Tous niveaux</option>
+                                <option value="debutant">Débutant</option>
+                                <option value="intermediaire">Intermédiaire</option>
+                                <option value="avance">Avancé</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Coach</label>
+                        <input type="text" id="editEventCoach" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Lieu</label>
+                        <input type="text" id="editEventLocation" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea id="editEventDescription" class="form-textarea" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Participants maximum</label>
+                        <input type="number" id="editEventMaxParticipants" class="form-control" min="1" max="100">
+                    </div>
+                    
+                    <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Enregistrer
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="cancelEditBtn">
+                            Annuler
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/fr.js"></script>
+    <script src="../assets/js/planning.js"></script>
+    <script src="../assets/js/planning-fallback.js"></script>
+</body>
+</html>
+
+
+
+
+

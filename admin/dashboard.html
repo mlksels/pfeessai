@@ -1,0 +1,3456 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Manar Sport</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="../assets/js/sync.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --primary-pale: #dbeafe;
+            --accent: #f59e0b;
+            --accent-pale: #fef3c7;
+            --success: #10b981;
+            --success-pale: #d1fae5;
+            --danger: #ef4444;
+            --danger-pale: #fee2e2;
+            --warning: #f59e0b;
+            --warning-pale: #fef3c7;
+            --info: #3b82f6;
+            --info-pale: #dbeafe;
+            --purple: #7c3aed;
+            --purple-pale: #ede9fe;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-500: #64748b;
+            --gray-700: #334155;
+            --gray-900: #0f172a;
+            --sidebar-w: 270px;
+            --sidebar-collapsed: 72px;
+            --radius: 14px;
+            --radius-sm: 8px;
+            --shadow: 0 4px 24px rgba(15,23,42,0.07);
+            --shadow-md: 0 8px 32px rgba(15,23,42,0.12);
+            --shadow-lg: 0 16px 48px rgba(15,23,42,0.16);
+            --font: 'Plus Jakarta Sans', sans-serif;
+            --transition: all 0.28s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font);
+            background: #f0f4fb;
+            color: var(--gray-700);
+            overflow-x: hidden;
+            font-size: 0.925rem;
+        }
+
+        /* ========== LAYOUT ========== */
+        .layout { display: flex; min-height: 100vh; }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: linear-gradient(175deg, #0f172a 0%, #1e3a8a 55%, #1e40af 100%);
+            color: white;
+            position: fixed;
+            top: 0; left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 200;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 30px rgba(15,23,42,0.2);
+        }
+
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+        .sidebar.collapsed { width: var(--sidebar-collapsed); }
+
+        /* Brand */
+        .sidebar-brand {
+            padding: 22px 20px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            min-height: 72px;
+            flex-shrink: 0;
+        }
+
+        .brand-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--accent), #f97316);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(245,158,11,0.4);
+        }
+
+        .brand-text { overflow: hidden; white-space: nowrap; transition: var(--transition); }
+        .brand-text h2 { font-size: 1rem; font-weight: 800; letter-spacing: 1px; }
+        .brand-text p { font-size: 0.72rem; opacity: 0.6; margin-top: 1px; }
+
+        .sidebar.collapsed .brand-text { opacity: 0; width: 0; }
+
+        /* Admin info */
+        .admin-profile {
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+
+        .admin-avatar {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--accent), #f97316);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+            color: white;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .admin-avatar::after {
+            content: '';
+            position: absolute;
+            bottom: 1px; right: 1px;
+            width: 9px; height: 9px;
+            background: var(--success);
+            border-radius: 50%;
+            border: 2px solid #1e3a8a;
+            animation: pulseGreen 2s infinite;
+        }
+
+        @keyframes pulseGreen {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+            50% { box-shadow: 0 0 0 5px rgba(16,185,129,0); }
+        }
+
+        .admin-info { overflow: hidden; white-space: nowrap; transition: var(--transition); }
+        .admin-info strong { display: block; font-size: 0.87rem; font-weight: 700; }
+        .admin-info span { font-size: 0.73rem; opacity: 0.6; }
+        .sidebar.collapsed .admin-info { opacity: 0; width: 0; }
+
+        /* Nav */
+        .sidebar-nav {
+            flex: 1;
+            padding: 14px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .nav-section-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            opacity: 0.4;
+            padding: 10px 8px 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .sidebar.collapsed .nav-section-label { opacity: 0; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            white-space: nowrap;
+            position: relative;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .nav-item i { font-size: 0.95rem; width: 18px; text-align: center; flex-shrink: 0; }
+
+        .nav-item span { transition: var(--transition); overflow: hidden; }
+        .sidebar.collapsed .nav-item span { opacity: 0; width: 0; }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(3px);
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            box-shadow: inset 3px 0 0 var(--accent);
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--danger);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 20px;
+            min-width: 18px;
+            text-align: center;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+
+        .sidebar.collapsed .nav-badge { display: none; }
+
+        /* Tooltip for collapsed */
+        .sidebar.collapsed .nav-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: calc(var(--sidebar-collapsed) + 8px);
+            background: var(--gray-900);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateX(-8px);
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed .nav-item:hover::after {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Footer */
+        .sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+
+        /* ========== MAIN ========== */
+        .main {
+            flex: 1;
+            margin-left: var(--sidebar-w);
+            transition: var(--transition);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.collapsed ~ .main { margin-left: var(--sidebar-collapsed); }
+
+        /* ========== TOPBAR ========== */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0 28px;
+            height: 68px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            box-shadow: 0 1px 8px rgba(15,23,42,0.05);
+        }
+
+        .topbar-left { display: flex; align-items: center; gap: 16px; }
+
+        .toggle-btn {
+            width: 36px; height: 36px;
+            border: 1.5px solid var(--gray-200);
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--gray-500);
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .toggle-btn:hover { background: var(--gray-100); border-color: var(--gray-300); color: var(--primary); }
+
+        .page-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .breadcrumb {
+            font-size: 0.78rem;
+            color: var(--gray-500);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .breadcrumb i { font-size: 0.65rem; }
+
+        .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+        .search-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--gray-100);
+            border: 1.5px solid transparent;
+            border-radius: 10px;
+            padding: 7px 14px;
+            transition: var(--transition);
+        }
+
+        .search-wrap:focus-within {
+            background: white;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        .search-wrap i { color: var(--gray-500); font-size: 0.85rem; }
+        .search-wrap input { border: none; background: none; outline: none; font-size: 0.875rem; width: 180px; font-family: var(--font); }
+
+        .icon-btn {
+            width: 38px; height: 38px;
+            border: 1.5px solid var(--gray-200);
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--gray-500);
+            transition: var(--transition);
+            position: relative;
+            font-size: 0.95rem;
+        }
+
+        .icon-btn:hover { background: var(--gray-100); color: var(--primary); }
+
+        .icon-btn .dot {
+            position: absolute;
+            top: 6px; right: 7px;
+            width: 8px; height: 8px;
+            background: var(--danger);
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .topbar-user {
+            display: flex; align-items: center; gap: 10px;
+            padding: 6px 14px 6px 6px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .topbar-user:hover { border-color: var(--primary-light); }
+
+        .topbar-avatar {
+            width: 30px; height: 30px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .topbar-user-info strong { display: block; font-size: 0.82rem; font-weight: 700; color: var(--gray-900); }
+        .topbar-user-info span { font-size: 0.72rem; color: var(--gray-500); }
+
+        .btn-logout-top {
+            display: flex; align-items: center; gap: 7px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: var(--font);
+            transition: var(--transition);
+        }
+
+        .btn-logout-top:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,0.35); }
+
+        /* ========== CONTENT ========== */
+        .content { flex: 1; padding: 26px 28px; }
+
+        .section { display: none; animation: fadeUp 0.3s ease; }
+        .section.active { display: block; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========== CARDS ========== */
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--gray-100);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-header h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-header h3 i { color: var(--primary-light); }
+
+        .card-body { padding: 22px; }
+
+        /* ========== STATS GRID ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 22px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            opacity: 0.05;
+            transform: translate(20px, -20px);
+        }
+
+        .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+
+        .stat-icon {
+            width: 52px; height: 52px;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.blue { background: var(--primary-pale); color: var(--primary); }
+        .stat-icon.green { background: var(--success-pale); color: var(--success); }
+        .stat-icon.orange { background: var(--warning-pale); color: var(--warning); }
+        .stat-icon.purple { background: var(--purple-pale); color: var(--purple); }
+        .stat-icon.red { background: var(--danger-pale); color: var(--danger); }
+
+        .stat-body { flex: 1; }
+        .stat-label { font-size: 0.78rem; color: var(--gray-500); font-weight: 500; margin-bottom: 4px; }
+        .stat-value { font-size: 2rem; font-weight: 800; color: var(--gray-900); line-height: 1; }
+        .stat-change {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 0.75rem; font-weight: 600;
+            margin-top: 6px;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .stat-change.up { background: var(--success-pale); color: var(--success); }
+        .stat-change.warn { background: var(--warning-pale); color: var(--warning); }
+        .stat-change.neutral { background: var(--info-pale); color: var(--info); }
+
+        /* ========== CHARTS ========== */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .chart-wrap {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+        }
+
+        .chart-wrap h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .chart-canvas { height: 280px; position: relative; }
+
+        /* ========== TABLE ========== */
+        .table-wrap {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .table-wrap table { width: 100%; border-collapse: collapse; }
+
+        .table-wrap th {
+            background: var(--gray-50);
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .table-wrap td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--gray-100);
+            font-size: 0.875rem;
+            vertical-align: middle;
+        }
+
+        .table-wrap tr:last-child td { border-bottom: none; }
+        .table-wrap tr:hover td { background: var(--gray-50); }
+
+        .user-cell { display: flex; align-items: center; gap: 10px; }
+
+        .user-avatar-sm {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .user-cell-info strong { display: block; font-size: 0.875rem; font-weight: 600; color: var(--gray-900); }
+        .user-cell-info span { font-size: 0.75rem; color: var(--gray-500); }
+
+        /* ========== BADGES ========== */
+        .badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.73rem;
+            font-weight: 700;
+        }
+
+        .badge-success { background: var(--success-pale); color: var(--success); }
+        .badge-warning { background: var(--warning-pale); color: #92400e; }
+        .badge-danger { background: var(--danger-pale); color: var(--danger); }
+        .badge-info { background: var(--info-pale); color: var(--info); }
+        .badge-primary { background: var(--primary-pale); color: var(--primary); }
+        .badge-purple { background: var(--purple-pale); color: var(--purple); }
+        .badge-gray { background: var(--gray-100); color: var(--gray-500); }
+
+        /* ========== BUTTONS ========== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 18px;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: var(--font);
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(30,58,138,0.35); }
+
+        .btn-success { background: linear-gradient(135deg, #059669, var(--success)); color: white; }
+        .btn-success:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(16,185,129,0.35); }
+
+        .btn-danger { background: linear-gradient(135deg, #dc2626, var(--danger)); color: white; }
+        .btn-danger:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(239,68,68,0.35); }
+
+        .btn-warning { background: linear-gradient(135deg, #d97706, var(--warning)); color: white; }
+        .btn-warning:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(245,158,11,0.35); }
+
+        .btn-secondary { background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-200); }
+        .btn-secondary:hover { background: var(--gray-200); }
+
+        .btn-ghost { background: transparent; color: var(--gray-500); border: 1.5px solid var(--gray-200); }
+        .btn-ghost:hover { background: var(--gray-100); color: var(--gray-700); }
+
+        /* ========== ACTION BUTTONS ========== */
+        .btn-action {
+            width: 32px; height: 32px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .btn-action:hover { transform: scale(1.12); }
+        .btn-view { background: var(--info-pale); color: var(--info); }
+        .btn-edit { background: var(--warning-pale); color: #92400e; }
+        .btn-delete { background: var(--danger-pale); color: var(--danger); }
+        .btn-approve { background: var(--success-pale); color: var(--success); }
+        .btn-verify { background: var(--primary-pale); color: var(--primary); }
+
+        /* ========== SECTION HEADER ========== */
+        .section-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .section-top h2 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-top h2 i { color: var(--primary-light); font-size: 1rem; }
+
+        /* ========== FILTERS BAR ========== */
+        .filters-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 18px;
+        }
+
+        .filter-item { display: flex; flex-direction: column; gap: 4px; min-width: 160px; flex: 1; }
+        .filter-item label { font-size: 0.72rem; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-family: var(--font);
+            color: var(--gray-700);
+            background: white;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        textarea.form-control { resize: vertical; min-height: 80px; }
+
+        /* ========== PAGINATION ========== */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            padding: 16px;
+            border-top: 1px solid var(--gray-100);
+        }
+
+        .page-btn {
+            min-width: 34px; height: 34px;
+            border: 1.5px solid var(--gray-200);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex; align-items: center; justify-content: center;
+            transition: var(--transition);
+            font-family: var(--font);
+        }
+
+        .page-btn:hover { background: var(--primary-pale); border-color: var(--primary-light); color: var(--primary); }
+        .page-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+
+        /* ========== EVENTS LIST ========== */
+        .event-item {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 14px;
+            border-left: 4px solid var(--primary-light);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .event-item:hover { transform: translateX(4px); box-shadow: var(--shadow-md); }
+
+        .event-item.type-competition { border-color: var(--danger); }
+        .event-item.type-training { border-color: var(--success); }
+        .event-item.type-event { border-color: var(--primary-light); }
+
+        .event-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .event-title { font-size: 1rem; font-weight: 700; color: var(--gray-900); }
+        .event-date-badge { font-size: 0.8rem; color: var(--gray-500); display: flex; align-items: center; gap: 6px; }
+
+        .event-meta { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0; }
+        .event-meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--gray-500); }
+        .event-meta-item i { color: var(--primary-light); width: 14px; }
+
+        .progress-bar { height: 6px; background: var(--gray-100); border-radius: 10px; overflow: hidden; margin: 8px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light)); border-radius: 10px; transition: width 0.6s ease; }
+
+        /* ========== TEAMS GRID ========== */
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 18px;
+        }
+
+        .team-card {
+            background: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .team-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+
+        .team-head {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            padding: 20px;
+            color: white;
+        }
+
+        .team-head h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+        .team-head p { font-size: 0.78rem; opacity: 0.8; }
+
+        .team-body { padding: 18px; }
+        .team-meta { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+        .team-meta-item { display: flex; align-items: center; gap: 8px; font-size: 0.83rem; color: var(--gray-500); }
+        .team-meta-item i { color: var(--primary-light); width: 16px; }
+
+        /* ========== GALLERY ========== */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .gallery-item {
+            border-radius: var(--radius);
+            overflow: hidden;
+            aspect-ratio: 1;
+            position: relative;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            background: var(--gray-100);
+        }
+
+        .gallery-placeholder {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--primary-pale), var(--purple-pale));
+            color: var(--primary);
+            gap: 8px;
+        }
+
+        .gallery-placeholder i { font-size: 2rem; }
+        .gallery-placeholder span { font-size: 0.8rem; font-weight: 600; }
+
+        .gallery-real-img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.35s ease;
+        }
+
+        .gallery-item:hover .gallery-real-img { transform: scale(1.07); }
+
+        .gallery-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(15,23,42,0.85), transparent 50%);
+            color: white;
+            padding: 14px;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .gallery-item:hover .gallery-overlay { opacity: 1; }
+        .gallery-item:hover .gallery-placeholder { transform: scale(1.05); transition: var(--transition); }
+
+        /* Upload zone */
+        .upload-zone {
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--radius);
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--gray-50);
+            position: relative;
+        }
+        .upload-zone:hover, .upload-zone.drag-over {
+            border-color: var(--primary-light);
+            background: var(--primary-pale);
+        }
+        .upload-zone input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+        .upload-zone i { font-size: 2rem; color: var(--gray-400); display: block; margin-bottom: 8px; }
+        .upload-zone strong { display: block; color: var(--gray-700); margin-bottom: 4px; }
+        .upload-zone small { color: var(--gray-500); }
+        .upload-preview {
+            max-width: 100%; max-height: 200px; border-radius: 10px;
+            object-fit: contain; display: block; margin: 10px auto 0;
+            border: 1px solid var(--gray-200);
+        }
+        /* Document upload item */
+        .doc-upload-item {
+            display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+            background: var(--gray-50); border-radius: 10px; margin-bottom: 8px;
+            border: 1px solid var(--gray-200);
+        }
+        .doc-upload-item .doc-icon-sm { font-size: 1.3rem; }
+        .doc-upload-item .doc-info { flex: 1; }
+        .doc-upload-item .doc-info strong { font-size: 0.82rem; display: block; }
+        .doc-upload-item .doc-info span { font-size: 0.72rem; color: var(--gray-500); }
+        .doc-upload-item .remove-doc { background: none; border: none; color: var(--danger); cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+        .doc-upload-item .remove-doc:hover { background: var(--danger-pale); }
+
+        .gallery-overlay-title { font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+        .gallery-overlay-meta { font-size: 0.72rem; opacity: 0.8; display: flex; gap: 10px; }
+
+        /* ========== MESSAGES ========== */
+        .message-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            border-left: 3px solid transparent;
+            transition: var(--transition);
+        }
+
+        .message-card.unread { border-color: var(--primary-light); }
+        .message-card:hover { box-shadow: var(--shadow-md); }
+
+        .msg-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .msg-sender strong { font-size: 0.9rem; font-weight: 700; color: var(--gray-900); }
+        .msg-sender span { font-size: 0.78rem; color: var(--gray-500); margin-left: 8px; }
+        .msg-date { font-size: 0.75rem; color: var(--gray-500); }
+        .msg-subject { font-size: 0.875rem; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
+        .msg-text { font-size: 0.83rem; color: var(--gray-500); line-height: 1.5; margin-bottom: 12px; }
+        .msg-actions { display: flex; gap: 8px; }
+
+        /* ========== CALENDAR ========== */
+        .calendar-wrap { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+
+        .cal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 22px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+        }
+
+        .cal-header h3 { font-size: 1rem; font-weight: 700; }
+
+        .cal-nav { display: flex; gap: 8px; }
+        .cal-nav-btn {
+            width: 32px; height: 32px;
+            background: rgba(255,255,255,0.2); border: none; border-radius: 8px;
+            color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: var(--transition);
+        }
+
+        .cal-nav-btn:hover { background: rgba(255,255,255,0.35); }
+
+        .cal-weekdays {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            padding: 12px 12px 0;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 8px 12px 12px; }
+
+        .cal-day {
+            min-height: 80px;
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--gray-100);
+            background: white;
+            transition: var(--transition);
+            font-size: 0.8rem;
+        }
+
+        .cal-day:hover { border-color: var(--primary-light); background: var(--primary-pale); }
+        .cal-day.today { background: var(--primary-pale); border-color: var(--primary-light); }
+        .cal-day.other-month { background: var(--gray-50); color: var(--gray-300); }
+
+        .cal-day-num { font-weight: 700; margin-bottom: 4px; font-size: 0.82rem; }
+        .cal-day.today .cal-day-num { color: var(--primary); }
+
+        .cal-event {
+            padding: 2px 5px;
+            font-size: 0.68rem;
+            border-radius: 4px;
+            color: white;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .cal-event.competition { background: var(--danger); }
+        .cal-event.training { background: var(--success); }
+        .cal-event.event { background: var(--primary-light); }
+
+        /* ========== QUICK ACTIONS ========== */
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+        }
+
+        .quick-action {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px 16px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid var(--gray-100);
+            transition: var(--transition);
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+
+        .quick-action:hover {
+            border-color: var(--primary-light);
+            background: var(--primary-pale);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .quick-action i { font-size: 1.5rem; color: var(--primary-light); }
+        .quick-action span { font-size: 0.82rem; font-weight: 700; color: var(--gray-700); }
+
+        /* ========== MODAL ========== */
+        .modal {
+            position: fixed; inset: 0;
+            background: rgba(15,23,42,0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+            padding: 20px;
+        }
+
+        .modal.show { display: flex; }
+
+        .modal-box {
+            background: white;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 680px;
+            max-height: 88vh;
+            overflow-y: auto;
+            animation: modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        .modal-box.large { max-width: 900px; }
+        .modal-box.small { max-width: 460px; }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.88) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border-radius: 20px 20px 0 0;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 10;
+        }
+
+        .modal-header h3 { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+
+        .modal-close {
+            width: 34px; height: 34px;
+            background: rgba(255,255,255,0.2); border: none;
+            border-radius: 50%; color: white; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover { background: rgba(255,255,255,0.35); transform: rotate(90deg); }
+
+        .modal-body { padding: 24px; }
+
+        .modal-footer { padding: 16px 24px; border-top: 1px solid var(--gray-100); display: flex; justify-content: flex-end; gap: 10px; }
+
+        /* ========== FORM ========== */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-grid.cols-1 { grid-template-columns: 1fr; }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group.full { grid-column: 1 / -1; }
+
+        .form-label { font-size: 0.78rem; font-weight: 700; color: var(--gray-700); text-transform: uppercase; letter-spacing: 0.4px; }
+        .form-label .req { color: var(--danger); }
+
+        .input-icon-wrap { position: relative; }
+        .input-icon-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--gray-500); font-size: 0.85rem; }
+        .input-icon-wrap .form-control { padding-left: 36px; }
+
+        /* ========== DOCUMENTS ========== */
+        .docs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+
+        .doc-card {
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .doc-card:hover { border-color: var(--primary-light); transform: translateY(-3px); box-shadow: var(--shadow); }
+
+        .doc-icon { font-size: 2.2rem; color: var(--primary-light); margin-bottom: 8px; }
+        .doc-name { font-size: 0.82rem; font-weight: 700; color: var(--gray-700); margin-bottom: 4px; word-break: break-word; }
+        .doc-meta { font-size: 0.72rem; color: var(--gray-500); }
+
+        .doc-status {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 0.7rem; font-weight: 700;
+            padding: 3px 8px; border-radius: 20px;
+            margin-top: 6px;
+        }
+
+        .doc-status.verified { background: var(--success-pale); color: var(--success); }
+        .doc-status.pending { background: var(--warning-pale); color: #92400e; }
+        .doc-status.expired { background: var(--danger-pale); color: var(--danger); }
+
+        .doc-type-tag {
+            position: absolute; top: 8px; right: 8px;
+            font-size: 0.65rem; font-weight: 700;
+            padding: 2px 6px; border-radius: 6px;
+        }
+
+        .doc-type-tag.pdf { background: var(--danger-pale); color: var(--danger); }
+        .doc-type-tag.image { background: var(--info-pale); color: var(--info); }
+
+        /* ========== NOTIFICATION ========== */
+        #toast-container {
+            position: fixed; top: 20px; right: 20px;
+            z-index: 9999;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+
+        .toast {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+            min-width: 280px;
+            max-width: 380px;
+            box-shadow: var(--shadow-md);
+            animation: toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(60px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(60px); }
+        }
+
+        .toast.success { background: linear-gradient(135deg, #059669, var(--success)); }
+        .toast.error { background: linear-gradient(135deg, #dc2626, var(--danger)); }
+        .toast.warning { background: linear-gradient(135deg, #d97706, var(--warning)); }
+        .toast.info { background: linear-gradient(135deg, #2563eb, var(--primary-light)); }
+
+        /* ========== LOADING ========== */
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--primary-light);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 40px auto;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ========== FINANCES ========== */
+        .finance-table tbody tr td:nth-child(4) { font-weight: 700; color: var(--gray-900); }
+
+        /* ========== PARAMETRES ========== */
+        .settings-section { margin-bottom: 28px; }
+        .settings-section h4 { font-size: 0.85rem; font-weight: 800; color: var(--gray-700); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid var(--gray-100); }
+
+        .checkbox-group { display: flex; gap: 20px; }
+        .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; cursor: pointer; }
+        .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1100px) { .charts-grid { grid-template-columns: 1fr; } }
+
+        @media (max-width: 768px) {
+            .sidebar { left: calc(-1 * var(--sidebar-w)); }
+            .sidebar.mobile-show { left: 0; }
+            .main { margin-left: 0 !important; }
+            .content { padding: 16px; }
+            .topbar { padding: 0 16px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .search-wrap { display: none; }
+            .topbar-user-info { display: none; }
+        }
+
+        @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="fas fa-running"></i></div>
+            <div class="brand-text">
+                <h2>MANAR SPORT</h2>
+                <p>Administration</p>
+            </div>
+        </div>
+
+        <div class="admin-profile">
+            <div class="admin-avatar"><i class="fas fa-user-shield"></i></div>
+            <div class="admin-info">
+                <strong id="adminName">Admin</strong>
+                <span id="adminRole">Administrateur</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Principal</div>
+            <a class="nav-item active" data-section="dashboard" data-tooltip="Dashboard">
+                <i class="fas fa-home"></i><span>Dashboard</span>
+            </a>
+
+            <div class="nav-section-label">Gestion</div>
+            <a class="nav-item" data-section="utilisateurs" data-tooltip="Utilisateurs">
+                <i class="fas fa-users"></i><span>Utilisateurs</span>
+                <span class="nav-badge" id="pendingBadge">0</span>
+            </a>
+            <a class="nav-item" data-section="equipes" data-tooltip="?quipes">
+                <i class="fas fa-users-cog"></i><span>?quipes</span>
+            </a>
+            <a class="nav-item" data-section="planning" data-tooltip="Planning">
+                <i class="fas fa-calendar-alt"></i><span>Planning</span>
+            </a>
+            <a class="nav-item" data-section="evenements" data-tooltip="?v?nements">
+                <i class="fas fa-calendar-check"></i><span>?v?nements</span>
+            </a>
+
+            <div class="nav-section-label">Contenu</div>
+            <a class="nav-item" data-section="galerie" data-tooltip="Galerie">
+                <i class="fas fa-images"></i><span>Galerie</span>
+            </a>
+            <a class="nav-item" data-section="messages" data-tooltip="Messages">
+                <i class="fas fa-envelope"></i><span>Messages</span>
+                <span class="nav-badge" id="messageBadge">0</span>
+            </a>
+
+            <div class="nav-section-label">Analyses</div>
+            <a class="nav-item" data-section="finances" data-tooltip="Finances">
+                <i class="fas fa-chart-line"></i><span>Finances</span>
+            </a>
+            <a class="nav-item" data-section="statistiques" data-tooltip="Statistiques">
+                <i class="fas fa-chart-bar"></i><span>Statistiques</span>
+            </a>
+
+            <div class="nav-section-label">Syst?me</div>
+            <a class="nav-item" data-section="parametres" data-tooltip="Param?tres">
+                <i class="fas fa-cog"></i><span>Param?tres</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="../index.html" class="nav-item" data-tooltip="Retour au site">
+                <i class="fas fa-arrow-left"></i><span>Retour au site</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="toggle-btn" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div>
+                    <div class="page-title" id="sectionTitle">Tableau de Bord</div>
+                    <div class="breadcrumb">
+                        <span>Admin</span>
+                        <i class="fas fa-chevron-right"></i>
+                        <span id="breadcrumb">Dashboard</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="topbar-right">
+                <div class="search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Rechercher..." id="globalSearch">
+                </div>
+                <button class="icon-btn" id="notifBtn" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="dot" id="notifDot" style="display:none"></span>
+                </button>
+                <div class="topbar-user" id="topbarUser">
+                    <div class="topbar-avatar" id="topbarInitials">A</div>
+                    <div class="topbar-user-info">
+                        <strong id="topbarName">Admin</strong>
+                        <span>Administrateur</span>
+                    </div>
+                    <i class="fas fa-chevron-down" style="font-size:0.7rem;color:var(--gray-500)"></i>
+                </div>
+                <button class="btn-logout-top" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> D?connexion
+                </button>
+            </div>
+        </header>
+
+        <!-- CONTENT -->
+        <div class="content">
+
+            <!-- ===== DASHBOARD ===== -->
+            <section id="dashboard" class="section active">
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Membres actifs</div>
+                            <div class="stat-value" id="statMembers">0</div>
+                            <div class="stat-change up"><i class="fas fa-arrow-up"></i> +12% ce mois</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-user-plus"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Nouveaux (7j)</div>
+                            <div class="stat-value" id="statNew">0</div>
+                            <div class="stat-change up"><i class="fas fa-arrow-up"></i> +8 cette semaine</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange"><i class="fas fa-calendar-check"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">?v?nements</div>
+                            <div class="stat-value" id="statEvents">0</div>
+                            <div class="stat-change neutral">?? venir</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red"><i class="fas fa-clock"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">En attente</div>
+                            <div class="stat-value" id="statPending">0</div>
+                            <div class="stat-change warn"><i class="fas fa-exclamation-circle"></i> ?? traiter</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-wrap">
+                        <h3><i class="fas fa-chart-line" style="color:var(--primary-light)"></i> Inscriptions (7 derniers jours)</h3>
+                        <div class="chart-canvas"><canvas id="registrationsChart"></canvas></div>
+                    </div>
+                    <div class="chart-wrap">
+                        <h3><i class="fas fa-futbol" style="color:var(--primary-light)"></i> R?partition par sport</h3>
+                        <div class="chart-canvas"><canvas id="sportsChart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card" style="margin-bottom:24px">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bolt"></i> Actions Rapides</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions-grid">
+                            <div class="quick-action" onclick="app.showSection('utilisateurs')">
+                                <i class="fas fa-user-plus"></i><span>G?rer membres</span>
+                            </div>
+                            <div class="quick-action" onclick="app.showAddEventModal()">
+                                <i class="fas fa-calendar-plus"></i><span>Nouvel ?v?nement</span>
+                            </div>
+                            <div class="quick-action" onclick="app.showAddTeamModal()">
+                                <i class="fas fa-users-cog"></i><span>Nouvelle ?quipe</span>
+                            </div>
+                            <div class="quick-action" onclick="app.showSection('galerie')">
+                                <i class="fas fa-camera"></i><span>Galerie</span>
+                            </div>
+                            <div class="quick-action" onclick="app.exportData()">
+                                <i class="fas fa-download"></i><span>Exporter</span>
+                            </div>
+                            <div class="quick-action" onclick="app.showSection('messages')">
+                                <i class="fas fa-envelope"></i><span>Messages</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Users -->
+                <div class="table-wrap">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user-plus"></i> Inscriptions r?centes</h3>
+                        <a class="btn btn-ghost btn-sm" onclick="app.showSection('utilisateurs')">Voir tout ??'</a>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Utilisateur</th>
+                                <th>Email</th>
+                                <th>Type</th>
+                                <th>Date d'inscription</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentUsersBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ===== UTILISATEURS ===== -->
+            <section id="utilisateurs" class="section">
+                <div class="section-top">
+                    <h2><i class="fas fa-users"></i> Gestion des Utilisateurs</h2>
+                    <div style="display:flex;gap:10px">
+                        <button class="btn btn-success" onclick="app.showAddUserModal()">
+                            <i class="fas fa-user-plus"></i> Ajouter
+                        </button>
+                        <button class="btn btn-ghost" onclick="app.verifyAllDocuments()">
+                            <i class="fas fa-check-double"></i> V?rifier tout
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filters-bar">
+                    <div class="filter-item">
+                        <label>Rechercher</label>
+                        <input type="text" id="searchUser" class="form-control" placeholder="Nom, email...">
+                    </div>
+                    <div class="filter-item">
+                        <label>Type</label>
+                        <select id="filterType" class="form-select">
+                            <option value="">Tous</option>
+                            <option value="coach">Coach</option>
+                            <option value="athlete">Athl?te</option>
+                            <option value="parent">Parent</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>Statut</label>
+                        <select id="filterStatus" class="form-select">
+                            <option value="">Tous</option>
+                            <option value="active">Actif</option>
+                            <option value="pending">En attente</option>
+                            <option value="inactive">Inactif</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>Documents</label>
+                        <select id="filterDocStatus" class="form-select">
+                            <option value="">Tous</option>
+                            <option value="verified">V?rifi?s</option>
+                            <option value="unverified">En attente</option>
+                            <option value="expired">Expir?s</option>
+                        </select>
+                    </div>
+                    <div style="align-self:flex-end;display:flex;gap:8px">
+                        <button class="btn btn-primary" onclick="app.applyFilters()"><i class="fas fa-filter"></i> Filtrer</button>
+                        <button class="btn btn-secondary" onclick="app.resetFilters()"><i class="fas fa-undo"></i></button>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>Utilisateur</th><th>Email</th>
+                                <th>Type</th><th>T?l?phone</th><th>Statut</th>
+                                <th>Documents</th><th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                    <div class="pagination" id="paginationContainer"></div>
+                </div>
+            </section>
+
+            <!-- ===== ??QUIPES ===== -->
+            <section id="equipes" class="section">
+                <div class="section-top">
+                    <h2><i class="fas fa-users-cog"></i> Gestion des ?quipes</h2>
+                    <button class="btn btn-success" onclick="app.showAddTeamModal()">
+                        <i class="fas fa-plus"></i> Nouvelle ?quipe
+                    </button>
+                </div>
+                <div class="teams-grid" id="teamsGrid"></div>
+            </section>
+
+            <!-- ===== PLANNING ===== -->
+            <section id="planning" class="section">
+                <div class="section-top">
+                    <h2><i class="fas fa-calendar-alt"></i> Planning</h2>
+                    <div style="display:flex;gap:10px">
+                        <button class="btn btn-success" onclick="app.showAddEventModal()">
+                            <i class="fas fa-plus"></i> ??v?nement
+                        </button>
+                        <button class="btn btn-primary" onclick="app.showAddSessionModal()">
+                            <i class="fas fa-clock"></i> S?ance
+                        </button>
+                    </div>
+                </div>
+                <div class="calendar-wrap">
+                    <div class="cal-header">
+                        <h3 id="calMonthYear">Mois Ann?e</h3>
+                        <div class="cal-nav">
+                            <button class="cal-nav-btn" onclick="app.changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                            <button class="cal-nav-btn" onclick="app.goToToday()" style="padding:0 10px;min-width:70px;font-size:0.78rem;font-family:var(--font)">Aujourd'hui</button>
+                            <button class="cal-nav-btn" onclick="app.changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="cal-weekdays">
+                        <div>Lun</div><div>Mar</div><div>Mer</div>
+                        <div>Jeu</div><div>Ven</div><div>Sam</div><div>Dim</div>
+                    </div>
+                    <div class="cal-days" id="calDays"></div>
+                </div>
+            </section>
+
+            <!-- ===== ??V??NEMENTS ===== -->
+            <section id="evenements" class="section">
+                <div class="section-top">
+                    <h2><i class="fas fa-calendar-check"></i> Gestion des ?v?nements</h2>
+                    <button class="btn btn-success" onclick="app.showAddEventModal()">
+                        <i class="fas fa-plus"></i> Nouvel ?v?nement
+                    </button>
+                </div>
+                <div id="eventsList"></div>
+            </section>
+
+            <!-- ===== GALERIE ===== -->
+            <section id="galerie" class="section">
+                <div class="section-top">
+                    <h2><i class="fas fa-images"></i> Galerie Photos</h2>
+                    <button class="btn btn-success" onclick="app.showAddImageModal()">
+                        <i class="fas fa-upload"></i> Ajouter une image
+                    </button>
+                </div>
+                <div class="gallery-grid" id="galleryGrid"></div>
+            </section>
+
+            <!-- ===== FINANCES ===== -->
+            <section id="finances" class="section">
+                <div class="section-top">
+                    <h2><i class="fas fa-chart-line"></i> Finances</h2>
+                    <button class="btn btn-primary" onclick="app.exportTransactions()">
+                        <i class="fas fa-download"></i> Exporter
+                    </button>
+                </div>
+
+                <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-wallet"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Revenus ce mois</div>
+                            <div class="stat-value" id="finRevenue">0</div>
+                            <div class="stat-change up">DZD</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange"><i class="fas fa-credit-card"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">En attente</div>
+                            <div class="stat-value" id="finPending">0</div>
+                            <div class="stat-change warn">DZD</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple"><i class="fas fa-percent"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Taux de recouvrement</div>
+                            <div class="stat-value" id="finRate">0%</div>
+                            <div class="stat-change up"><i class="fas fa-arrow-up"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-wrap" style="margin-bottom:20px">
+                    <h3><i class="fas fa-chart-bar" style="color:var(--primary-light)"></i> ??volution mensuelle des revenus</h3>
+                    <div class="chart-canvas"><canvas id="revenueChart"></canvas></div>
+                </div>
+
+                <div class="table-wrap">
+                    <div class="card-header">
+                        <h3><i class="fas fa-receipt"></i> Transactions r?centes</h3>
+                    </div>
+                    <table class="finance-table">
+                        <thead>
+                            <tr><th>Date</th><th>Membre</th><th>Type</th><th>Montant</th><th>Statut</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="transactionsBody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ===== STATISTIQUES ===== -->
+            <section id="statistiques" class="section">
+                <div class="section-top">
+                    <h2><i class="fas fa-chart-bar"></i> Statistiques d?taill?es</h2>
+                </div>
+
+                <div class="stats-grid" style="margin-bottom:20px">
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fas fa-mars"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Hommes</div>
+                            <div class="stat-value" id="statMen">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple"><i class="fas fa-venus"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Femmes</div>
+                            <div class="stat-value" id="statWomen">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-birthday-cake"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">?,ge moyen</div>
+                            <div class="stat-value" id="statAvgAge">0</div>
+                            <div class="stat-change neutral">ans</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange"><i class="fas fa-futbol"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Sports pratiqu?s</div>
+                            <div class="stat-value">4</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-wrap">
+                        <h3><i class="fas fa-chart-pie" style="color:var(--primary-light)"></i> R?partition par ?ge</h3>
+                        <div class="chart-canvas"><canvas id="ageChart"></canvas></div>
+                    </div>
+                    <div class="chart-wrap">
+                        <h3><i class="fas fa-calendar-day" style="color:var(--primary-light)"></i> Activit? par jour</h3>
+                        <div class="chart-canvas"><canvas id="activityChart"></canvas></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== MESSAGES ===== -->
+            <section id="messages" class="section">
+                <div class="section-top">
+                    <h2><i class="fas fa-envelope"></i> Messages</h2>
+                    <div style="display:flex;gap:10px">
+                        <button class="btn btn-primary" onclick="app.markAllRead()">
+                            <i class="fas fa-check-double"></i> Tout lire
+                        </button>
+                        <button class="btn btn-ghost" onclick="app.renderMessages()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filters-bar" style="margin-bottom:18px">
+                    <div class="filter-item">
+                        <label>Statut</label>
+                        <select id="filterMsgStatus" class="form-select">
+                            <option value="">Tous</option>
+                            <option value="unread">Non lus</option>
+                            <option value="read">Lus</option>
+                        </select>
+                    </div>
+                    <div class="filter-item" style="flex:2">
+                        <label>Recherche</label>
+                        <input type="text" id="searchMsg" class="form-control" placeholder="Nom, sujet...">
+                    </div>
+                </div>
+
+                <div id="messagesList"></div>
+            </section>
+
+            <!-- ===== PARAM?^TRES ===== -->
+            <section id="parametres" class="section">
+                <div class="section-top">
+                    <h2><i class="fas fa-cog"></i> Param?tres</h2>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="settings-section">
+                            <h4><i class="fas fa-info-circle" style="color:var(--primary-light)"></i> Informations du club</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Nom du club</label>
+                                    <input type="text" class="form-control" id="sClubName" value="Association Sportive Manar Oran">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email de contact</label>
+                                    <input type="email" class="form-control" id="sEmail" value="contact@manarsport.dz">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">T?l?phone</label>
+                                    <input type="tel" class="form-control" id="sPhone" value="+213 41 12 34 56">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Adresse</label>
+                                    <input type="text" class="form-control" id="sAddress" value="Bir El Djir, Oran, Alg?rie">
+                                </div>
+                                <div class="form-group full">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control" id="sDesc">Association sportive fond?e en 2010, d?di?e au d?veloppement du sport ? Oran.</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><i class="fas fa-bell" style="color:var(--primary-light)"></i> Notifications</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Canaux actifs</label>
+                                    <div class="checkbox-group" style="margin-top:8px">
+                                        <label class="checkbox-label"><input type="checkbox" id="notifEmail" checked> Email</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="notifSms" checked> SMS</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="notifPush"> Push</label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Fr?quence des rapports</label>
+                                    <select class="form-select" id="sReportFreq">
+                                        <option value="daily">Quotidien</option>
+                                        <option value="weekly" selected>Hebdomadaire</option>
+                                        <option value="monthly">Mensuel</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><i class="fas fa-shield-alt" style="color:var(--primary-light)"></i> S?curit?</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">D?lai d'expiration de session</label>
+                                    <select class="form-select" id="sSessionTimeout">
+                                        <option value="30">30 minutes</option>
+                                        <option value="60" selected>1 heure</option>
+                                        <option value="240">4 heures</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Tentatives de connexion max</label>
+                                    <input type="number" class="form-control" id="sMaxAttempts" value="5" min="3" max="10">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><i class="fas fa-database" style="color:var(--primary-light)"></i> Donn?es</h4>
+                            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                                <button class="btn btn-primary" onclick="app.exportData()">
+                                    <i class="fas fa-download"></i> Exporter JSON
+                                </button>
+                                <button class="btn btn-ghost" onclick="app.importData()">
+                                    <i class="fas fa-upload"></i> Importer
+                                </button>
+                                <button class="btn btn-danger" onclick="app.resetData()">
+                                    <i class="fas fa-trash"></i> R?initialiser
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:10px;padding-top:20px;border-top:1px solid var(--gray-100)">
+                            <button class="btn btn-success" onclick="app.saveSettings()">
+                                <i class="fas fa-save"></i> Sauvegarder les param?tres
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div><!-- /content -->
+    </div><!-- /main -->
+</div><!-- /layout -->
+<script>
+class AdminApp {
+    constructor() {
+        this.currentUser = null;
+        this.users = [];
+        this.events = [];
+        this.teams = [];
+        this.gallery = [];
+        this.messages = [];
+        this.transactions = [];
+        this.currentPage = 1;
+        this.itemsPerPage = 10;
+        this.currentCalDate = new Date();
+        this.charts = {};
+        this.init();
+    }
+
+    /* ===== INIT ===== */
+    async init() {
+        this.checkAuth();
+        await this.loadData();
+        this.initCharts();
+        this.renderAll();
+        this.bindEvents();
+        this.renderCalendar();
+        const hash = window.location.hash.slice(1);
+        if (hash) this.showSection(hash);
+    }
+
+    /* ===== AUTH ===== */
+    checkAuth() {
+        const session = localStorage.getItem('currentSession') || localStorage.getItem('currentUser') || localStorage.getItem('ms_session');
+        if (!session) { window.location.href = '../pages/connexion.html'; return; }
+        const user = JSON.parse(session);
+        const role = user.role || user.userType || '';
+        if (role !== 'admin') { window.location.href = '../index.html'; return; }
+        this.currentUser = user;
+        const name = user.prenom || user.nom || 'Admin';
+        document.getElementById('adminName').textContent = name;
+        document.getElementById('adminRole').textContent = user.adminFunction || 'Administrateur';
+        document.getElementById('topbarName').textContent = name;
+        document.getElementById('topbarInitials').textContent = name.charAt(0).toUpperCase();
+    }
+
+    /* ===== DATA ===== */
+    async loadData() {
+        try {
+            // Charger les donn?es existantes - ne PAS ?craser si d?j? pr?sentes
+            const storedUsers = localStorage.getItem('users');
+            this.users = storedUsers ? JSON.parse(storedUsers) : this.seedUsers();
+
+            const storedEvents = localStorage.getItem('events');
+            this.events = storedEvents ? JSON.parse(storedEvents) : this.seedEvents();
+
+            const storedTeams = localStorage.getItem('teams');
+            this.teams = storedTeams ? JSON.parse(storedTeams) : this.seedTeams();
+
+            const storedGallery = localStorage.getItem('gallery');
+            this.gallery = storedGallery ? JSON.parse(storedGallery) : this.seedGallery();
+
+            const storedMessages = localStorage.getItem('messages');
+            this.messages = storedMessages ? JSON.parse(storedMessages) : this.seedMessages();
+
+            const storedTx = localStorage.getItem('transactions');
+            this.transactions = storedTx ? JSON.parse(storedTx) : this.seedTransactions();
+
+            // Sauvegarder SEULEMENT les donn?es qui n'existaient pas encore
+            if (!storedEvents) localStorage.setItem('events', JSON.stringify(this.events));
+            if (!storedTeams) localStorage.setItem('teams', JSON.stringify(this.teams));
+            if (!storedGallery) localStorage.setItem('gallery', JSON.stringify(this.gallery));
+            if (!storedMessages) localStorage.setItem('messages', JSON.stringify(this.messages));
+            if (!storedTx) localStorage.setItem('transactions', JSON.stringify(this.transactions));
+            // NE PAS r??crire users ici pour pr?server ceux de l'inscription
+
+        } catch(e) {
+            console.error('loadData error:', e);
+            this.toast('Erreur lors du chargement des donn?es', 'error');
+        }
+    }
+
+    saveAll() {
+        localStorage.setItem('users', JSON.stringify(this.users));
+        localStorage.setItem('events', JSON.stringify(this.events));
+        localStorage.setItem('teams', JSON.stringify(this.teams));
+        localStorage.setItem('gallery', JSON.stringify(this.gallery));
+        localStorage.setItem('messages', JSON.stringify(this.messages));
+        localStorage.setItem('transactions', JSON.stringify(this.transactions));
+    }
+
+    /* ===== SEED DATA ===== */
+    seedUsers() {
+        return [
+            { id:1, nom:'Benali', prenom:'Karim', email:'karim@test.com', telephone:'0555123456',
+              role:'athlete', userType:'athlete', status:'pending', sexe:'M', dateNaissance:'1995-03-15',
+              adresse:'Alger Centre', sport:'Football', niveau:'Avanc?',
+              documents:[
+                {id:101, name:"Carte d'identit?", type:'pdf', date:'2024-01-15', size:'2.3 MB', verified:true, verifiedDate:'2024-01-16', description:'CIN N? 123456'},
+                {id:102, name:'Certificat m?dical', type:'pdf', date:'2024-01-15', size:'1.1 MB', verified:false, expiryDate:'2025-06-15'},
+                {id:103, name:"Photo d'identit?", type:'image', date:'2024-01-15', size:'0.8 MB', verified:true}
+              ], createdAt:'2024-01-15T10:30:00', lastLogin:'2024-02-20T14:30:00' },
+
+            { id:2, nom:'Moussa', prenom:'Leila', email:'leila@test.com', telephone:'0555234567',
+              role:'coach', userType:'coach', status:'active', sexe:'F', specialite:'Natation', experience:'5 ans',
+              documents:[
+                {id:201, name:"Dipl?me d'entra?neur", type:'pdf', date:'2023-12-10', size:'3.5 MB', verified:true, verifiedDate:'2023-12-12'},
+                {id:202, name:'CV professionnel', type:'pdf', date:'2023-12-10', size:'1.2 MB', verified:true},
+                {id:203, name:'Certificat m?dical', type:'pdf', date:'2023-12-10', size:'0.9 MB', verified:true, expiryDate:'2025-12-10'},
+                {id:204, name:'Photo professionnelle', type:'image', date:'2023-12-10', size:'1.5 MB', verified:true}
+              ], createdAt:'2023-12-10T09:15:00', lastLogin:'2024-02-21T09:15:00' },
+
+            { id:3, nom:'Touati', prenom:'Yacine', email:'yacine@test.com', telephone:'0555345678',
+              role:'parent', userType:'parent', status:'active', sexe:'M',
+              enfants:[{nom:'Touati', prenom:'Sofia', age:12, sport:'Natation'}],
+              documents:[
+                {id:301, name:"Carte d'identit?", type:'pdf', date:'2024-01-05', size:'2.1 MB', verified:true},
+                {id:302, name:'Acte de naissance Sofia', type:'pdf', date:'2024-01-05', size:'1.8 MB', verified:true},
+                {id:303, name:'Certificat m?dical Sofia', type:'pdf', date:'2024-01-05', size:'1.0 MB', verified:false, expiryDate:'2025-01-05'},
+                {id:304, name:'Photo de famille', type:'image', date:'2024-01-05', size:'2.2 MB', verified:false}
+              ], createdAt:'2024-01-05T14:20:00', lastLogin:'2024-02-19T10:45:00' },
+
+            { id:4, nom:'Ziani', prenom:'Mohamed', email:'mohamed@test.com', telephone:'0555567890',
+              role:'athlete', userType:'athlete', status:'pending', sexe:'M', dateNaissance:'2000-07-22',
+              adresse:'Bab Ezzouar', sport:'Basketball', niveau:'Interm?diaire',
+              documents:[
+                {id:501, name:"Carte d'identit?", type:'pdf', date:'2024-02-01', size:'2.4 MB', verified:false},
+                {id:502, name:'Certificat m?dical', type:'pdf', date:'2024-02-01', size:'1.3 MB', verified:false, expiryDate:'2025-02-01'},
+                {id:503, name:'Photo', type:'image', date:'2024-02-01', size:'0.9 MB', verified:false}
+              ], createdAt:'2024-02-01T11:45:00', lastLogin:null },
+
+            { id:5, nom:'Hadj', prenom:'Sara', email:'sara@test.com', telephone:'0555678901',
+              role:'athlete', userType:'athlete', status:'active', sexe:'F', dateNaissance:'2002-11-08',
+              sport:'Natation', niveau:'Avanc?',
+              documents:[
+                {id:601, name:"Carte d'identit?", type:'pdf', date:'2024-01-20', size:'1.9 MB', verified:true},
+                {id:602, name:'Certificat m?dical', type:'pdf', date:'2024-01-20', size:'1.1 MB', verified:true, expiryDate:'2025-01-20'}
+              ], createdAt:'2024-01-20T16:00:00', lastLogin:'2024-02-22T11:30:00' }
+        ];
+    }
+
+    seedEvents() {
+        return [
+            {id:1, title:'Tournoi Annuel de Football', date:'2025-03-15', endDate:'2025-03-20', type:'competition', sport:'Football', location:'Stade Municipal', description:'Tournoi inter-clubs ??" Cat?gories U15, U17, U20', maxParticipants:100, registered:45, coach:'Leila Moussa', price:2000, schedule:'15:00 - 19:00', status:'confirmed'},
+            {id:2, title:'Portes Ouvertes Manar Sport', date:'2025-03-25', type:'event', location:'Complexe Manar', description:"D?couvrez nos installations et rencontrez nos coachs", maxParticipants:500, registered:120, schedule:'10:00 - 18:00', status:'open'},
+            {id:3, title:'Stage Intensif Natation', date:'2025-04-05', endDate:'2025-04-07', type:'training', sport:'Natation', location:'Piscine Olympique', description:'Stage intensif avec coach professionnel', maxParticipants:30, registered:18, coach:'Leila Moussa', price:5000, schedule:'09:00 - 12:00', status:'open'},
+            {id:4, title:'Match Amical Basketball', date:'2025-03-30', type:'competition', sport:'Basketball', location:'Salle Omnisports', description:"Match contre l'?quipe de Mostaganem", maxParticipants:30, registered:15, schedule:'18:00 - 20:00', status:'confirmed'},
+            {id:5, title:'R?union Parents-Coachs', date:'2025-03-28', type:'event', location:'Salle de r?union', description:'Point sur la saison en cours', maxParticipants:50, registered:32, schedule:'18:30 - 20:00', status:'open'}
+        ];
+    }
+
+    seedTeams() {
+        return [
+            {id:1, name:'Football U20', sport:'Football', coach:'Karim Benali', members:18, maxMembers:22, category:'Jeunes', level:'Comp?tition', schedule:'Lun, Mer, Ven 18h-20h', achievements:['Champion r?gional 2023', 'Finaliste coupe 2022']},
+            {id:2, name:'Basketball Senior', sport:'Basketball', coach:'Leila Moussa', members:15, maxMembers:15, category:'Adultes', level:'Avanc?', schedule:'Mar, Jeu, Sam 19h-21h', achievements:['3?me place nationale 2023']},
+            {id:3, name:'Natation Jeunes', sport:'Natation', coach:'Amine Slimani', members:12, maxMembers:20, category:'Jeunes', level:'D?butant', schedule:'Lun, Mer 16h-18h', achievements:[]},
+            {id:4, name:'Athl?tisme Tous Niveaux', sport:'Athl?tisme', coach:'Sofiane Hadj', members:8, maxMembers:15, category:'Tous ?ges', level:'Tous niveaux', schedule:'Mar, Jeu 17h-19h', achievements:[]}
+        ];
+    }
+
+    seedGallery() {
+        return [
+            {id:1, title:'Victoire en finale r?gionale', description:"??quipe U20 apr?s la victoire", date:'2024-11-15', category:'competitions', author:'Service Com', likes:45, views:230},
+            {id:2, title:'Entra?nement basketball', description:"S?ance senior f?minine", date:'2024-11-10', category:'entrainements', author:'Leila Moussa', likes:32, views:156},
+            {id:3, title:'Journ?e portes ouvertes', description:"D?couverte des installations", date:'2024-11-05', category:'evenements', author:'Service Com', likes:67, views:412},
+            {id:4, title:'Stage natation jeunes', description:"Stage intensif d'?t?", date:'2024-11-01', category:'formations', author:'Leila Moussa', likes:28, views:189},
+            {id:5, title:'Remise des prix', description:"C?r?monie de cl?ture de saison", date:'2024-10-25', category:'evenements', author:'Admin', likes:89, views:567}
+        ];
+    }
+
+    seedMessages() {
+        return [
+            {id:1, name:'Ahmed Benali', email:'ahmed@test.com', subject:"Demande d'inscription", message:"Je souhaite inscrire mon fils de 12 ans au football. Quels sont les documents n?cessaires ?", date:'2024-02-20T10:30:00', read:false},
+            {id:2, name:'Samira Moussa', email:'samira@test.com', subject:'Question sur les tarifs', message:'Bonjour, int?ress?e par les cours de natation adulte. Tarifs et horaires ?', date:'2024-02-19T15:45:00', read:true},
+            {id:3, name:'Rachid Touati', email:'rachid@test.com', subject:'Demande de stage', message:"Y a-t-il des stages basketball pendant les vacances de printemps ?", date:'2024-02-18T09:20:00', read:false},
+            {id:4, name:'Nadia Ziani', email:'nadia@test.com', subject:"Probl?me de connexion", message:"Je n'arrive pas ? me connecter ? mon espace parent. Pouvez-vous m'aider ?", date:'2024-02-17T14:10:00', read:false}
+        ];
+    }
+
+    seedTransactions() {
+        return [
+            {id:1, date:'2024-02-20', member:'Karim Benali', type:'Inscription', amount:5000, status:'pay?'},
+            {id:2, date:'2024-02-19', member:'Leila Moussa', type:'Stage natation', amount:5000, status:'pay?'},
+            {id:3, date:'2024-02-18', member:'Yacine Touati', type:'Inscription enfant', amount:3500, status:'en attente'},
+            {id:4, date:'2024-02-17', member:'Mohamed Ziani', type:'Inscription', amount:5000, status:'pay?'},
+            {id:5, date:'2024-02-16', member:'Sara Hadj', type:'Stage', amount:5000, status:'en attente'}
+        ];
+    }
+
+    /* ===== STATS ===== */
+    updateStats() {
+        const nonAdmin = this.users.filter(u => (u.role || u.userType) !== 'admin');
+        const active = nonAdmin.filter(u => u.status === 'active').length;
+        const pending = nonAdmin.filter(u => u.status === 'pending').length;
+        const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+        const newThisWeek = nonAdmin.filter(u => new Date(u.createdAt) > weekAgo).length;
+        const men = nonAdmin.filter(u => u.sexe === 'M').length;
+        const women = nonAdmin.filter(u => u.sexe === 'F').length;
+
+        const upd = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+
+        upd('statMembers', active);
+        upd('statNew', newThisWeek);
+        upd('statEvents', this.events.length);
+        upd('statPending', pending);
+        upd('pendingBadge', pending);
+        const unread = this.messages.filter(m => !m.read).length;
+        upd('messageBadge', unread);
+        const notifDot = document.getElementById('notifDot');
+        if (notifDot) notifDot.style.display = (pending + unread > 0) ? 'block' : 'none';
+
+        const paidTotal = this.transactions.filter(t => t.status === 'pay?').reduce((a, t) => a + t.amount, 0);
+        const pendingTotal = this.transactions.filter(t => t.status === 'en attente').reduce((a, t) => a + t.amount, 0);
+        const rate = (paidTotal + pendingTotal) > 0 ? Math.round(paidTotal / (paidTotal + pendingTotal) * 100) : 0;
+        upd('finRevenue', paidTotal.toLocaleString());
+        upd('finPending', pendingTotal.toLocaleString());
+        upd('finRate', rate + '%');
+
+        upd('statMen', men);
+        upd('statWomen', women);
+
+        const ages = nonAdmin.filter(u => u.dateNaissance).map(u => {
+            const b = new Date(u.dateNaissance); const t = new Date();
+            let a = t.getFullYear() - b.getFullYear();
+            if (t.getMonth() < b.getMonth() || (t.getMonth() === b.getMonth() && t.getDate() < b.getDate())) a--;
+            return a;
+        });
+        upd('statAvgAge', ages.length ? Math.round(ages.reduce((a,b) => a+b, 0) / ages.length) : 0);
+    }
+
+    /* ===== CHARTS ===== */
+    initCharts() {
+        if (typeof Chart === 'undefined') return;
+
+        const mkChart = (id, config) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (this.charts[id]) this.charts[id].destroy();
+            this.charts[id] = new Chart(el.getContext('2d'), config);
+        };
+
+        const commonOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
+
+        mkChart('registrationsChart', {
+            type: 'line',
+            data: {
+                labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+                datasets: [{ label:'Inscriptions', data:[5,8,12,7,15,20,10],
+                    borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.08)',
+                    tension:0.4, fill:true, pointBackgroundColor:'#3b82f6', pointRadius:4 }]
+            },
+            options: { ...commonOpts, scales: { y: { beginAtZero: true, grid: { color:'rgba(0,0,0,0.04)' } }, x: { grid: { display: false } } } }
+        });
+
+        mkChart('sportsChart', {
+            type: 'doughnut',
+            data: {
+                labels:['Football','Basketball','Natation','Athl?tisme'],
+                datasets: [{ data:[45,30,25,15], backgroundColor:['#1e3a8a','#f59e0b','#10b981','#7c3aed'], borderWidth:2, borderColor:'white' }]
+            },
+            options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ font:{ size:12 } } } } }
+        });
+
+        mkChart('revenueChart', {
+            type: 'bar',
+            data: {
+                labels:['Jan','F?v','Mar','Avr','Mai','Jun'],
+                datasets:[{ label:'Revenus (DZD)', data:[25000,32000,28000,35000,42000,48000],
+                    backgroundColor:'rgba(30,58,138,0.7)', borderRadius:8, borderSkipped:false }]
+            },
+            options: { ...commonOpts, scales: { y: { beginAtZero:true, grid:{ color:'rgba(0,0,0,0.04)' } }, x:{ grid:{ display:false } } } }
+        });
+
+        mkChart('ageChart', {
+            type: 'pie',
+            data: { labels:['<18','18-25','26-35','36-45','46+'], datasets:[{ data:[25,45,60,30,15], backgroundColor:['#3b82f6','#f59e0b','#10b981','#ef4444','#7c3aed'], borderWidth:2, borderColor:'white' }] },
+            options: { responsive:true, maintainAspectRatio:false }
+        });
+
+        mkChart('activityChart', {
+            type: 'radar',
+            data: { labels:['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'], datasets:[{ label:'Activit? (%)', data:[65,72,68,80,85,95,45], backgroundColor:'rgba(30,58,138,0.1)', borderColor:'#1e3a8a', pointBackgroundColor:'#1e3a8a' }] },
+            options: { responsive:true, maintainAspectRatio:false, scales:{ r:{ beginAtZero:true, max:100 } } }
+        });
+    }
+
+    /* ===== RENDER ALL ===== */
+    renderAll() {
+        this.updateStats();
+        this.renderRecentUsers();
+        this.renderUsersTable();
+        this.renderEventsList();
+        this.renderTeamsGrid();
+        this.renderGalleryGrid();
+        this.renderMessages();
+        this.renderTransactions();
+    }
+
+    /* ===== RECENT USERS ===== */
+    renderRecentUsers() {
+        const tbody = document.getElementById('recentUsersBody'); if (!tbody) return;
+        const recent = this.users.filter(u => (u.role||u.userType) !== 'admin').slice(0, 5);
+        tbody.innerHTML = recent.map(u => `
+            <tr>
+                <td><div class="user-cell">
+                    <div class="user-avatar-sm">${u.profilePicture ? `<img src="${u.profilePicture}" alt="${u.prenom} ${u.nom}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : `${(u.prenom||'?').charAt(0)}${(u.nom||'').charAt(0)}`}</div>
+                    <div class="user-cell-info">
+                        <strong>${u.prenom} ${u.nom}</strong>
+                        <span>${u.email}</span>
+                    </div>
+                </div></td>
+                <td>${u.email}</td>
+                <td><span class="badge ${this.typeBadge(u.role||u.userType)}">${this.typeLabel(u.role||u.userType)}</span></td>
+                <td>${new Date(u.createdAt).toLocaleDateString('fr-FR')}</td>
+                <td>${this.statusBadge(u.status)}</td>
+                <td>
+                    <button class="btn-action btn-view" onclick="app.viewUser(${u.id})" title="Voir"><i class="fas fa-eye"></i></button>
+                    ${u.status==='pending' ? `<button class="btn-action btn-approve" onclick="app.approveUser(${u.id})" title="Approuver"><i class="fas fa-check"></i></button>` : ''}
+                </td>
+            </tr>`).join('');
+    }
+
+    /* ===== USERS TABLE ===== */
+    renderUsersTable() {
+        const tbody = document.getElementById('usersTableBody'); if (!tbody) return;
+
+        const search = (document.getElementById('searchUser')?.value || '').toLowerCase();
+        const typeF = document.getElementById('filterType')?.value || '';
+        const statusF = document.getElementById('filterStatus')?.value || '';
+        const docF = document.getElementById('filterDocStatus')?.value || '';
+
+        let list = this.users.filter(u => (u.role||u.userType) !== 'admin');
+        if (search) list = list.filter(u => `${u.prenom} ${u.nom} ${u.email}`.toLowerCase().includes(search));
+        if (typeF) list = list.filter(u => (u.role||u.userType) === typeF);
+        if (statusF) list = list.filter(u => u.status === statusF);
+        if (docF === 'verified') list = list.filter(u => u.documents?.every(d => d.verified));
+        if (docF === 'unverified') list = list.filter(u => u.documents?.some(d => !d.verified));
+        if (docF === 'expired') list = list.filter(u => u.documents?.some(d => d.expiryDate && new Date(d.expiryDate) < new Date()));
+
+        const start = (this.currentPage - 1) * this.itemsPerPage;
+        const page = list.slice(start, start + this.itemsPerPage);
+
+        tbody.innerHTML = page.map(u => {
+            // Compter docs depuis u.documents[] + u.files{} (format inscription)
+            const docs = u.documents || [];
+            const filesCount = u.files ? Object.keys(u.files).filter(k => u.files[k] && u.files[k].name).length : 0;
+            const totalDocs = docs.length + filesCount;
+            const unverified = docs.filter(d => !d.verified).length + (filesCount > 0 ? filesCount : 0);
+            const expired = docs.filter(d => d.expiryDate && new Date(d.expiryDate) < new Date()).length;
+            const docBadge = totalDocs === 0
+                ? `<span class="badge badge-gray"><i class="fas fa-folder"></i> Aucun</span>`
+                : expired > 0
+                    ? `<span class="badge badge-danger"><i class="fas fa-exclamation-triangle"></i> ${expired} expir?</span>`
+                    : unverified > 0
+                        ? `<span class="badge badge-warning"><i class="fas fa-clock"></i> ${unverified} en attente</span>`
+                        : `<span class="badge badge-success"><i class="fas fa-check"></i> ${totalDocs} v?rifi?s</span>`;
+            return `
+            <tr>
+                <td style="color:var(--gray-500);font-size:0.8rem">#${u.id}</td>
+                <td><div class="user-cell">
+                    <div class="user-avatar-sm">${u.profilePicture ? `<img src="${u.profilePicture}" alt="${u.prenom} ${u.nom}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">` : `${(u.prenom||'?').charAt(0)}${(u.nom||'').charAt(0)}`}</div>
+                    <div class="user-cell-info">
+                        <strong>${u.prenom} ${u.nom}</strong>
+                        <span>${this.typeLabel(u.role||u.userType)}</span>
+                    </div>
+                </div></td>
+                <td style="font-size:0.82rem">${u.email}</td>
+                <td><span class="badge ${this.typeBadge(u.role||u.userType)}">${this.typeLabel(u.role||u.userType)}</span></td>
+                <td style="font-size:0.82rem">${u.telephone || '??"'}</td>
+                <td>${this.statusBadge(u.status)}</td>
+                <td>${docBadge}</td>
+                <td>
+                    <div style="display:flex;gap:4px">
+                        <button class="btn-action btn-view" onclick="app.viewUser(${u.id})" title="Voir"><i class="fas fa-eye"></i></button>
+                        <button class="btn-action btn-edit" onclick="app.showEditUserModal(${u.id})" title="Modifier"><i class="fas fa-edit"></i></button>
+                        <button class="btn-action btn-delete" onclick="app.deleteUser(${u.id})" title="Supprimer"><i class="fas fa-trash"></i></button>
+                        ${u.status==='pending' ? `<button class="btn-action btn-approve" onclick="app.approveUser(${u.id})" title="Approuver"><i class="fas fa-check"></i></button>` : ''}
+                        ${unverified > 0 ? `<button class="btn-action btn-verify" onclick="app.verifyAllUserDocs(${u.id})" title="V?rifier docs (${unverified})"><i class="fas fa-check-double"></i></button>` : ''}
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
+        this.renderPagination(list.length);
+    }
+
+    renderPagination(total) {
+        const container = document.getElementById('paginationContainer'); if (!container) return;
+        const pages = Math.ceil(total / this.itemsPerPage);
+        let html = '';
+        for (let i = 1; i <= pages; i++) {
+            html += `<button class="page-btn ${i === this.currentPage ? 'active' : ''}" onclick="app.changePage(${i})">${i}</button>`;
+        }
+        container.innerHTML = html;
+    }
+
+    /* ===== EVENTS ===== */
+    renderEventsList() {
+        const container = document.getElementById('eventsList'); if (!container) return;
+        const sorted = [...this.events].sort((a,b) => new Date(a.date) - new Date(b.date));
+        container.innerHTML = sorted.map(ev => {
+            const rate = Math.round(ev.registered / ev.maxParticipants * 100);
+            const typeColors = {competition:'var(--danger)', training:'var(--success)', event:'var(--primary-light)'};
+            const typeLabels = {competition:'Comp?tition', training:'Entra?nement', event:'??v?nement'};
+            return `
+            <div class="event-item type-${ev.type}">
+                <div class="event-head">
+                    <div>
+                        <span class="badge ${ev.type==='competition'?'badge-danger':ev.type==='training'?'badge-success':'badge-primary'}" style="margin-bottom:6px">${typeLabels[ev.type]||ev.type}</span>
+                        <div class="event-title">${ev.title}</div>
+                    </div>
+                    <span class="event-date-badge"><i class="fas fa-calendar"></i>${new Date(ev.date).toLocaleDateString('fr-FR')}${ev.endDate ? ' → ' + new Date(ev.endDate).toLocaleDateString('fr-FR') : ''}</span>
+                </div>
+                <div class="event-meta">
+                    <span class="event-meta-item"><i class="fas fa-map-marker-alt"></i>${ev.location}</span>
+                    ${ev.schedule ? `<span class="event-meta-item"><i class="fas fa-clock"></i>${ev.schedule}</span>` : ''}
+                    ${ev.sport ? `<span class="event-meta-item"><i class="fas fa-futbol"></i>${ev.sport}</span>` : ''}
+                    ${ev.coach ? `<span class="event-meta-item"><i class="fas fa-user-tie"></i>${ev.coach}</span>` : ''}
+                    ${ev.price ? `<span class="event-meta-item"><i class="fas fa-tag"></i>${ev.price.toLocaleString()} DZD</span>` : ''}
+                </div>
+                <p style="color:var(--gray-500);font-size:0.83rem;margin-bottom:10px">${ev.description}</p>
+                <div>
+                    <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--gray-500);margin-bottom:4px">
+                        <span>Inscriptions: ${ev.registered}/${ev.maxParticipants}</span><span>${rate}%</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${rate}%"></div></div>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:14px">
+                    <button class="btn btn-primary btn-sm" onclick="app.showEditEventModal(${ev.id})"><i class="fas fa-edit"></i> Modifier</button>
+                    <button class="btn btn-danger btn-sm" onclick="app.deleteEvent(${ev.id})"><i class="fas fa-trash"></i> Supprimer</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    /* ===== TEAMS ===== */
+    renderTeamsGrid() {
+        const container = document.getElementById('teamsGrid'); if (!container) return;
+        const sportIcons = {Football:'fas fa-futbol', Basketball:'fas fa-basketball-ball', Natation:'fas fa-swimmer', 'Athl?tisme':'fas fa-running'};
+        container.innerHTML = this.teams.map(t => {
+            const pct = Math.round(t.members / t.maxMembers * 100);
+            const isFull = t.members >= t.maxMembers;
+            return `
+            <div class="team-card">
+                <div class="team-head">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                        <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center">
+                            <i class="${sportIcons[t.sport]||'fas fa-users'}"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin:0">${t.name}</h3>
+                            <p>${t.sport}</p>
+                        </div>
+                    </div>
+                    <span class="badge ${isFull?'badge-danger':'badge-success'}" style="background:rgba(255,255,255,0.2);color:white">
+                        ${isFull ? 'Complet' : 'Places disponibles'}
+                    </span>
+                </div>
+                <div class="team-body">
+                    <div class="team-meta">
+                        <div class="team-meta-item"><i class="fas fa-user-tie"></i> Coach: <strong>${t.coach}</strong></div>
+                        <div class="team-meta-item"><i class="fas fa-users"></i> ${t.members}/${t.maxMembers} membres</div>
+                        <div class="team-meta-item"><i class="fas fa-clock"></i> ${t.schedule}</div>
+                        <div class="team-meta-item"><i class="fas fa-tag"></i> ${t.category} ??? ${t.level}</div>
+                    </div>
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--gray-500);margin-bottom:4px">
+                            <span>Taux d'occupation</span><span>${pct}%</span>
+                        </div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${isFull?'var(--danger)':'var(--success)'}"></div></div>
+                    </div>
+                    ${t.achievements?.length ? `<div style="margin-top:12px;font-size:0.75rem;color:var(--gray-500)"><i class="fas fa-trophy" style="color:var(--accent)"></i> ${t.achievements.join(' ??? ')}</div>` : ''}
+                    <div style="display:flex;gap:8px;margin-top:14px">
+                        <button class="btn btn-primary btn-sm" onclick="app.showEditTeamModal(${t.id})"><i class="fas fa-edit"></i> Modifier</button>
+                        <button class="btn btn-danger btn-sm" onclick="app.deleteTeam(${t.id})"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>`;
+        }).join('') || '<p style="color:var(--gray-500);grid-column:1/-1;text-align:center;padding:40px">Aucune ?quipe</p>';
+    }
+
+    /* ===== GALLERY ===== */
+    renderGalleryGrid() {
+        const container = document.getElementById('galleryGrid'); if (!container) return;
+        const catColors = {competitions:'#ef4444', entrainements:'#10b981', evenements:'#3b82f6', formations:'#7c3aed'};
+        const catIcons = {competitions:'fas fa-trophy', entrainements:'fas fa-dumbbell', evenements:'fas fa-calendar-star', formations:'fas fa-graduation-cap'};
+        if (!this.gallery.length) {
+            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--gray-500)"><i class="fas fa-images" style="font-size:3rem;display:block;margin-bottom:12px;opacity:0.3"></i><p style="font-weight:600;margin-bottom:6px">Aucune photo</p><small>Cliquez sur "Ajouter une image" pour publier votre premi?re photo</small></div>';
+            return;
+        }
+        container.innerHTML = this.gallery.map(item => {
+            const hasImg = item.dataUrl;
+            const ph = !hasImg ? `<div class="gallery-placeholder" style="background:linear-gradient(135deg,${catColors[item.category]||'#667eea'}22,${catColors[item.category]||'#764ba2'}11)"><i class="${catIcons[item.category]||'fas fa-image'}" style="color:${catColors[item.category]||'#667eea'};font-size:2.5rem"></i><span style="color:${catColors[item.category]||'#667eea'}">${item.title.substring(0,20)}</span></div>` : '';
+            const img = hasImg ? `<img class="gallery-real-img" src="${item.dataUrl}" alt="${item.title}" loading="lazy">` : '';
+            return `<div class="gallery-item" onclick="app.viewImage(${item.id})">${img}${ph}<div class="gallery-overlay"><div class="gallery-overlay-title">${item.title}</div><div class="gallery-overlay-meta"><span><i class="fas fa-heart" style="color:#f87171"></i> ${item.likes}</span><span><i class="fas fa-eye"></i> ${item.views}</span><span>${new Date(item.date).toLocaleDateString('fr-FR')}</span></div></div></div>`;
+        }).join('');
+    }
+
+    /* ===== MESSAGES ===== */
+    renderMessages() {
+        const container = document.getElementById('messagesList'); if (!container) return;
+        const statusF = document.getElementById('filterMsgStatus')?.value || '';
+        const search = (document.getElementById('searchMsg')?.value || '').toLowerCase();
+
+        let list = [...this.messages].sort((a,b) => new Date(b.date) - new Date(a.date));
+        if (statusF === 'unread') list = list.filter(m => !m.read);
+        if (statusF === 'read') list = list.filter(m => m.read);
+        if (search) list = list.filter(m => `${m.name} ${m.subject} ${m.message}`.toLowerCase().includes(search));
+
+        if (!list.length) {
+            container.innerHTML = '<div style="text-align:center;padding:50px;color:var(--gray-500)"><i class="fas fa-inbox" style="font-size:2rem;display:block;margin-bottom:10px"></i>Aucun message trouv?</div>';
+            return;
+        }
+
+        container.innerHTML = list.map(msg => `
+            <div class="message-card ${!msg.read ? 'unread' : ''}">
+                <div class="msg-head">
+                    <div class="msg-sender">
+                        <strong>${msg.name}</strong>
+                        <span>${msg.email}</span>
+                        ${!msg.read ? '<span class="badge badge-primary" style="margin-left:8px">Nouveau</span>' : ''}
+                    </div>
+                    <span class="msg-date">${new Date(msg.date).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+                </div>
+                <div class="msg-subject">${msg.subject}</div>
+                <div class="msg-text">${msg.message}</div>
+                <div class="msg-actions">
+                    ${!msg.read ? `<button class="btn btn-primary btn-sm" onclick="app.markRead(${msg.id})"><i class="fas fa-check"></i> Marquer lu</button>` : ''}
+                    <button class="btn btn-success btn-sm" onclick="app.replyMessage(${msg.id})"><i class="fas fa-reply"></i> R?pondre</button>
+                    <button class="btn btn-danger btn-sm" onclick="app.deleteMessage(${msg.id})"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>`).join('');
+    }
+
+    /* ===== TRANSACTIONS ===== */
+    renderTransactions() {
+        const tbody = document.getElementById('transactionsBody'); if (!tbody) return;
+        tbody.innerHTML = this.transactions.slice(0,10).map(t => `
+            <tr>
+                <td>${new Date(t.date).toLocaleDateString('fr-FR')}</td>
+                <td>${t.member}</td>
+                <td><span class="badge badge-info">${t.type}</span></td>
+                <td><strong>${t.amount.toLocaleString()} DZD</strong></td>
+                <td><span class="badge ${t.status==='pay?'?'badge-success':'badge-warning'}">${t.status}</span></td>
+                <td>
+                    ${t.status==='en attente'?`<button class="btn btn-success btn-sm" onclick="app.markPaid(${t.id})"><i class="fas fa-check"></i> Marquer pay?</button>`:''}
+                </td>
+            </tr>`).join('');
+    }
+
+    /* ===== CALENDAR ===== */
+    renderCalendar() {
+        const container = document.getElementById('calDays');
+        const title = document.getElementById('calMonthYear');
+        if (!container || !title) return;
+
+        const y = this.currentCalDate.getFullYear();
+        const m = this.currentCalDate.getMonth();
+        title.textContent = new Date(y, m).toLocaleDateString('fr-FR', {month:'long', year:'numeric'});
+
+        const firstDay = new Date(y, m, 1).getDay();
+        const lastDate = new Date(y, m+1, 0).getDate();
+        const prevLast = new Date(y, m, 0).getDate();
+        const offset = firstDay === 0 ? 6 : firstDay - 1;
+
+        let days = [];
+        for (let i = offset; i > 0; i--) days.push({d:prevLast-i+1, cur:false, dt:new Date(y,m-1,prevLast-i+1)});
+        for (let i = 1; i <= lastDate; i++) days.push({d:i, cur:true, dt:new Date(y,m,i), today:this.isToday(y,m,i)});
+        for (let i = 1; days.length < 42; i++) days.push({d:i, cur:false, dt:new Date(y,m+1,i)});
+
+        container.innerHTML = days.map(day => {
+            const evs = this.events.filter(e => new Date(e.date).toDateString() === day.dt.toDateString());
+            return `
+            <div class="cal-day ${day.today?'today':''} ${!day.cur?'other-month':''}">
+                <div class="cal-day-num">${day.d}</div>
+                ${evs.map(e => `<div class="cal-event ${e.type}" onclick="app.viewEvent(${e.id})" title="${e.title}">${e.title.substring(0,14)}</div>`).join('')}
+            </div>`;
+        }).join('');
+    }
+
+    isToday(y, m, d) {
+        const t = new Date();
+        return t.getFullYear()===y && t.getMonth()===m && t.getDate()===d;
+    }
+
+    /* ===== VIEW USER MODAL ===== */
+    viewUser(id) {
+        const u = this.users.find(x => x.id === id); if (!u) return;
+
+        // Fusionner u.documents (tableau) et u.files (objet ancien format inscription)
+        let allDocs = [...(u.documents || [])];
+
+        // R?cup?rer les fichiers de l'ancien format u.files (cl? ??' {name,size,type,dataUrl?})
+        if (u.files && typeof u.files === 'object') {
+            const fileLabels = {
+                diplomeCoach: "Dipl?me d'entra?neur",
+                certificatMedicalCoach: 'Certificat m?dical',
+                photoCoach: 'Photo professionnelle',
+                extraitNaissanceCoach: 'Extrait de naissance',
+                certificatMedicalAthlete: 'Certificat m?dical',
+                photoAthlete: "Photo d'identit?",
+                extraitNaissanceAthlete: 'Extrait de naissance'
+            };
+            Object.entries(u.files).forEach(([key, f]) => {
+                if (!f || !f.name) return;
+                // Ne pas dupliquer si d?j? dans documents
+                const alreadyIn = allDocs.some(d => d.fileName === f.name || d.name === (fileLabels[key] || f.name));
+                if (!alreadyIn) {
+                    allDocs.push({
+                        id: key,
+                        name: fileLabels[key] || f.name,
+                        fileName: f.name,
+                        mimeType: f.type || '',
+                        size: f.size ? this.formatSize(f.size) : '?',
+                        date: u.registrationDate ? u.registrationDate.split('T')[0] : (u.createdAt||'').split('T')[0],
+                        dataUrl: f.dataUrl || null,
+                        preview: f.preview || null,
+                        verified: false,
+                        source: 'inscription'
+                    });
+                }
+            });
+        }
+        if (!u.profilePicture) {
+            const photoDoc = allDocs.find(d => /photo/i.test(d.name));
+            if (photoDoc?.preview) u.profilePicture = photoDoc.preview;
+        }
+
+        const renderDoc = (doc) => {
+            const previewSource = doc.preview || doc.dataUrl;
+            const isExpired = doc.expiryDate && new Date(doc.expiryDate) < new Date();
+            const st = doc.verified ? 'verified' : isExpired ? 'expired' : 'pending';
+            const stLabel = doc.verified ? '<i class="fas fa-check-circle"></i> V?rifi?' : isExpired ? '<i class="fas fa-exclamation-circle"></i> Expir?' : '<i class="fas fa-clock"></i> En attente';
+
+            let preview = '';
+            if (previewSource) {
+                const isPdf = doc.mimeType === 'application/pdf' || doc.fileName?.toLowerCase().endsWith('.pdf');
+                const isImg = doc.mimeType?.startsWith('image/') || previewSource.startsWith('data:image');
+                if (isPdf) {
+                    preview = `<iframe src="${previewSource}" style="width:100%;height:110px;border-radius:8px;border:1px solid var(--gray-200);margin:8px 0" title="${doc.name}"></iframe>`;
+                } else if (isImg) {
+                    preview = `<img src="${previewSource}" alt="${doc.name}" style="width:100%;max-height:110px;object-fit:cover;border-radius:8px;margin:8px 0;cursor:zoom-in" onclick="window.open('${previewSource}','_blank')" title="Cliquer pour agrandir">`;
+                }
+            } else {
+                preview = `<div style="background:var(--gray-50);border-radius:8px;padding:12px;margin:8px 0;text-align:center;font-size:0.75rem;color:var(--gray-500)"><i class="fas fa-exclamation-triangle" style="color:var(--warning);display:block;font-size:1.3rem;margin-bottom:4px"></i>Fichier non disponible<br><small>Ancienne inscription sans fichier enregistr?</small></div>`;
+            }
+
+            const isPdf = (doc.mimeType || '').includes('pdf') || (doc.fileName||'').endsWith('.pdf');
+            const isImg = (doc.mimeType || '').startsWith('image/');
+            const icon = isPdf ? 'fa-file-pdf' : isImg ? 'fa-file-image' : 'fa-file-alt';
+            const typeTag = isPdf ? 'PDF' : isImg ? 'IMAGE' : 'FICHIER';
+            const tagClass = isPdf ? 'pdf' : isImg ? 'image' : 'file';
+            const docSource = doc.source === 'inscription' ? '<span style="font-size:0.65rem;background:var(--primary-pale);color:var(--primary);padding:1px 6px;border-radius:10px;display:inline-block;margin-top:3px">Inscription</span>' : '';
+
+            return `<div class="doc-card">
+                <span class="doc-type-tag ${tagClass}">${typeTag}</span>
+                <div class="doc-icon"><i class="fas ${icon}"></i></div>
+                <div class="doc-name">${doc.name}</div>
+                ${docSource}
+                ${preview}
+                <div class="doc-meta">${doc.date ? new Date(doc.date).toLocaleDateString('fr-FR') : '??"'} ??? ${doc.size||'?'}</div>
+                ${doc.description ? `<div style="font-size:0.72rem;color:var(--gray-500);margin-top:3px">${doc.description}</div>` : ''}
+                ${doc.expiryDate ? `<div style="font-size:0.7rem;color:${isExpired?'var(--danger)':'var(--gray-500)'};margin-top:3px"><i class="fas fa-clock"></i> Expire: ${new Date(doc.expiryDate).toLocaleDateString('fr-FR')}</div>` : ''}
+                <div class="doc-status ${st}">${stLabel}</div>
+                <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">
+                    ${previewSource ? `<a class="btn btn-ghost btn-sm" href="${previewSource}" download="${doc.fileName||doc.name}" style="flex:1;justify-content:center;text-decoration:none"><i class="fas fa-download"></i> T?l?charger</a>` : ''}
+                    ${!doc.verified ? `<button class="btn btn-success btn-sm" onclick="app.verifyDoc(${u.id},'${doc.id}')"><i class="fas fa-check"></i> V?rifier</button>` : ''}
+                    <button class="btn btn-danger btn-sm" onclick="app.removeDoc(${u.id},'${doc.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>`;
+        };
+
+        const docsHtml = allDocs.length
+            ? allDocs.map(renderDoc).join('')
+            : `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--gray-500)">
+                <i class="fas fa-folder-open" style="font-size:2rem;display:block;margin-bottom:8px;opacity:0.3"></i>
+                Aucun document
+               </div>`;
+
+        const enfantsHtml = u.enfants?.map(e => `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--gray-50);border-radius:10px;margin-bottom:8px">
+                <div style="width:36px;height:36px;background:var(--primary-pale);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--primary)"><i class="fas fa-child"></i></div>
+                <div><strong>${e.prenom} ${e.nom}</strong><div style="font-size:0.78rem;color:var(--gray-500)">${e.age} ans ??? ${e.sport}</div></div>
+            </div>`).join('') || '';
+
+        const unverified = allDocs.filter(d => !d.verified).length;
+
+        this.openModal('large', `<i class="fas fa-user-circle"></i> Profil ??" ${u.prenom} ${u.nom}`, `
+            <div style="display:flex;gap:20px;margin-bottom:24px;flex-wrap:wrap">
+                <div style="width:90px;height:90px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:linear-gradient(135deg,var(--primary),var(--primary-light));">
+                    ${u.profilePicture ? `<img src="${u.profilePicture}" alt="${u.prenom} ${u.nom}" style="width:100%;height:100%;object-fit:cover">` : `<span style="color:white;font-size:2rem;font-weight:800">${(u.prenom||'?').charAt(0)}</span>`}
+                </div>
+                <div style="flex:1">
+                    <h2 style="font-size:1.4rem;margin-bottom:6px">${u.prenom} ${u.nom}</h2>
+                    <span class="badge ${this.typeBadge(u.role||u.userType)}">${this.typeLabel(u.role||u.userType)}</span>
+                    ${this.statusBadge(u.status)}
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+                        <div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-envelope" style="color:var(--primary-light);width:14px"></i>${u.email}</div>
+                        <div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-phone" style="color:var(--primary-light);width:14px"></i>${u.telephone||'Non renseign?'}</div>
+                        ${u.dateNaissance?`<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-birthday-cake" style="color:var(--primary-light);width:14px"></i>${new Date(u.dateNaissance).toLocaleDateString('fr-FR')}</div>`:''}
+                        ${u.adresse?`<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-map-marker-alt" style="color:var(--primary-light);width:14px"></i>${u.adresse}</div>`:''}
+                        <div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-calendar" style="color:var(--primary-light);width:14px"></i>Inscrit le ${new Date(u.createdAt||u.registrationDate).toLocaleDateString('fr-FR')}</div>
+                        <div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-clock" style="color:var(--primary-light);width:14px"></i>${u.lastLogin?'Derni?re connexion: '+new Date(u.lastLogin).toLocaleDateString('fr-FR'):'Jamais connect?'}</div>
+                    </div>
+                </div>
+            </div>
+            ${u.sport?`<div style="background:var(--primary-pale);border-radius:10px;padding:14px;margin-bottom:16px"><strong style="font-size:0.85rem;color:var(--primary)"><i class="fas fa-futbol"></i> Infos sportives</strong><div style="margin-top:8px;display:flex;gap:10px"><span class="badge badge-primary">${u.sport}</span><span class="badge badge-info">${u.niveau||'Non sp?cifi?'}</span></div></div>`:''}
+            ${u.specialite?`<div style="background:var(--success-pale);border-radius:10px;padding:14px;margin-bottom:16px"><strong style="font-size:0.85rem;color:var(--success)"><i class="fas fa-chalkboard-teacher"></i> Infos coach</strong><div style="margin-top:8px;display:flex;gap:10px"><span class="badge badge-success">${u.specialite}</span><span class="badge badge-info">${u.experience||''}</span></div></div>`:''}
+            ${enfantsHtml?`<div style="margin-bottom:16px"><h4 style="font-size:0.85rem;font-weight:700;margin-bottom:10px;color:var(--gray-700)"><i class="fas fa-child" style="color:var(--primary-light)"></i> Enfants inscrits</h4>${enfantsHtml}</div>`:''}
+            <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                    <h4 style="font-size:0.85rem;font-weight:700;color:var(--gray-700)"><i class="fas fa-folder-open" style="color:var(--primary-light)"></i> Documents (${allDocs.length})</h4>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn btn-primary btn-sm" onclick="app.showAddDocModal(${u.id})"><i class="fas fa-plus"></i> Ajouter</button>
+                        ${unverified>0?`<button class="btn btn-success btn-sm" onclick="app.verifyAllUserDocs(${u.id});app.closeModal();setTimeout(()=>app.viewUser(${u.id}),100)"><i class="fas fa-check-double"></i> Tout v?rifier</button>`:''}
+                    </div>
+                </div>
+                <div class="docs-grid">${docsHtml}</div>
+            </div>
+        `, `
+            <button class="btn btn-secondary" onclick="app.closeModal()">Fermer</button>
+            <button class="btn btn-primary" onclick="app.showEditUserModal(${u.id});app.closeModal()"><i class="fas fa-edit"></i> Modifier</button>
+            ${u.status==='pending'?`<button class="btn btn-success" onclick="app.approveUser(${u.id});app.closeModal()"><i class="fas fa-check"></i> Approuver</button>`:''}
+        `);
+    }
+
+    /* ===== ADD DOCUMENT TO USER ===== */
+    showAddDocModal(userId) {
+        const u = this.users.find(x => x.id === userId); if (!u) return;
+        this._pendingDocData = null;
+        this.openModal('small', `<i class="fas fa-folder-plus"></i> Ajouter un document ??" ${u.prenom} ${u.nom}`, `
+            <div class="form-grid cols-1">
+                <div class="form-group">
+                    <label class="form-label">Fichier <span class="req">*</span></label>
+                    <div class="upload-zone" id="docUploadZone">
+                        <input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" onchange="app.handleDocFile(this,${userId})">
+                        <i class="fas fa-file-upload" id="docUploadIcon"></i>
+                        <strong id="docUploadLabel">Cliquer ou glisser un fichier</strong>
+                        <small>PDF, JPG, PNG ??" max 5 Mo</small>
+                        <img id="docImgPreview" class="upload-preview" style="display:none" alt="Aper?u">
+                        <div id="docPdfLabel" style="display:none;margin-top:10px;font-size:0.82rem;color:var(--success)"><i class="fas fa-check-circle"></i> PDF pr?t</div>
+                    </div>
+                </div>
+                <div class="form-group"><label class="form-label">Nom du document <span class="req">*</span></label><input type="text" class="form-control" id="docName" placeholder="Ex: Carte d'identit?, Certificat m?dical..."></div>
+                <div class="form-group"><label class="form-label">Date d'expiration (si applicable)</label><input type="date" class="form-control" id="docExpiry"></div>
+                <div class="form-group"><label class="form-label">Notes</label><input type="text" class="form-control" id="docDesc" placeholder="Description optionnelle"></div>
+            </div>`,
+            `<button class="btn btn-secondary" onclick="app.closeModal();app.viewUser(${userId})">Retour</button>
+             <button class="btn btn-success" onclick="app.submitAddDoc(${userId})"><i class="fas fa-save"></i> Enregistrer</button>`
+        );
+    }
+
+    handleDocFile(input, userId) {
+        const file = input.files[0]; if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { this.toast('Fichier trop grand (max 5 Mo)', 'warning'); input.value = ''; return; }
+        const reader = new FileReader();
+        reader.onload = e => {
+            this._pendingDocData = { dataUrl: e.target.result, mimeType: file.type, size: this.formatSize(file.size), fileName: file.name };
+            const isImg = file.type.startsWith('image/');
+            const preview = document.getElementById('docImgPreview');
+            const pdfLabel = document.getElementById('docPdfLabel');
+            const icon = document.getElementById('docUploadIcon');
+            const label = document.getElementById('docUploadLabel');
+            if (label) label.textContent = file.name;
+            if (icon) icon.style.display = 'none';
+            if (isImg && preview) { preview.src = e.target.result; preview.style.display = 'block'; }
+            else if (pdfLabel) pdfLabel.style.display = 'block';
+            const zone = document.getElementById('docUploadZone');
+            if (zone) zone.style.borderColor = 'var(--success)';
+            // Auto-fill name if empty
+            const nameInput = document.getElementById('docName');
+            if (nameInput && !nameInput.value) nameInput.value = file.name.replace(/\.[^.]+$/, '');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    submitAddDoc(userId) {
+        const u = this.users.find(x => x.id === userId); if (!u) return;
+        const name = document.getElementById('docName')?.value.trim();
+        if (!this._pendingDocData) { this.toast('Veuillez s?lectionner un fichier', 'warning'); return; }
+        if (!name) { this.toast('Nom du document obligatoire', 'warning'); return; }
+        if (!u.documents) u.documents = [];
+        u.documents.push({
+            id: Date.now(), name,
+            dataUrl: this._pendingDocData.dataUrl,
+            mimeType: this._pendingDocData.mimeType,
+            size: this._pendingDocData.size,
+            date: new Date().toISOString().split('T')[0],
+            description: document.getElementById('docDesc')?.value||'',
+            expiryDate: document.getElementById('docExpiry')?.value||undefined,
+            verified: false
+        });
+        this._pendingDocData = null;
+        localStorage.setItem('users', JSON.stringify(this.users));
+        this.closeModal();
+        this.viewUser(userId);
+        this.renderUsersTable();
+        this.toast(`Document "${name}" ajout?`, 'success');
+    }
+
+    removeDoc(userId, docId) {
+        if (!confirm('Supprimer ce document ?')) return;
+        const u = this.users.find(x => x.id === userId); if (!u) return;
+        // Supprimer depuis u.documents (id num?rique ou string)
+        if (u.documents) u.documents = u.documents.filter(d => String(d.id) !== String(docId));
+        // Supprimer aussi depuis u.files si c'est une cl? string (ancien format)
+        if (u.files && u.files[docId]) delete u.files[docId];
+        localStorage.setItem('users', JSON.stringify(this.users));
+        this.closeModal(); this.viewUser(userId); this.renderUsersTable();
+        this.toast('Document supprim?', 'success');
+    }
+
+    formatSize(bytes) {
+        if (bytes < 1024) return bytes + ' o';
+        if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' Ko';
+        return (bytes/1024/1024).toFixed(1) + ' Mo';
+    }
+
+    /* ===== ADD USER MODAL ===== */
+    showAddUserModal() {
+        this._pendingAddUserDocs = {};
+        this.openModal('', '<i class="fas fa-user-plus"></i> Ajouter un utilisateur', `
+            <div class="form-grid">
+                <div class="form-group"><label class="form-label">Pr?nom <span class="req">*</span></label><input type="text" class="form-control" id="uPrenom" placeholder="Pr?nom"></div>
+                <div class="form-group"><label class="form-label">Nom <span class="req">*</span></label><input type="text" class="form-control" id="uNom" placeholder="Nom"></div>
+                <div class="form-group full"><label class="form-label">Email <span class="req">*</span></label><input type="email" class="form-control" id="uEmail" placeholder="email@exemple.com"></div>
+                <div class="form-group"><label class="form-label">Mot de passe <span class="req">*</span></label><input type="password" class="form-control" id="uPwd" placeholder="Minimum 6 caract?res"></div>
+                <div class="form-group"><label class="form-label">T?l?phone</label><input type="tel" class="form-control" id="uPhone" placeholder="055X XXX XXX"></div>
+                <div class="form-group"><label class="form-label">R?le <span class="req">*</span></label>
+                    <select class="form-select" id="uRole">
+                        <option value="athlete">Athl?te</option>
+                        <option value="coach">Coach</option>
+                        <option value="parent">Parent</option>
+                        <option value="admin">Administrateur</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Sexe</label>
+                    <select class="form-select" id="uSexe"><option value="M">Homme</option><option value="F">Femme</option></select>
+                </div>
+                <div class="form-group"><label class="form-label">Date de naissance</label><input type="date" class="form-control" id="uBirth"></div>
+                <div class="form-group full"><label class="form-label">Adresse</label><input type="text" class="form-control" id="uAddress" placeholder="Ville, quartier"></div>
+            </div>
+            <div style="margin-top:18px;padding:12px;border-radius:12px;background:var(--gray-50)">
+                <h4 style="font-size:1rem;margin-bottom:10px;color:var(--gray-700)"><i class="fas fa-folder-open" style="color:var(--primary-light)"></i> Documents essentiels</h4>
+                <div class="form-grid">
+                    <div class="form-group full"><label class="form-label">Certificat médical</label><input type="file" class="form-control" id="uCertificatMedical" accept=".pdf,.jpg,.jpeg,.png" onchange="app.handleAddUserDocFile(this,'Certificat médical')"></div>
+                    <div class="form-group full"><label class="form-label">Photo d'identité</label><input type="file" class="form-control" id="uPhotoIdentite" accept=".jpg,.jpeg,.png" onchange="app.handleAddUserDocFile(this,'Photo d\'identité')"></div>
+                    <div class="form-group full"><label class="form-label">Extrait de naissance</label><input type="file" class="form-control" id="uExtraitNaissance" accept=".pdf,.jpg,.jpeg,.png" onchange="app.handleAddUserDocFile(this,'Extrait de naissance')"></div>
+                </div>
+            </div>`,
+            `<button class="btn btn-secondary" onclick="app.closeModal()">Annuler</button>
+             <button class="btn btn-success" onclick="app.submitAddUser()"><i class="fas fa-save"></i> Cr?er l'utilisateur</button>`
+        );
+    }
+
+    handleAddUserDocFile(input, label) {
+        const file = input.files[0]; if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { this.toast('Fichier trop grand (max 5 Mo)', 'warning'); input.value = ''; if (this._pendingAddUserDocs) delete this._pendingAddUserDocs[label]; return; }
+        const reader = new FileReader();
+        reader.onload = e => {
+            if (!this._pendingAddUserDocs) this._pendingAddUserDocs = {};
+            this._pendingAddUserDocs[label] = {
+                id: `${label}-${Date.now()}`,
+                name: label,
+                fileName: file.name,
+                mimeType: file.type,
+                size: this.formatSize(file.size),
+                date: new Date().toISOString().split('T')[0],
+                dataUrl: e.target.result,
+                verified: false,
+                source: 'inscription'
+            };
+        };
+        reader.readAsDataURL(file);
+    }
+
+    submitAddUser() {
+        const prenom = document.getElementById('uPrenom')?.value.trim();
+        const nom = document.getElementById('uNom')?.value.trim();
+        const email = document.getElementById('uEmail')?.value.trim();
+        const pwd = document.getElementById('uPwd')?.value;
+        const role = document.getElementById('uRole')?.value;
+        const phone = document.getElementById('uPhone')?.value.trim();
+        const sexe = document.getElementById('uSexe')?.value;
+        const birth = document.getElementById('uBirth')?.value;
+        const address = document.getElementById('uAddress')?.value.trim();
+
+        if (!prenom || !nom || !email || !pwd || !role) { this.toast('Veuillez remplir les champs obligatoires', 'warning'); return; }
+        if (pwd.length < 6) { this.toast('Mot de passe trop court (6 caract?res minimum)', 'warning'); return; }
+        const existingUser = this.users.find(u => u.email && u.email.trim().toLowerCase() === email.trim().toLowerCase());
+        if (existingUser) {
+            this.toast('Cet utilisateur existe déjà, affichage de sa fiche.', 'info');
+            this.closeModal();
+            this.showEditUserModal(existingUser.id);
+            return;
+        }
+
+        const docs = Object.values(this._pendingAddUserDocs || {}).filter(doc => doc && doc.dataUrl);
+        const newUser = {
+            id: Date.now(), prenom, nom, email, password: pwd,
+            role, userType: role, telephone: phone, sexe, dateNaissance: birth, adresse: address,
+            status: 'active', documents: docs,
+            createdAt: new Date().toISOString(), lastLogin: null
+        };
+
+        this.users.push(newUser);
+        localStorage.setItem('users', JSON.stringify(this.users));
+        this.closeModal();
+        this.renderAll();
+        this.toast(`Utilisateur ${prenom} ${nom} cr?? avec succ?s`, 'success');
+    }
+
+    /* ===== EDIT USER MODAL ===== */
+    showEditUserModal(id) {
+        const u = this.users.find(x => x.id === id); if (!u) return;
+        let allDocs = [...(u.documents || [])];
+        if (u.files && typeof u.files === 'object') {
+            const fileLabels = {
+                diplomeCoach: "Dipl?me d'entra?neur",
+                certificatMedicalCoach: 'Certificat m?dical',
+                photoCoach: 'Photo professionnelle',
+                extraitNaissanceCoach: 'Extrait de naissance',
+                certificatMedicalAthlete: 'Certificat m?dical',
+                photoAthlete: "Photo d'identit?",
+                extraitNaissanceAthlete: 'Extrait de naissance'
+            };
+            Object.entries(u.files).forEach(([key, f]) => {
+                if (!f || !f.name) return;
+                const alreadyIn = allDocs.some(d => d.fileName === f.name || d.name === (fileLabels[key] || f.name));
+                if (!alreadyIn) {
+                    allDocs.push({
+                        id: key,
+                        name: fileLabels[key] || f.name,
+                        fileName: f.name,
+                        mimeType: f.type || '',
+                        size: f.size ? this.formatSize(f.size) : '?',
+                        date: u.registrationDate ? u.registrationDate.split('T')[0] : (u.createdAt||'').split('T')[0],
+                        dataUrl: f.dataUrl || null,
+                        preview: f.preview || null,
+                        verified: false,
+                        source: 'inscription'
+                    });
+                }
+            });
+        }
+
+        const docsHtml = allDocs.length
+            ? allDocs.map(doc => {
+                const previewSource = doc.preview || doc.dataUrl;
+                const isPdf = (doc.mimeType || '').includes('pdf') || (doc.fileName||'').toLowerCase().endsWith('.pdf');
+                const isImg = (doc.mimeType || '').startsWith('image/') || (previewSource||'').startsWith('data:image');
+                const icon = isPdf ? 'fa-file-pdf' : isImg ? 'fa-file-image' : 'fa-file-alt';
+                const typeTag = isPdf ? 'PDF' : isImg ? 'IMAGE' : 'FICHIER';
+                const tagClass = isPdf ? 'pdf' : isImg ? 'image' : 'file';
+                return `
+                    <div class="doc-card">
+                        <span class="doc-type-tag ${tagClass}">${typeTag}</span>
+                        <div class="doc-icon"><i class="fas ${icon}"></i></div>
+                        <div class="doc-name">${doc.name}</div>
+                        ${previewSource ? `<a class="btn btn-ghost btn-sm" href="${previewSource}" target="_blank" style="margin-top:8px;display:inline-flex;align-items:center;justify-content:center"><i class="fas fa-eye"></i> Voir</a>` : '<div style="font-size:0.78rem;color:var(--gray-500);margin-top:8px">Aperçu non disponible</div>'}
+                        ${previewSource ? `<a class="btn btn-ghost btn-sm" href="${previewSource}" download="${doc.fileName||doc.name}" style="margin-top:8px;display:inline-flex;align-items:center;justify-content:center"><i class="fas fa-download"></i> T?l?charger</a>` : ''}
+                    </div>`;
+            }).join('')
+            : `<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--gray-500)"><i class="fas fa-folder-open" style="font-size:1.5rem;display:block;margin-bottom:8px;opacity:0.35"></i>Aucun document disponible</div>`;
+
+        this.openModal('', `<i class="fas fa-user-edit"></i> Modifier ??" ${u.prenom} ${u.nom}`, `
+            <div class="form-grid">
+                <div class="form-group"><label class="form-label">Pr?nom</label><input type="text" class="form-control" id="euPrenom" value="${u.prenom||''}"></div>
+                <div class="form-group"><label class="form-label">Nom</label><input type="text" class="form-control" id="euNom" value="${u.nom||''}"></div>
+                <div class="form-group full"><label class="form-label">Email</label><input type="email" class="form-control" id="euEmail" value="${u.email||''}"></div>
+                <div class="form-group"><label class="form-label">T?l?phone</label><input type="tel" class="form-control" id="euPhone" value="${u.telephone||''}"></div>
+                <div class="form-group"><label class="form-label">R?le</label>
+                    <select class="form-select" id="euRole">
+                        <option value="athlete" ${(u.role||u.userType)==='athlete'?'selected':''}>Athl?te</option>
+                        <option value="coach" ${(u.role||u.userType)==='coach'?'selected':''}>Coach</option>
+                        <option value="parent" ${(u.role||u.userType)==='parent'?'selected':''}>Parent</option>
+                        <option value="admin" ${(u.role||u.userType)==='admin'?'selected':''}>Admin</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Statut</label>
+                    <select class="form-select" id="euStatus">
+                        <option value="active" ${u.status==='active'?'selected':''}>Actif</option>
+                        <option value="pending" ${u.status==='pending'?'selected':''}>En attente</option>
+                        <option value="inactive" ${u.status==='inactive'?'selected':''}>Inactif</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Date de naissance</label><input type="date" class="form-control" id="euBirth" value="${u.dateNaissance||''}"></div>
+                <div class="form-group"><label class="form-label">Adresse</label><input type="text" class="form-control" id="euAddress" value="${u.adresse||''}"></div>
+                <div class="form-group full"><label class="form-label">Nouveau mot de passe (laisser vide = inchang?)</label><input type="password" class="form-control" id="euPwd" placeholder="Nouveau mot de passe"></div>
+            </div>
+            <div style="margin-top:18px">
+                <h4 style="font-size:0.95rem;font-weight:700;color:var(--gray-700);margin-bottom:10px"><i class="fas fa-folder-open" style="color:var(--primary-light)"></i> Documents existants</h4>
+                <div class="docs-grid">${docsHtml}</div>
+            </div>`,
+            `<button class="btn btn-secondary" onclick="app.closeModal()">Annuler</button>
+             <button class="btn btn-primary" onclick="app.submitEditUser(${id})"><i class="fas fa-save"></i> Sauvegarder</button>`
+        );
+    }
+
+    submitEditUser(id) {
+        const u = this.users.find(x => x.id === id); if (!u) return;
+        u.prenom = document.getElementById('euPrenom')?.value.trim() || u.prenom;
+        u.nom = document.getElementById('euNom')?.value.trim() || u.nom;
+        u.email = document.getElementById('euEmail')?.value.trim() || u.email;
+        u.telephone = document.getElementById('euPhone')?.value.trim();
+        u.role = document.getElementById('euRole')?.value; u.userType = u.role;
+        u.status = document.getElementById('euStatus')?.value || u.status;
+        u.dateNaissance = document.getElementById('euBirth')?.value;
+        u.adresse = document.getElementById('euAddress')?.value.trim();
+        const newPwd = document.getElementById('euPwd')?.value;
+        if (newPwd && newPwd.length >= 6) u.password = newPwd;
+        localStorage.setItem('users', JSON.stringify(this.users));
+        this.closeModal();
+        this.renderAll();
+        this.toast(`Utilisateur ${u.prenom} ${u.nom} mis ? jour`, 'success');
+    }
+
+    /* ===== ADD EVENT MODAL ===== */
+    showAddEventModal() {
+        this.openModal('', '<i class="fas fa-calendar-plus"></i> Nouvel ?v?nement', `
+            <div class="form-grid">
+                <div class="form-group full"><label class="form-label">Titre <span class="req">*</span></label><input type="text" class="form-control" id="evTitle" placeholder="Titre de l'?v?nement"></div>
+                <div class="form-group"><label class="form-label">Date d?but <span class="req">*</span></label><input type="date" class="form-control" id="evDate"></div>
+                <div class="form-group"><label class="form-label">Date fin</label><input type="date" class="form-control" id="evEndDate"></div>
+                <div class="form-group"><label class="form-label">Heure d?but</label><input type="time" class="form-control" id="evStartTime"></div>
+                <div class="form-group"><label class="form-label">Heure fin</label><input type="time" class="form-control" id="evEndTime"></div>
+                <div class="form-group"><label class="form-label">Type <span class="req">*</span></label>
+                    <select class="form-select" id="evType">
+                        <option value="competition">Comp?tition</option>
+                        <option value="training">Entra?nement</option>
+                        <option value="event">??v?nement</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Sport</label>
+                    <select class="form-select" id="evSport">
+                        <option value="">??"</option>
+                        <option value="Football">Football</option>
+                        <option value="Basketball">Basketball</option>
+                        <option value="Natation">Natation</option>
+                        <option value="Athl?tisme">Athl?tisme</option>
+                    </select>
+                </div>
+                <div class="form-group full"><label class="form-label">Lieu <span class="req">*</span></label><input type="text" class="form-control" id="evLocation" placeholder="Lieu de l'?v?nement"></div>
+                <div class="form-group full"><label class="form-label">Description</label><textarea class="form-control" id="evDesc" rows="3" placeholder="Description..."></textarea></div>
+                <div class="form-group"><label class="form-label">Participants max</label><input type="number" class="form-control" id="evMax" value="100" min="1"></div>
+                <div class="form-group"><label class="form-label">Prix (DZD)</label><input type="number" class="form-control" id="evPrice" value="0" min="0"></div>
+                <div class="form-group full"><label class="form-label">Responsable / Coach</label><input type="text" class="form-control" id="evCoach" placeholder="Nom du coach"></div>
+            </div>`,
+            `<button class="btn btn-secondary" onclick="app.closeModal()">Annuler</button>
+             <button class="btn btn-success" onclick="app.submitAddEvent()"><i class="fas fa-save"></i> Cr?er l'?v?nement</button>`
+        );
+    }
+
+    showEditEventModal(id) {
+        const ev = this.events.find(e => e.id === id); if (!ev) return;
+        this.openModal('', `<i class="fas fa-edit"></i> Modifier ??" ${ev.title}`, `
+            <div class="form-grid">
+                <div class="form-group full"><label class="form-label">Titre</label><input type="text" class="form-control" id="eeTitle" value="${ev.title}"></div>
+                <div class="form-group"><label class="form-label">Date d?but</label><input type="date" class="form-control" id="eeDate" value="${ev.date}"></div>
+                <div class="form-group"><label class="form-label">Date fin</label><input type="date" class="form-control" id="eeEndDate" value="${ev.endDate||''}"></div>
+                <div class="form-group"><label class="form-label">Type</label>
+                    <select class="form-select" id="eeType">
+                        <option value="competition" ${ev.type==='competition'?'selected':''}>Comp?tition</option>
+                        <option value="training" ${ev.type==='training'?'selected':''}>Entra?nement</option>
+                        <option value="event" ${ev.type==='event'?'selected':''}>??v?nement</option>
+                    </select>
+                </div>
+                <div class="form-group full"><label class="form-label">Lieu</label><input type="text" class="form-control" id="eeLocation" value="${ev.location}"></div>
+                <div class="form-group full"><label class="form-label">Description</label><textarea class="form-control" id="eeDesc" rows="3">${ev.description}</textarea></div>
+                <div class="form-group"><label class="form-label">Participants max</label><input type="number" class="form-control" id="eeMax" value="${ev.maxParticipants}"></div>
+                <div class="form-group"><label class="form-label">Prix (DZD)</label><input type="number" class="form-control" id="eePrice" value="${ev.price||0}"></div>
+            </div>`,
+            `<button class="btn btn-secondary" onclick="app.closeModal()">Annuler</button>
+             <button class="btn btn-primary" onclick="app.submitEditEvent(${id})"><i class="fas fa-save"></i> Sauvegarder</button>`
+        );
+    }
+
+    submitAddEvent() {
+        const title = document.getElementById('evTitle')?.value.trim();
+        const date = document.getElementById('evDate')?.value;
+        const location = document.getElementById('evLocation')?.value.trim();
+        if (!title || !date || !location) { this.toast('Veuillez remplir les champs obligatoires', 'warning'); return; }
+        const st = document.getElementById('evStartTime')?.value;
+        const et = document.getElementById('evEndTime')?.value;
+        const ev = {
+            id: Date.now(), title, date, endDate: document.getElementById('evEndDate')?.value||undefined,
+            type: document.getElementById('evType')?.value, sport: document.getElementById('evSport')?.value,
+            location, description: document.getElementById('evDesc')?.value||'',
+            maxParticipants: parseInt(document.getElementById('evMax')?.value)||100,
+            registered: 0, price: parseInt(document.getElementById('evPrice')?.value)||0,
+            coach: document.getElementById('evCoach')?.value.trim(),
+            schedule: (st&&et)?`${st} - ${et}`:undefined, status:'open'
+        };
+        this.events.push(ev);
+        localStorage.setItem('events', JSON.stringify(this.events));
+        this.closeModal();
+        this.renderEventsList(); this.renderCalendar(); this.updateStats();
+        this.toast(`??v?nement "${title}" cr??`, 'success');
+    }
+
+    submitEditEvent(id) {
+        const ev = this.events.find(e => e.id === id); if (!ev) return;
+        ev.title = document.getElementById('eeTitle')?.value.trim() || ev.title;
+        ev.date = document.getElementById('eeDate')?.value || ev.date;
+        ev.endDate = document.getElementById('eeEndDate')?.value || undefined;
+        ev.type = document.getElementById('eeType')?.value || ev.type;
+        ev.location = document.getElementById('eeLocation')?.value.trim() || ev.location;
+        ev.description = document.getElementById('eeDesc')?.value || ev.description;
+        ev.maxParticipants = parseInt(document.getElementById('eeMax')?.value) || ev.maxParticipants;
+        ev.price = parseInt(document.getElementById('eePrice')?.value) || 0;
+        localStorage.setItem('events', JSON.stringify(this.events));
+        this.closeModal();
+        this.renderEventsList(); this.renderCalendar();
+        this.toast(`??v?nement mis ? jour`, 'success');
+    }
+
+    /* ===== ADD TEAM MODAL ===== */
+    showAddTeamModal() {
+        this.openModal('', '<i class="fas fa-users-cog"></i> Nouvelle ?quipe', `
+            <div class="form-grid">
+                <div class="form-group full"><label class="form-label">Nom de l'?quipe <span class="req">*</span></label><input type="text" class="form-control" id="tName" placeholder="Ex: Football U20"></div>
+                <div class="form-group"><label class="form-label">Sport <span class="req">*</span></label>
+                    <select class="form-select" id="tSport">
+                        <option value="Football">Football</option>
+                        <option value="Basketball">Basketball</option>
+                        <option value="Natation">Natation</option>
+                        <option value="Athl?tisme">Athl?tisme</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Coach <span class="req">*</span></label><input type="text" class="form-control" id="tCoach" placeholder="Nom du coach"></div>
+                <div class="form-group"><label class="form-label">Cat?gorie</label><input type="text" class="form-control" id="tCat" placeholder="Jeunes, Adultes..."></div>
+                <div class="form-group"><label class="form-label">Niveau</label><input type="text" class="form-control" id="tLevel" placeholder="D?butant, Comp?tition..."></div>
+                <div class="form-group"><label class="form-label">Membres max</label><input type="number" class="form-control" id="tMax" value="20" min="1"></div>
+                <div class="form-group full"><label class="form-label">Horaires</label><input type="text" class="form-control" id="tSchedule" placeholder="Ex: Lun, Mer, Ven 18h-20h"></div>
+            </div>`,
+            `<button class="btn btn-secondary" onclick="app.closeModal()">Annuler</button>
+             <button class="btn btn-success" onclick="app.submitAddTeam()"><i class="fas fa-save"></i> Cr?er l'?quipe</button>`
+        );
+    }
+
+    showEditTeamModal(id) {
+        const t = this.teams.find(x => x.id === id); if (!t) return;
+        this.openModal('', `<i class="fas fa-edit"></i> Modifier ??" ${t.name}`, `
+            <div class="form-grid">
+                <div class="form-group full"><label class="form-label">Nom</label><input type="text" class="form-control" id="etName" value="${t.name}"></div>
+                <div class="form-group"><label class="form-label">Coach</label><input type="text" class="form-control" id="etCoach" value="${t.coach}"></div>
+                <div class="form-group"><label class="form-label">Membres max</label><input type="number" class="form-control" id="etMax" value="${t.maxMembers}"></div>
+                <div class="form-group"><label class="form-label">Cat?gorie</label><input type="text" class="form-control" id="etCat" value="${t.category}"></div>
+                <div class="form-group"><label class="form-label">Niveau</label><input type="text" class="form-control" id="etLevel" value="${t.level}"></div>
+                <div class="form-group full"><label class="form-label">Horaires</label><input type="text" class="form-control" id="etSchedule" value="${t.schedule}"></div>
+            </div>`,
+            `<button class="btn btn-secondary" onclick="app.closeModal()">Annuler</button>
+             <button class="btn btn-primary" onclick="app.submitEditTeam(${id})"><i class="fas fa-save"></i> Sauvegarder</button>`
+        );
+    }
+
+    submitAddTeam() {
+        const name = document.getElementById('tName')?.value.trim();
+        const coach = document.getElementById('tCoach')?.value.trim();
+        if (!name || !coach) { this.toast('Nom et coach obligatoires', 'warning'); return; }
+        this.teams.push({
+            id: Date.now(), name, sport: document.getElementById('tSport')?.value, coach,
+            members: 0, maxMembers: parseInt(document.getElementById('tMax')?.value)||20,
+            category: document.getElementById('tCat')?.value||'', level: document.getElementById('tLevel')?.value||'',
+            schedule: document.getElementById('tSchedule')?.value||'', achievements: []
+        });
+        localStorage.setItem('teams', JSON.stringify(this.teams));
+        this.closeModal(); this.renderTeamsGrid();
+        this.toast(`??quipe "${name}" cr??e`, 'success');
+    }
+
+    submitEditTeam(id) {
+        const t = this.teams.find(x => x.id === id); if (!t) return;
+        t.name = document.getElementById('etName')?.value.trim() || t.name;
+        t.coach = document.getElementById('etCoach')?.value.trim() || t.coach;
+        t.maxMembers = parseInt(document.getElementById('etMax')?.value) || t.maxMembers;
+        t.category = document.getElementById('etCat')?.value || t.category;
+        t.level = document.getElementById('etLevel')?.value || t.level;
+        t.schedule = document.getElementById('etSchedule')?.value || t.schedule;
+        localStorage.setItem('teams', JSON.stringify(this.teams));
+        this.closeModal(); this.renderTeamsGrid();
+        this.toast('??quipe mise ? jour', 'success');
+    }
+
+    /* ===== ADD IMAGE MODAL ===== */
+    showAddImageModal() {
+        this._pendingImageData = null;
+        this.openModal('', '<i class="fas fa-upload"></i> Publier une photo', `
+            <div class="form-grid cols-1">
+                <div class="form-group">
+                    <label class="form-label">Photo <span class="req">*</span></label>
+                    <div class="upload-zone" id="imgUploadZone">
+                        <input type="file" id="imgFile" accept="image/*" onchange="app.handleImageFile(this)">
+                        <i class="fas fa-cloud-upload-alt" id="imgUploadIcon"></i>
+                        <strong id="imgUploadLabel">Cliquer ou glisser une image ici</strong>
+                        <small>JPG, PNG, WEBP, GIF ??" max 5 Mo</small>
+                        <img id="imgPreview" class="upload-preview" style="display:none" alt="Aper?u">
+                    </div>
+                </div>
+                <div class="form-group"><label class="form-label">Titre <span class="req">*</span></label><input type="text" class="form-control" id="imgTitle" placeholder="Titre de la photo"></div>
+                <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="imgDesc" rows="2" placeholder="Description de la photo..."></textarea></div>
+                <div class="form-group"><label class="form-label">Cat?gorie</label>
+                    <select class="form-select" id="imgCat">
+                        <option value="competitions">Comp?titions</option>
+                        <option value="entrainements">Entra?nements</option>
+                        <option value="evenements">?v?nements</option>
+                        <option value="formations">Formations</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Auteur / Photographe</label><input type="text" class="form-control" id="imgAuthor" placeholder="Nom du photographe"></div>
+            </div>`,
+            `<button class="btn btn-secondary" onclick="app.closeModal()">Annuler</button>
+             <button class="btn btn-success" onclick="app.submitAddImage()"><i class="fas fa-check"></i> Publier</button>`
+        );
+    }
+
+    handleImageFile(input) {
+        const file = input.files[0]; if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { this.toast('Image trop grande (max 5 Mo)', 'warning'); input.value = ''; return; }
+        const reader = new FileReader();
+        reader.onload = e => {
+            this._pendingImageData = e.target.result;
+            const preview = document.getElementById('imgPreview');
+            const icon = document.getElementById('imgUploadIcon');
+            const label = document.getElementById('imgUploadLabel');
+            if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
+            if (icon) icon.style.display = 'none';
+            if (label) label.textContent = file.name;
+            const zone = document.getElementById('imgUploadZone');
+            if (zone) zone.style.borderColor = 'var(--success)';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    submitAddImage() {
+        const title = document.getElementById('imgTitle')?.value.trim();
+        if (!this._pendingImageData) { this.toast('Veuillez s?lectionner une photo', 'warning'); return; }
+        if (!title) { this.toast('Titre obligatoire', 'warning'); return; }
+        this.gallery.push({
+            id: Date.now(), title,
+            description: document.getElementById('imgDesc')?.value||'',
+            date: new Date().toISOString().split('T')[0],
+            category: document.getElementById('imgCat')?.value||'evenements',
+            author: document.getElementById('imgAuthor')?.value.trim()||'Admin',
+            dataUrl: this._pendingImageData,
+            likes: 0, views: 0
+        });
+        this._pendingImageData = null;
+        localStorage.setItem('gallery', JSON.stringify(this.gallery));
+        this.closeModal(); this.renderGalleryGrid();
+        this.toast(`Photo "${title}" publi?e`, 'success');
+    }
+
+    /* ===== ADD SESSION MODAL ===== */
+    showAddSessionModal() {
+        this.openModal('small', '<i class="fas fa-clock"></i> Ajouter une s?ance', `
+            <div class="form-grid">
+                <div class="form-group full"><label class="form-label">Titre <span class="req">*</span></label><input type="text" class="form-control" id="sesTitle" placeholder="Ex: Entra?nement Football U20"></div>
+                <div class="form-group"><label class="form-label">Date <span class="req">*</span></label><input type="date" class="form-control" id="sesDate"></div>
+                <div class="form-group"><label class="form-label">Sport</label>
+                    <select class="form-select" id="sesSport">
+                        <option value="Football">Football</option>
+                        <option value="Basketball">Basketball</option>
+                        <option value="Natation">Natation</option>
+                        <option value="Athl?tisme">Athl?tisme</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Heure d?but</label><input type="time" class="form-control" id="sesStart" value="18:00"></div>
+                <div class="form-group"><label class="form-label">Heure fin</label><input type="time" class="form-control" id="sesEnd" value="20:00"></div>
+                <div class="form-group full"><label class="form-label">Lieu</label><input type="text" class="form-control" id="sesLoc" placeholder="Terrain, salle..."></div>
+            </div>`,
+            `<button class="btn btn-secondary" onclick="app.closeModal()">Annuler</button>
+             <button class="btn btn-success" onclick="app.submitAddSession()"><i class="fas fa-save"></i> Planifier</button>`
+        );
+    }
+
+    submitAddSession() {
+        const title = document.getElementById('sesTitle')?.value.trim();
+        const date = document.getElementById('sesDate')?.value;
+        if (!title || !date) { this.toast('Titre et date obligatoires', 'warning'); return; }
+        const st = document.getElementById('sesStart')?.value;
+        const et = document.getElementById('sesEnd')?.value;
+        this.events.push({
+            id: Date.now(), title, date, type:'training',
+            sport: document.getElementById('sesSport')?.value,
+            location: document.getElementById('sesLoc')?.value||'',
+            description: 'S?ance d\'entra?nement',
+            maxParticipants: 30, registered: 0,
+            schedule: (st&&et)?`${st} - ${et}`:undefined, status:'open'
+        });
+        localStorage.setItem('events', JSON.stringify(this.events));
+        this.closeModal(); this.renderCalendar(); this.renderEventsList(); this.updateStats();
+        this.toast('S?ance planifi?e', 'success');
+    }
+
+    /* ===== VIEW IMAGE ===== */
+    viewImage(id) {
+        const item = this.gallery.find(x => x.id === id); if (!item) return;
+        item.views = (item.views||0) + 1;
+        localStorage.setItem('gallery', JSON.stringify(this.gallery));
+        const catColors = {competitions:'#ef4444', entrainements:'#10b981', evenements:'#3b82f6', formations:'#7c3aed'};
+        const catIcons = {competitions:'fas fa-trophy', entrainements:'fas fa-dumbbell', evenements:'fas fa-calendar-star', formations:'fas fa-graduation-cap'};
+        const mediaHtml = item.dataUrl
+            ? `<img src="${item.dataUrl}" alt="${item.title}" style="width:100%;max-height:400px;object-fit:contain;border-radius:12px;background:#000;display:block;margin-bottom:16px">`
+            : `<div style="width:100%;height:200px;border-radius:12px;background:linear-gradient(135deg,${catColors[item.category]||'#667eea'}22,${catColors[item.category]||'#764ba2'}11);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;margin-bottom:16px">
+                <i class="${catIcons[item.category]||'fas fa-image'}" style="font-size:4rem;color:${catColors[item.category]||'#667eea'}"></i>
+               </div>`;
+        this.openModal('large', `<i class="fas fa-image"></i> ${item.title}`, `
+            ${mediaHtml}
+            <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+                <span class="badge badge-info">${item.category}</span>
+                <span class="badge badge-gray"><i class="fas fa-user"></i> ${item.author}</span>
+                <span class="badge badge-gray"><i class="fas fa-calendar"></i> ${new Date(item.date).toLocaleDateString('fr-FR')}</span>
+            </div>
+            ${item.description ? `<p style="color:var(--gray-600);margin-bottom:12px">${item.description}</p>` : ''}
+            <div style="display:flex;gap:20px;font-size:0.85rem;color:var(--gray-500)">
+                <span><i class="fas fa-heart" style="color:#f87171"></i> ${item.likes} j'aime</span>
+                <span><i class="fas fa-eye"></i> ${item.views} vues</span>
+            </div>`,
+            `<button class="btn btn-secondary" onclick="app.closeModal()">Fermer</button>
+             <button class="btn btn-success" onclick="app.likeImage(${id})"><i class="fas fa-heart"></i> J'aime (${item.likes})</button>
+             ${item.dataUrl ? `<a class="btn btn-primary" href="${item.dataUrl}" download="${item.title}.jpg"><i class="fas fa-download"></i> T?l?charger</a>` : ''}
+             <button class="btn btn-danger" onclick="app.deleteImage(${id})"><i class="fas fa-trash"></i> Supprimer</button>`
+        );
+    }
+
+    likeImage(id) {
+        const item = this.gallery.find(x => x.id === id); if (!item) return;
+        item.likes = (item.likes||0) + 1;
+        localStorage.setItem('gallery', JSON.stringify(this.gallery));
+        this.closeModal(); this.viewImage(id); this.renderGalleryGrid();
+    }
+
+    /* ===== REPLY MESSAGE ===== */
+    replyMessage(id) {
+        const msg = this.messages.find(m => m.id === id); if (!msg) return;
+        this.openModal('small', `<i class="fas fa-reply"></i> R?pondre ? ${msg.name}`, `
+            <div class="form-grid cols-1">
+                <div style="background:var(--gray-50);border-radius:10px;padding:14px;margin-bottom:4px">
+                    <div style="font-size:0.78rem;color:var(--gray-500);margin-bottom:4px"><strong>${msg.name}</strong> ??" ${msg.subject}</div>
+                    <p style="font-size:0.83rem;color:var(--gray-600)">${msg.message}</p>
+                </div>
+                <div class="form-group"><label class="form-label">Votre r?ponse <span class="req">*</span></label>
+                    <textarea class="form-control" id="replyText" rows="5" placeholder="Votre message..."></textarea>
+                </div>
+            </div>`,
+            `<button class="btn btn-secondary" onclick="app.closeModal()">Annuler</button>
+             <button class="btn btn-success" onclick="app.submitReply(${id})"><i class="fas fa-paper-plane"></i> Envoyer</button>`
+        );
+    }
+
+    submitReply(id) {
+        const text = document.getElementById('replyText')?.value.trim();
+        if (!text) { this.toast('Veuillez ?crire une r?ponse', 'warning'); return; }
+        const msg = this.messages.find(m => m.id === id);
+        if (msg) { msg.read = true; localStorage.setItem('messages', JSON.stringify(this.messages)); }
+        this.closeModal(); this.renderMessages(); this.updateStats();
+        this.toast('R?ponse envoy?e (simulation)', 'success');
+    }
+
+    /* ===== CRUD HELPERS ===== */
+    approveUser(id) {
+        const u = this.users.find(x => x.id === id); if (!u) return;
+        u.status = 'active';
+        localStorage.setItem('users', JSON.stringify(this.users));
+        this.renderAll(); this.toast(`${u.prenom} ${u.nom} approuv?(e)`, 'success');
+    }
+
+    deleteUser(id) {
+        const u = this.users.find(x => x.id === id); if (!u) return;
+        if (!confirm(`Supprimer d?finitivement ${u.prenom} ${u.nom} ?`)) return;
+        this.users = this.users.filter(x => x.id !== id);
+        localStorage.setItem('users', JSON.stringify(this.users));
+        this.renderAll(); this.toast('Utilisateur supprim?', 'success');
+    }
+
+    deleteEvent(id) {
+        if (!confirm('Supprimer cet ?v?nement ?')) return;
+        this.events = this.events.filter(e => e.id !== id);
+        localStorage.setItem('events', JSON.stringify(this.events));
+        this.renderEventsList(); this.renderCalendar(); this.updateStats();
+        this.toast('??v?nement supprim?', 'success');
+    }
+
+    deleteTeam(id) {
+        if (!confirm('Supprimer cette ?quipe ?')) return;
+        this.teams = this.teams.filter(t => t.id !== id);
+        localStorage.setItem('teams', JSON.stringify(this.teams));
+        this.renderTeamsGrid(); this.toast('??quipe supprim?e', 'success');
+    }
+
+    deleteImage(id) {
+        if (!confirm('Supprimer cette image ?')) return;
+        this.gallery = this.gallery.filter(x => x.id !== id);
+        localStorage.setItem('gallery', JSON.stringify(this.gallery));
+        this.closeModal(); this.renderGalleryGrid(); this.toast('Image supprim?e', 'success');
+    }
+
+    deleteMessage(id) {
+        if (!confirm('Supprimer ce message ?')) return;
+        this.messages = this.messages.filter(m => m.id !== id);
+        localStorage.setItem('messages', JSON.stringify(this.messages));
+        this.renderMessages(); this.updateStats(); this.toast('Message supprim?', 'success');
+    }
+
+    markRead(id) {
+        const m = this.messages.find(x => x.id === id); if (!m) return;
+        m.read = true;
+        localStorage.setItem('messages', JSON.stringify(this.messages));
+        this.renderMessages(); this.updateStats(); this.toast('Message marqu? comme lu', 'success');
+    }
+
+    markAllRead() {
+        this.messages.forEach(m => m.read = true);
+        localStorage.setItem('messages', JSON.stringify(this.messages));
+        this.renderMessages(); this.updateStats(); this.toast('Tous les messages marqu?s comme lus', 'success');
+    }
+
+    markPaid(id) {
+        const t = this.transactions.find(x => x.id === id); if (!t) return;
+        t.status = 'pay?';
+        localStorage.setItem('transactions', JSON.stringify(this.transactions));
+        this.renderTransactions(); this.updateStats(); this.toast('Transaction marqu?e comme pay?e', 'success');
+    }
+
+    verifyDoc(userId, docId) {
+        const u = this.users.find(x => x.id === userId); if (!u) return;
+        // Chercher dans u.documents (tableau) par id num?rique ou string
+        const d = u.documents?.find(x => String(x.id) === String(docId));
+        if (d) {
+            d.verified = true; d.verifiedDate = new Date().toISOString();
+        } else if (u.files && u.files[docId]) {
+            // Ancien format u.files : migrer vers u.documents
+            if (!u.documents) u.documents = [];
+            const f = u.files[docId];
+            const fileLabels = {
+                diplomeCoach:"Dipl?me d'entra?neur", certificatMedicalCoach:'Certificat m?dical',
+                photoCoach:'Photo professionnelle', extraitNaissanceCoach:'Extrait de naissance',
+                certificatMedicalAthlete:'Certificat m?dical', photoAthlete:"Photo d'identit?",
+                extraitNaissanceAthlete:'Extrait de naissance'
+            };
+            const existing = u.documents.find(x => x.name === (fileLabels[docId]||f.name));
+            if (existing) { existing.verified = true; existing.verifiedDate = new Date().toISOString(); }
+            else {
+                u.documents.push({ id: docId, name: fileLabels[docId]||f.name, fileName: f.name,
+                    mimeType: f.type||'', size: f.size ? this.formatSize(f.size) : '?',
+                    date: (u.registrationDate||u.createdAt||'').split('T')[0],
+                    dataUrl: f.dataUrl||null, verified: true,
+                    verifiedDate: new Date().toISOString(), source: 'inscription' });
+            }
+        }
+        localStorage.setItem('users', JSON.stringify(this.users));
+        this.closeModal(); this.viewUser(userId); this.toast('Document v?rifi?', 'success');
+    }
+
+    verifyAllUserDocs(userId) {
+        const u = this.users.find(x => x.id === userId); if (!u) return;
+        let count = 0;
+        // V?rifier tous les documents du tableau
+        if (!u.documents) u.documents = [];
+        u.documents.forEach(d => { if (!d.verified) { d.verified = true; d.verifiedDate = new Date().toISOString(); count++; } });
+        // V?rifier aussi les fichiers de u.files non encore migr?s
+        if (u.files) {
+            const fileLabels = {
+                diplomeCoach:"Dipl?me d'entra?neur", certificatMedicalCoach:'Certificat m?dical',
+                photoCoach:'Photo professionnelle', extraitNaissanceCoach:'Extrait de naissance',
+                certificatMedicalAthlete:'Certificat m?dical', photoAthlete:"Photo d'identit?",
+                extraitNaissanceAthlete:'Extrait de naissance'
+            };
+            Object.entries(u.files).forEach(([key, f]) => {
+                if (!f || !f.name) return;
+                const label = fileLabels[key] || f.name;
+                const already = u.documents.find(d => d.name === label || d.id === key);
+                if (!already) {
+                    u.documents.push({ id: key, name: label, fileName: f.name, mimeType: f.type||'',
+                        size: f.size ? this.formatSize(f.size) : '?',
+                        date: (u.registrationDate||u.createdAt||'').split('T')[0],
+                        dataUrl: f.dataUrl||null, verified: true,
+                        verifiedDate: new Date().toISOString(), source: 'inscription' });
+                    count++;
+                } else if (!already.verified) { already.verified = true; already.verifiedDate = new Date().toISOString(); count++; }
+            });
+        }
+        localStorage.setItem('users', JSON.stringify(this.users));
+        this.renderUsersTable(); this.toast(`${count} document(s) v?rifi?(s) pour ${u.prenom} ${u.nom}`, 'success');
+    }
+
+    verifyAllDocuments() {
+        let count = 0;
+        this.users.forEach(u => u.documents?.forEach(d => {
+            if (!d.verified) { d.verified = true; d.verifiedDate = new Date().toISOString(); count++; }
+        }));
+        localStorage.setItem('users', JSON.stringify(this.users));
+        this.renderUsersTable(); this.toast(`${count} document(s) v?rifi?(s)`, 'success');
+    }
+
+    /* ===== EXPORT / IMPORT ===== */
+    exportData() {
+        const data = { users:this.users, events:this.events, teams:this.teams, gallery:this.gallery, messages:this.messages, transactions:this.transactions, exportDate:new Date().toISOString() };
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `manar-sport-${new Date().toISOString().split('T')[0]}.json`;
+        a.click(); this.toast('Donn?es export?es', 'success');
+    }
+
+    exportTransactions() {
+        let csv = 'Date,Membre,Type,Montant,Statut\n';
+        this.transactions.forEach(t => { csv += `${t.date},${t.member},${t.type},${t.amount},${t.status}\n`; });
+        const blob = new Blob([csv], {type:'text/csv'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'transactions.csv'; a.click(); this.toast('Transactions export?es', 'success');
+    }
+
+    importData() {
+        const input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+        input.onchange = e => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (data.users) { this.users = data.users; localStorage.setItem('users', JSON.stringify(this.users)); }
+                    if (data.events) { this.events = data.events; localStorage.setItem('events', JSON.stringify(this.events)); }
+                    if (data.teams) { this.teams = data.teams; localStorage.setItem('teams', JSON.stringify(this.teams)); }
+                    if (data.gallery) { this.gallery = data.gallery; localStorage.setItem('gallery', JSON.stringify(this.gallery)); }
+                    if (data.messages) { this.messages = data.messages; localStorage.setItem('messages', JSON.stringify(this.messages)); }
+                    this.renderAll(); this.toast('Donn?es import?es avec succ?s', 'success');
+                } catch(err) { this.toast("Erreur lors de l'import", 'error'); }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    }
+
+    resetData() {
+        if (!confirm('R?initialiser TOUTES les donn?es ? Cette action est irr?versible.')) return;
+        localStorage.clear(); location.reload();
+    }
+
+    /* ===== SETTINGS ===== */
+    saveSettings() {
+        const settings = {
+            clubName: document.getElementById('sClubName')?.value,
+            email: document.getElementById('sEmail')?.value,
+            phone: document.getElementById('sPhone')?.value,
+            address: document.getElementById('sAddress')?.value,
+            desc: document.getElementById('sDesc')?.value,
+            notifEmail: document.getElementById('notifEmail')?.checked,
+            notifSms: document.getElementById('notifSms')?.checked,
+            notifPush: document.getElementById('notifPush')?.checked,
+            reportFreq: document.getElementById('sReportFreq')?.value,
+            sessionTimeout: document.getElementById('sSessionTimeout')?.value,
+            maxAttempts: document.getElementById('sMaxAttempts')?.value
+        };
+        localStorage.setItem('adminSettings', JSON.stringify(settings));
+        this.toast('Param?tres sauvegard?s avec succ?s', 'success');
+    }
+
+    loadSettings() {
+        const settings = JSON.parse(localStorage.getItem('adminSettings') || '{}');
+        if (settings.clubName && document.getElementById('sClubName')) document.getElementById('sClubName').value = settings.clubName;
+        if (settings.email && document.getElementById('sEmail')) document.getElementById('sEmail').value = settings.email;
+    }
+
+    /* ===== MODAL SYSTEM ===== */
+    openModal(size, title, body, footer) {
+        document.querySelectorAll('.modal').forEach(m => m.remove());
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.innerHTML = `
+            <div class="modal-box ${size}">
+                <div class="modal-header">
+                    <h3>${title}</h3>
+                    <button class="modal-close" onclick="app.closeModal()">?-</button>
+                </div>
+                <div class="modal-body">${body}</div>
+                ${footer ? `<div class="modal-footer">${footer}</div>` : ''}
+            </div>`;
+        modal.addEventListener('click', e => { if (e.target === modal) this.closeModal(); });
+        document.body.appendChild(modal);
+    }
+
+    closeModal() {
+        document.querySelectorAll('.modal').forEach(m => { m.style.animation = 'none'; m.remove(); });
+    }
+
+    /* ===== TOAST ===== */
+    toast(msg, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const icons = {success:'fas fa-check-circle', error:'fas fa-exclamation-circle', warning:'fas fa-exclamation-triangle', info:'fas fa-info-circle'};
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        t.innerHTML = `<i class="${icons[type]||icons.info}"></i> ${msg}`;
+        container.appendChild(t);
+        setTimeout(() => {
+            t.style.animation = 'toastOut 0.3s ease forwards';
+            setTimeout(() => t.remove(), 300);
+        }, 3200);
+    }
+
+    /* ===== SECTION NAVIGATION ===== */
+    showSection(name) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(a => a.classList.remove('active'));
+        const sec = document.getElementById(name); if (sec) sec.classList.add('active');
+        const link = document.querySelector(`.nav-item[data-section="${name}"]`); if (link) link.classList.add('active');
+        const titles = { dashboard:'Tableau de Bord', utilisateurs:'Gestion des Utilisateurs', equipes:'Gestion des ?quipes', planning:'Planning', evenements:'Gestion des ?v?nements', galerie:'Galerie Photos', messages:'Messages', finances:'Finances', statistiques:'Statistiques', parametres:'Param?tres' };
+        document.getElementById('sectionTitle').textContent = titles[name] || name;
+        document.getElementById('breadcrumb').textContent = titles[name] || name;
+        window.location.hash = name;
+        if (name === 'utilisateurs') this.renderUsersTable();
+        if (name === 'equipes') this.renderTeamsGrid();
+        if (name === 'evenements') this.renderEventsList();
+        if (name === 'galerie') this.renderGalleryGrid();
+        if (name === 'messages') this.renderMessages();
+        if (name === 'finances') { this.renderTransactions(); this.initCharts(); }
+        if (name === 'statistiques') { setTimeout(() => this.initCharts(), 100); }
+    }
+
+    /* ===== HELPERS ===== */
+    typeBadge(role) { const m = {athlete:'badge-info', coach:'badge-success', parent:'badge-warning', admin:'badge-danger'}; return m[role] || 'badge-gray'; }
+    typeLabel(role) { const m = {athlete:'Athl?te', coach:'Coach', parent:'Parent', admin:'Admin', membre:'Membre'}; return m[role] || role; }
+    statusBadge(status) {
+        const c = {active:'badge-success', pending:'badge-warning', inactive:'badge-gray'};
+        const l = {active:'Actif', pending:'En attente', inactive:'Inactif'};
+        return `<span class="badge ${c[status]||'badge-gray'}">${l[status]||status}</span>`;
+    }
+
+    /* ===== EVENT BINDING ===== */
+    bindEvents() {
+        document.querySelectorAll('.nav-item[data-section]').forEach(a => {
+            a.addEventListener('click', e => { e.preventDefault(); this.showSection(a.dataset.section); });
+        });
+
+        document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+            const sb = document.getElementById('sidebar');
+            if (window.innerWidth <= 768) { sb.classList.toggle('mobile-show'); }
+            else { sb.classList.toggle('collapsed'); }
+        });
+
+        document.getElementById('logoutBtn')?.addEventListener('click', () => {
+            if (confirm('Se d?connecter ?')) {
+                localStorage.removeItem('currentSession');
+                this.toast('D?connexion r?ussie', 'success');
+                setTimeout(() => window.location.href = '../index.html', 1000);
+            }
+        });
+
+        document.getElementById('searchUser')?.addEventListener('input', () => { this.currentPage = 1; this.renderUsersTable(); });
+        document.getElementById('filterType')?.addEventListener('change', () => { this.currentPage = 1; this.renderUsersTable(); });
+        document.getElementById('filterStatus')?.addEventListener('change', () => { this.currentPage = 1; this.renderUsersTable(); });
+        document.getElementById('filterDocStatus')?.addEventListener('change', () => { this.currentPage = 1; this.renderUsersTable(); });
+        document.getElementById('filterMsgStatus')?.addEventListener('change', () => this.renderMessages());
+        document.getElementById('searchMsg')?.addEventListener('input', () => this.renderMessages());
+
+        document.getElementById('globalSearch')?.addEventListener('input', e => {
+            const q = e.target.value.trim();
+            if (q.length > 2) {
+                const found = this.users.filter(u => `${u.prenom} ${u.nom} ${u.email}`.toLowerCase().includes(q.toLowerCase()));
+                if (found.length) this.toast(`${found.length} utilisateur(s) trouv?(s)`, 'info');
+            }
+        });
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') this.closeModal(); });
+
+        this.loadSettings();
+    }
+
+    changePage(p) { this.currentPage = p; this.renderUsersTable(); }
+    applyFilters() { this.currentPage = 1; this.renderUsersTable(); }
+    resetFilters() {
+        ['searchUser','filterType','filterStatus','filterDocStatus'].forEach(id => {
+            const el = document.getElementById(id); if (el) el.value = '';
+        });
+        this.currentPage = 1; this.renderUsersTable();
+    }
+    changeMonth(d) { this.currentCalDate.setMonth(this.currentCalDate.getMonth() + d); this.renderCalendar(); }
+    goToToday() { this.currentCalDate = new Date(); this.renderCalendar(); }
+    viewEvent(id) { const ev = this.events.find(e => e.id === id); if (ev) this.toast(ev.title, 'info'); }
+}
+
+const app = new AdminApp();
+window.app = app;
+</script>
+</body>
+</html>
+

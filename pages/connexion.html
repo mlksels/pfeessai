@@ -1,0 +1,691 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Association Sportive Manar Oran</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../assets/js/sync.js"></script>
+    <link rel="stylesheet" href="../assets/css/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+    <style>
+        /* Styles suppl&eacute;mentaires pour la page de connexion */
+        .auth-messages {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideDown 0.3s ease;
+        }
+        
+        .auth-messages.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .auth-messages.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .auth-messages.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        
+        .auth-messages.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .forgot-password {
+            display: block;
+            text-align: right;
+            margin-top: 5px;
+            color: #667eea;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+        
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background-color: #e5e7eb;
+        }
+        
+        .divider::before {
+            left: 0;
+        }
+        
+        .divider::after {
+            right: 0;
+        }
+        
+        .divider span {
+            background-color: white;
+            padding: 0 10px;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .social-login {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn-social {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-social.google {
+            background-color: #fff;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-social.google:hover {
+            background-color: #f8f9fa;
+            border-color: #4285f4;
+        }
+        
+        .btn-social.facebook {
+            background-color: #1877f2;
+            color: white;
+        }
+        
+        .btn-social.facebook:hover {
+            background-color: #166fe5;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(24, 119, 242, 0.3);
+        }
+        
+        .login-benefits {
+            padding: 60px 0;
+            background-color: #f8fafc;
+        }
+        
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .benefit-card {
+            text-align: center;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .benefit-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .benefit-icon {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .benefit-icon i {
+            font-size: 30px;
+            color: white;
+        }
+        
+        .benefit-card h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .benefit-card p {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .modal-close:hover {
+            transform: scale(1.1);
+        }
+        
+        .modal-body {
+            padding: 30px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .modal-body h4 {
+            color: #333;
+            margin: 20px 0 10px;
+        }
+        
+        .modal-body h4:first-child {
+            margin-top: 0;
+        }
+        
+        .modal-body p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .modal-body ul {
+            color: #666;
+            padding-left: 20px;
+        }
+        
+        .modal-body li {
+            margin-bottom: 5px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Password input styles */
+        .password-input {
+            position: relative;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 5px;
+        }
+        
+        .toggle-password:hover {
+            color: #667eea;
+        }
+        
+        /* Remember me checkbox */
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .remember-me label {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        /* Field error */
+        .field-error {
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-control.error {
+            border-color: #dc3545;
+            background-color: #fff8f8;
+        }
+
+        /* Notification Container */
+        #notificationContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .social-login {
+                flex-direction: column;
+            }
+            
+            .modal-content {
+                margin: 10% auto;
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        <div class="logo-icon">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <div class="logo-text">
+                            <h1>MANAR SPORT</h1>
+                            <p>Usto Oran - Association Sportive</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <nav class="nav-menu" id="navMenu">
+                    <ul>
+                        <li><a href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+                        <li><a href="historique.html"><i class="fas fa-history"></i> Historique</a></li>
+                        <li><a href="equipes.html"><i class="fas fa-users"></i> Équipes</a></li>
+                        <li><a href="planning.html"><i class="fas fa-calendar-alt"></i> Planning</a></li>
+                        <li><a href="tarifs.html"><i class="fas fa-tags"></i> Tarifs</a></li>
+                        <li><a href="actualites.html"><i class="fas fa-newspaper"></i> Actualités</a></li>
+                        <li><a href="galerie.html"><i class="fas fa-images"></i> Galerie</a></li>
+                        <li><a href="inscription.html" class="btn-register"><i class="fas fa-user-plus"></i> Inscription</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Section Connexion -->
+    <section class="auth-section">
+        <div class="container">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h2><i class="fas fa-sign-in-alt"></i> Connexion</h2>
+                    <p>Acc&eacute;dez à votre espace personnel</p>
+                </div>
+                
+                <!-- Messages d'information -->
+                <div id="authMessages" class="auth-messages" style="display: none;"></div>
+                
+                <!-- Formulaire de Connexion -->
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope"></i> Email
+                        </label>
+                        <input type="email" id="email" name="email" class="form-control" 
+                               placeholder="votre@email.com" required autocomplete="email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock"></i> Mot de passe
+                        </label>
+                        <div class="password-input">
+                            <input type="password" id="password" name="password" 
+                                   class="form-control" placeholder="Votre mot de passe" 
+                                   required minlength="8" autocomplete="current-password">
+                            <button type="button" class="toggle-password" data-target="password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <a href="#" class="forgot-password" id="forgotPasswordLink">
+                            <i class="fas fa-question-circle"></i> Mot de passe oublià à
+                        </a>
+                    </div>
+                    
+                    <div class="form-group remember-me">
+                        <input type="checkbox" id="remember" name="remember">
+                        <label for="remember">Se souvenir de moi</label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block" id="loginButton">
+                        <i class="fas fa-sign-in-alt"></i> Se connecter
+                    </button>
+                    
+                    <div class="divider">
+                        <span>Ou connectez-vous avec</span>
+                    </div>
+                    
+                    <div class="social-login">
+                        <button type="button" class="btn-social google" id="googleLogin">
+                            <i class="fab fa-google"></i> Google
+                        </button>
+                        <button type="button" class="btn-social facebook" id="facebookLogin">
+                            <i class="fab fa-facebook"></i> Facebook
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Formulaire de r&eacute;initialisation -->
+                <form id="forgotPasswordForm" class="auth-form" style="display: none;">
+                    <h3 style="text-align: center; margin-bottom: 20px; color: #333;">
+                        <i class="fas fa-key"></i> R?initialisation
+                    </h3>
+                    <p style="text-align: center; margin-bottom: 20px; color: #6c757d;">
+                        Entrez votre adresse email pour recevoir un lien de r&eacute;initialisation.
+                    </p>
+                    
+                    <div class="form-group">
+                        <label for="forgotEmail" class="form-label">
+                            <i class="fas fa-envelope"></i> Email
+                        </label>
+                        <input type="email" id="forgotEmail" name="forgotEmail" class="form-control" 
+                               placeholder="votre@email.com" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-paper-plane"></i> Envoyer le lien
+                    </button>
+                    
+                    <button type="button" class="btn btn-secondary btn-block" id="backToLogin">
+                        <i class="fas fa-arrow-left"></i> Retour à la connexion
+                    </button>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>Pas encore membre à <a href="inscription.html">Inscrivez-vous ici</a></p>
+                    <p>En vous connectant, vous acceptez nos <a href="#" data-modal="conditions">Conditions d'utilisation</a> et notre <a href="#" data-modal="confidentialite">Politique de confidentialit&eacute;</a>.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section avantages connexion -->
+    <section class="login-benefits">
+        <div class="container">
+            <div class="section-title">
+                <h3><i class="fas fa-star"></i> Avantages de la connexion</h3>
+            </div>
+            
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <h4>Gestion du planning</h4>
+                    <p>Inscrivez-vous aux séances et g&eacute;rez votre emploi du temps</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h4>Suivi des performances</h4>
+                    <p>Acc&eacute;dez à vos statistiques et progr&egrave;s personnels</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h4>Communaut&eacute;</h4>
+                    <p>&Eacute;changez avec les autres membres et coachs</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <div class="benefit-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h4>Notifications</h4>
+                    <p>Recevez les dernières actualit&eacute;s et rappels</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <i class="fas fa-running"></i>
+                        <h3>MANAR SPORT</h3>
+                    </div>
+                    <p>Association Sportive Manar<br>
+                    Usto, Oran - Algérie<br>
+                    Tél: +213 41 12 34 56</p>
+                    <div class="social-links">
+                        <a href="#" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook"></i></a>
+                        <a href="#" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                        <a href="#" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i></a>
+                        <a href="#" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Liens Rapides</h4>
+                    <ul>
+                        <li><a href="../index.html">Accueil</a></li>
+                        <li><a href="historique.html">Historique</a></li>
+                        <li><a href="equipes.html">Équipes</a></li>
+                        <li><a href="planning.html">Planning</a></li>
+                        <li><a href="tarifs.html">Tarifs</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Informations</h4>
+                    <ul>
+                        <li><a href="#" data-modal="conditions">Conditions d'utilisation</a></li>
+                        <li><a href="#" data-modal="confidentialite">Politique de confidentialit&eacute;</a></li>
+                        <li><a href="#" data-modal="cookies">Politique des cookies</a></li>
+                        <li><a href="#contact">Contactez-nous</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Horaires d'Ouverture</h4>
+                    <p>Lundi - Vendredi: 8h - 22h<br>
+                    Samedi: 9h - 20h<br>
+                    Dimanche: 9h - 18h</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Association Sportive Manar Oran. Tous droits r&eacute;serv&eacute;s.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <div id="modalConditions" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-contract"></i> Conditions d'Utilisation</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4>1. Acceptation des conditions</h4>
+                <p>En utilisant ce site, vous acceptez les pr&eacute;sentes conditions d'utilisation.</p>
+                
+                <h4>2. Inscription et compte</h4>
+                <p>Les utilisateurs doivent fournir des informations exactes et maintenir la confidentialità de leur compte.</p>
+                
+                <h4>3. Responsabilit?s</h4>
+                <p>L'association d&eacute;cline toute responsabilità pour les blessures survenues pendant les activités sportives.</p>
+                
+                <h4>4. Propri?tà intellectuelle</h4>
+                <p>Tous les contenus du site sont la propri?tà de l'Association Sportive Manar.</p>
+                
+                <h4>5. Modification des conditions</h4>
+                <p>Nous nous r&eacute;servons le droit de modifier ces conditions à tout moment.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalConfidentialite" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-shield-alt"></i> Politique de Confidentialit&eacute;</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4>Collecte des donn&eacute;es</h4>
+                <p>Nous collectons uniquement les donn&eacute;es n&eacute;cessaires à votre inscription et à la gestion de votre compte.</p>
+                
+                <h4>Utilisation des donn&eacute;es</h4>
+                <p>Vos donn&eacute;es sont utilis&eacute;es pour :</p>
+                <ul>
+                    <li>G&eacute;rer votre inscription et participation</li>
+                    <li>Vous envoyer des informations importantes</li>
+                    <li>Am&eacute;liorer nos services</li>
+                </ul>
+                
+                <h4>Protection des donn&eacute;es</h4>
+                <p>Nous mettons en à"uvre des mesures de s?curità pour prot&eacute;ger vos donn&eacute;es.</p>
+                
+                <h4>Vos droits</h4>
+                <p>Vous avez le droit d'acc?der, de modifier ou de supprimer vos donn&eacute;es.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalCookies" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-cookie-bite"></i> Politique des Cookies</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4>Qu'est-ce qu'un cookie à</h4>
+                <p>Un cookie est un petit fichier stockà sur votre appareil pour am&eacute;liorer votre exp&eacute;rience.</p>
+                
+                <h4>Cookies utilis&eacute;s</h4>
+                <p>Nous utilisons :</p>
+                <ul>
+                    <li>Cookies essentiels (connexion, s&eacute;curit&eacute;)</li>
+                    <li>Cookies de performance (analyse d'usage)</li>
+                    <li>Cookies de fonctionnalità (pr?f?rences)</li>
+                </ul>
+                
+                <h4>Gestion des cookies</h4>
+                <p>Vous pouvez contr&ocirc;ler les cookies via les param?tres de votre navigateur.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer"></div>
+
+    <script src="../script.js"></script>
+    <script src="../assets/js/auth.js"></script>
+</body>
+</html>
+
+

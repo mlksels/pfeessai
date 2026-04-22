@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion ?v?nements - Manar Sport</title>
+    <link rel="stylesheet" href="../style.css">
+    
+    <script src="../assets/js/sync.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* M?mes styles que utilisateurs.html */
+        .admin-container { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; padding: 30px 0; }
+        .main-content { flex: 1; padding: 30px; background: #f8fafc; }
+        
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-running"></i>
+                <h2>MANAR SPORT</h2>
+                <p>Administration</p>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="utilisateurs.html">Utilisateurs</a></li>
+                <li><a href="evenements.html" class="active">?v?nements</a></li>
+                <li><a href="galerie.html">Galerie</a></li>
+                <li><a href="../index.html">Retour au site</a></li>
+            </ul>
+        </aside>
+        
+        <main class="main-content">
+            <h1>Gestion des ?v?nements</h1>
+            
+            <button class="btn-add" onclick="addEvent()">
+                <i class="fas fa-plus"></i> Nouvel ?v?nement
+            </button>
+            
+            <div class="users-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Date</th>
+                            <th>Heure</th>
+                            <th>Sport</th>
+                            <th>Coach</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventsTableBody">
+                        <tr>
+                            <td>Tournoi Annuel</td>
+                            <td>2024-12-15</td>
+                            <td>10:00</td>
+                            <td>Football</td>
+                            <td>Karim B.</td>
+                            <td>
+                                <button class="btn-action btn-edit">Modifier</button>
+                                <button class="btn-action btn-delete">Supprimer</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const session = localStorage.getItem('currentSession');
+            if (!session || JSON.parse(session).role !== 'admin') {
+                window.location.href = '../pages/connexion.html';
+                return;
+            }
+        });
+        
+        function addEvent() {
+            alert('Formulaire d\'ajout d\'?v?nement (simulation)');
+        }
+    </script>
+</body>
+</html>
+

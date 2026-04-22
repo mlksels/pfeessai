@@ -1,0 +1,334 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/js/sync.js"></script>
+    <title>Actualités - Association Sportive Manar Oran</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../assets/css/actualites.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        <div class="logo-icon">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <div class="logo-text">
+                            <h1>MANAR SPORT</h1>
+                            <p>Usto Oran - Association Sportive</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <nav class="nav-menu" id="navMenu">
+                    <ul>
+                        <li><a href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+                        <li><a href="historique.html"><i class="fas fa-history"></i> Historique</a></li>
+                        <li><a href="equipes.html"><i class="fas fa-users"></i> Équipes</a></li>
+                        <li><a href="planning.html"><i class="fas fa-calendar-alt"></i> Planning</a></li>
+                        <li><a href="tarifs.html"><i class="fas fa-tags"></i> Tarifs</a></li>
+                        <li><a href="actualites.html" class="active"><i class="fas fa-newspaper"></i> Actualités</a></li>
+                        <li><a href="galerie.html"><i class="fas fa-images"></i> Galerie</a></li>
+                        <li><a href="connexion.html" class="btn-login"><i class="fas fa-sign-in-alt"></i> Connexion</a></li>
+                        <li><a href="inscription.html" class="btn-register"><i class="fas fa-user-plus"></i> Inscription</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section Actualités -->
+    <section class="page-hero actualites-hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Actualités</h1>
+                <p>Restez informà des dernières nouvelles de notre association</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- News Filters -->
+    <section class="news-filters">
+        <div class="container">
+            <div class="filters-container">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-category="all">
+                        <i class="fas fa-newspaper"></i> Toutes les actualit&eacute;s
+                    </button>
+                    <button class="filter-btn" data-category="competitions">
+                        <i class="fas fa-trophy"></i> Compétitions
+                    </button>
+                    <button class="filter-btn" data-category="evenements">
+                        <i class="fas fa-calendar-star"></i> Événements
+                    </button>
+                    <button class="filter-btn" data-category="resultats">
+                        <i class="fas fa-chart-line"></i> Résultats
+                    </button>
+                    <button class="filter-btn" data-category="annonces">
+                        <i class="fas fa-bullhorn"></i> Annonces
+                    </button>
+                </div>
+                
+                <div class="search-sort">
+                    <div class="search-box">
+                        <input type="text" id="newsSearch" placeholder="Rechercher une actualit&eacute;...">
+                        <button type="button" id="searchNewsBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <select id="sortNews" class="form-select">
+                        <option value="date-desc">Plus r&eacute;centes</option>
+                        <option value="date-asc">Plus anciennes</option>
+                        <option value="popularite">Plus populaires</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured News -->
+    <section class="featured-news">
+        <div class="container">
+            <div class="section-title">
+                <h2><i class="fas fa-star"></i> Actualità à la Une</h2>
+            </div>
+            
+            <div class="featured-article">
+                <div class="featured-image">
+                    <img src="../assets/images/actualites/featured.jpg" alt="Tournoi Annuel">
+                    <div class="featured-badge">
+                        <span class="badge badge-warning">?à la une</span>
+                        <span class="badge badge-danger">Comp&eacute;tition</span>
+                    </div>
+                </div>
+                <div class="featured-content">
+                    <div class="article-meta">
+                        <span class="article-date">
+                            <i class="fas fa-calendar"></i> 15 Novembre 2024
+                        </span>
+                        <span class="article-author">
+                            <i class="fas fa-user"></i> Par l'&eacute;quipe Manar
+                        </span>
+                        <span class="article-views">
+                            <i class="fas fa-eye"></i> 1,245 vues
+                        </span>
+                    </div>
+                    <h2 class="article-title">Tournoi Annuel Manar 2024 : Inscriptions Ouvertes !</h2>
+                    <p class="article-excerpt">
+                        C'est officiel ! Les inscriptions pour le tournoi annuel Manar 2024 sont maintenant ouvertes. 
+                        Cet àv?nement phare de notre association r&eacute;unira plus de 500 athlètes dans 8 disciplines diff&eacute;rentes. 
+                        Des prix sp&eacute;ciaux, des troph&eacute;es et des bourses d'&eacute;tudes sont à gagner...
+                    </p>
+                    <div class="article-tags">
+                        <span class="tag">football</span>
+                        <span class="tag">basketball</span>
+                        <span class="tag">natation</span>
+                        <span class="tag">comp&eacute;tition</span>
+                    </div>
+                    <a href="#article1" class="btn btn-primary read-more">
+                        <i class="fas fa-book-reader"></i> Lire l'article complet
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- News Grid -->
+    <section class="news-grid-section">
+        <div class="container">
+            <div class="section-title">
+                <h2><i class="fas fa-newspaper"></i> Toutes les Actualités</h2>
+                <p>Découvrez toutes les nouvelles de l'association</p>
+            </div>
+            
+            <div class="news-grid" id="newsContainer">
+                <!-- Articles charg&eacute;s dynamiquement -->
+            </div>
+            
+            <div class="loading-spinner" id="newsLoader">
+                <div class="spinner"></div>
+                <p>Chargement des actualit&eacute;s...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular News -->
+    <section class="popular-news">
+        <div class="container">
+            <div class="section-title">
+                <h2><i class="fas fa-fire"></i> Les Plus Populaires</h2>
+                <p>Les articles les plus lus cette semaine</p>
+            </div>
+            
+            <div class="popular-grid">
+                <div class="popular-card">
+                    <div class="popular-rank">1</div>
+                    <div class="popular-content">
+                        <h4>Notre àquipe de football U20 championne régionale</h4>
+                        <div class="popular-meta">
+                            <span><i class="fas fa-calendar"></i> 10 Nov 2024</span>
+                            <span><i class="fas fa-eye"></i> 2,845 vues</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="popular-card">
+                    <div class="popular-rank">2</div>
+                    <div class="popular-content">
+                        <h4>Nouveau coach de natation : Karim Benali</h4>
+                        <div class="popular-meta">
+                            <span><i class="fas fa-calendar"></i> 8 Nov 2024</span>
+                            <span><i class="fas fa-eye"></i> 1,956 vues</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="popular-card">
+                    <div class="popular-rank">3</div>
+                    <div class="popular-content">
+                        <h4>Portes ouvertes : record de participation</h4>
+                        <div class="popular-meta">
+                            <span><i class="fas fa-calendar"></i> 5 Nov 2024</span>
+                            <span><i class="fas fa-eye"></i> 1,745 vues</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Subscription -->
+    <section class="newsletter-subscription">
+        <div class="container">
+            <div class="newsletter-card">
+                <div class="newsletter-content">
+                    <h3><i class="fas fa-paper-plane"></i> Restez Inform&eacute;s</h3>
+                    <p>Abonnez-vous à notre newsletter pour recevoir les dernières actualit&eacute;s directement dans votre bo&icirc;te email.</p>
+                    <ul class="newsletter-benefits">
+                        <li><i class="fas fa-check"></i> Actualités en avant-premi&egrave;re</li>
+                        <li><i class="fas fa-check"></i> Rappels d'Événements</li>
+                        <li><i class="fas fa-check"></i> Offres sp&eacute;ciales membres</li>
+                        <li><i class="fas fa-check"></i> Conseils sportifs exclusifs</li>
+                    </ul>
+                </div>
+                <div class="newsletter-form">
+                    <form id="newsletterForm">
+                        <div class="form-group">
+                            <input type="text" placeholder="Votre nom" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" placeholder="Votre email" required>
+                        </div>
+                        <div class="form-group">
+                            <select required>
+                                <option value="">Centre d'int&eacute;r&ecirc;t</option>
+                                <option value="competitions">Compétitions</option>
+                                <option value="entrainements">Entraînements</option>
+                                <option value="evenements">Événements</option>
+                                <option value="tous">Toutes les actualit&eacute;s</option>
+                            </select>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="acceptNewsletter" required>
+                            <label for="acceptNewsletter">J'accepte de recevoir les newsletters</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-envelope"></i> S'abonner
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Article Modal -->
+    <div id="articleModal" class="modal">
+        <div class="modal-content modal-xl">
+            <div class="modal-header">
+                <h3 id="modalArticleTitle"></h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Contenu chargà dynamiquement -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <i class="fas fa-running"></i>
+                        <h3>MANAR SPORT</h3>
+                    </div>
+                    <p>Association Sportive Manar<br>
+                    Usto, Oran - Algérie<br>
+                    Tél: +213 41 12 34 56</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Liens Rapides</h4>
+                    <ul>
+                        <li><a href="../index.html">Accueil</a></li>
+                        <li><a href="historique.html">Historique</a></li>
+                        <li><a href="equipes.html">Équipes</a></li>
+                        <li><a href="planning.html">Planning</a></li>
+                        <li><a href="tarifs.html">Tarifs</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Cat&eacute;gories</h4>
+                    <ul>
+                        <li><a href="#" data-category="competitions">Compétitions</a></li>
+                        <li><a href="#" data-category="evenements">Événements</a></li>
+                        <li><a href="#" data-category="resultats">Résultats</a></li>
+                        <li><a href="#" data-category="annonces">Annonces</a></li>
+                        <li><a href="#" data-category="sports">Sports</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Archives</h4>
+                    <ul>
+                        <li><a href="#" data-month="2024-11">Novembre 2024</a></li>
+                        <li><a href="#" data-month="2024-10">Octobre 2024</a></li>
+                        <li><a href="#" data-month="2024-09">Septembre 2024</a></li>
+                        <li><a href="#" data-month="2024-08">Ao&ucirc;t 2024</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Association Sportive Manar Oran. Tous droits r&eacute;serv&eacute;s.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../script.js"></script>
+    <script src="../assets/js/actualites.js"></script>
+</body>
+</html>
+
+
+
+

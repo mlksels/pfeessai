@@ -1,0 +1,596 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/js/sync.js"></script>
+    <title>Inscription - Association Sportive Manar Oran</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../assets/css/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+    <style>
+        /* Styles suppl&eacute;mentaires pour la validation */
+        .form-control.error, .form-select.error {
+            border-color: #dc3545 !important;
+            background-color: #fff8f8;
+        }
+        
+        .field-error {
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .field-error i {
+            font-size: 0.9rem;
+        }
+        
+        .date-info {
+            display: block;
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+        
+        .date-info i {
+            margin-right: 5px;
+        }
+        
+        .btn-remove-enfant {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #dc3545;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .btn-remove-enfant:hover {
+            transform: scale(1.1);
+            color: #c82333;
+        }
+        
+        .enfant-form {
+            position: relative;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        
+        .enfant-form h5 {
+            color: #007bff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        <div class="logo-icon">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <div class="logo-text">
+                            <h1>MANAR SPORT</h1>
+                            <p>Usto Oran - Association Sportive</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <nav class="nav-menu" id="navMenu">
+                    <ul>
+                        <li><a href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+                        <li><a href="historique.html"><i class="fas fa-history"></i> Historique</a></li>
+                        <li><a href="equipes.html"><i class="fas fa-users"></i> Équipes</a></li>
+                        <li><a href="planning.html"><i class="fas fa-calendar-alt"></i> Planning</a></li>
+                        <li><a href="tarifs.html"><i class="fas fa-tags"></i> Tarifs</a></li>
+                        <li><a href="actualites.html"><i class="fas fa-newspaper"></i> Actualités</a></li>
+                        <li><a href="galerie.html"><i class="fas fa-images"></i> Galerie</a></li>
+                        <li><a href="connexion.html" class="btn-login"><i class="fas fa-sign-in-alt"></i> Connexion</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Section Inscription -->
+    <section class="auth-section">
+        <div class="container">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h2><i class="fas fa-user-plus"></i> Inscription</h2>
+                    <p>Rejoignez notre communauté sportive</p>
+                </div>
+                
+                <!-- Messages d'erreur/succ&egrave;s -->
+                <div id="registrationMessages" class="auth-messages" style="display: none;"></div>
+                
+                <!-- S&eacute;lection du type d'utilisateur -->
+                <div class="user-type-selector">
+                    <div class="user-type-card" data-type="admin">
+                        <div class="user-type-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h3>Administrateur</h3>
+                        <p>Gestion de l'association</p>
+                    </div>
+                    <div class="user-type-card" data-type="coach">
+                        <div class="user-type-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <h3>Coach</h3>
+                        <p>Entraînement et encadrement</p>
+                    </div>
+                    <div class="user-type-card" data-type="athlete">
+                        <div class="user-type-icon">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <h3>Athlète</h3>
+                        <p>Pratique sportive</p>
+                    </div>
+                    <div class="user-type-card" data-type="parent">
+                        <div class="user-type-icon">
+                            <i class="fas fa-user-friends"></i>
+                        </div>
+                        <h3>Parent</h3>
+                        <p>Inscription des enfants</p>
+                    </div>
+                </div>
+                
+                <!-- Formulaire d'inscription -->
+                <form id="registrationForm" class="auth-form" enctype="multipart/form-data">
+                    <!-- à?tape 1: Type d'utilisateur -->
+                    <div class="form-step active" id="stepUserType">
+                        <h3><i class="fas fa-user-cog"></i> Type d'utilisateur</h3>
+                        <div class="form-group">
+                            <label for="userType" class="form-label">Je m'inscris en tant que :</label>
+                            <select id="userType" name="userType" class="form-select" required>
+                                <option value="">S&eacute;lectionnez un type</option>
+                                <option value="admin">Administrateur</option>
+                                <option value="coach">Coach</option>
+                                <option value="athlete">Athlète</option>
+                                <option value="parent">Parent</option>
+                            </select>
+                            <small class="form-hint">Ce choix d&eacute;terminera les informations à fournir</small>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-primary next-step" data-next="stepInfo">Suivant</button>
+                        </div>
+                    </div>
+                    
+                    <!-- à?tape 2: Informations communes -->
+                    <div class="form-step" id="stepInfo">
+                        <h3><i class="fas fa-id-card"></i> Informations personnelles</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="nom" class="form-label">Nom *</label>
+                                <input type="text" id="nom" name="nom" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="prenom" class="form-label">Pr&eacute;nom *</label>
+                                <input type="text" id="prenom" name="prenom" class="form-control" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dateNaissance" class="form-label">Date de naissance *</label>
+                                <input type="date" id="dateNaissance" name="dateNaissance" class="form-control" required>
+                                <small class="date-info" id="dateNaissanceInfo"></small>
+                            </div>
+                            <div class="form-group">
+                                <label for="sexe" class="form-label">Sexe *</label>
+                                <select id="sexe" name="sexe" class="form-select" required>
+                                    <option value="">S&eacute;lectionnez</option>
+                                    <option value="M">Masculin</option>
+                                    <option value="F">F&eacute;minin</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" id="email" name="email" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="telephone" class="form-label">Tél?phone *</label>
+                                <input type="tel" id="telephone" name="telephone" class="form-control" required pattern="[0-9\+\-\s]{10,}">
+                                <small class="form-hint">Format: 0550123456 ou +213550123456</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="adresse" class="form-label">Adresse</label>
+                                <input type="text" id="adresse" name="adresse" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="ville" class="form-label">Ville</label>
+                                <input type="text" id="ville" name="ville" class="form-control" value="Oran">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="password" class="form-label">Mot de passe *</label>
+                                <div class="password-input">
+                                    <input type="password" id="password" name="password" class="form-control" required minlength="8">
+                                    <button type="button" class="toggle-password" data-target="password">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="form-hint">Minimum 8 caract&egrave;res</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword" class="form-label">Confirmer le mot de passe *</label>
+                                <div class="password-input">
+                                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required>
+                                    <button type="button" class="toggle-password" data-target="confirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary prev-step" data-prev="stepUserType">Pr&eacute;c&eacute;dent</button>
+                            <button type="button" class="btn btn-primary next-step" data-next="stepSpecific">Suivant</button>
+                        </div>
+                    </div>
+                    
+                    <!-- à?tape 3: Informations sp&eacute;cifiques -->
+                    <div class="form-step" id="stepSpecific">
+                        <!-- Champs Admin -->
+                        <div id="adminFields" class="role-fields" style="display: none;">
+                            <h3><i class="fas fa-user-shield"></i> Informations administrateur</h3>
+                            
+                            <div class="form-group">
+                                <label for="adminFunction" class="form-label">Fonction *</label>
+                                <select id="adminFunction" name="adminFunction" class="form-select" required>
+                                    <option value="">S&eacute;lectionnez une fonction</option>
+                                    <option value="principal">Admin principal (tous les droits)</option>
+                                    <option value="statistiques">Admin des statistiques</option>
+                                    <option value="evenements">Admin des Événements</option>
+                                    <option value="utilisateurs">Admin des utilisateurs</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="codeOptionAdmin" class="form-label">Code d'option *</label>
+                                <input type="text" id="codeOptionAdmin" name="codeOptionAdmin" class="form-control" 
+                                       pattern="[A-Z]{3}\d{3}" placeholder="Ex: ADM123" required>
+                                <small class="form-hint">Format: 3 lettres majuscules suivies de 3 chiffres</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Champs Coach -->
+                        <div id="coachFields" class="role-fields" style="display: none;">
+                            <h3><i class="fas fa-chalkboard-teacher"></i> Informations coach</h3>
+                            
+                            <div class="form-group">
+                                <label for="sportCoach" class="form-label">Sport *</label>
+                                <select id="sportCoach" name="sportCoach" class="form-select" required>
+                                    <option value="">S&eacute;lectionnez un sport</option>
+                                    <option value="football">Football</option>
+                                    <option value="basketball">Basketball</option>
+                                    <option value="handball">Handball</option>
+                                    <option value="volleyball">Volleyball</option>
+                                    <option value="tennis">Tennis</option>
+                                    <option value="natation">Natation</option>
+                                    <option value="athletisme">Athl&eacute;tisme</option>
+                                    <option value="judo">Judo</option>
+                                    <option value="karate">Karate</option>
+                                    <option value="gymnastique">Gymnastique</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="ccpCoach" class="form-label">CCP *</label>
+                                <input type="text" id="ccpCoach" name="ccpCoach" class="form-control" 
+                                       pattern="\d{3}-\d{3}-\d{3}-\d{3}" placeholder="000-000-000-000" required>
+                                <small class="form-hint">Format: 000-000-000-000</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="diplomeCoach" class="form-label">Dipl&ocirc;me (PDF) *</label>
+                                <input type="file" id="diplomeCoach" name="diplomeCoach" class="form-control" 
+                                       accept=".pdf" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="hasMaladieCoach" name="hasMaladieCoach">
+                                    <label for="hasMaladieCoach">J'ai une maladie chronique</label>
+                                </div>
+                                <input type="text" id="nomMaladieCoach" name="nomMaladieCoach" class="form-control" 
+                                       placeholder="Nom de la maladie" style="display: none; margin-top: 10px;">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="certificatMedicalCoach" class="form-label">Certificat m&eacute;dical *</label>
+                                <input type="file" id="certificatMedicalCoach" name="certificatMedicalCoach" class="form-control" 
+                                       accept=".pdf,.jpg,.png" required>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="photoCoach" class="form-label">Photo *</label>
+                                    <input type="file" id="photoCoach" name="photoCoach" class="form-control" 
+                                           accept=".jpg,.jpeg,.png" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="extraitNaissanceCoach" class="form-label">Extrait de naissance *</label>
+                                    <input type="file" id="extraitNaissanceCoach" name="extraitNaissanceCoach" class="form-control" 
+                                           accept=".pdf,.jpg,.png" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="codeOptionCoach" class="form-label">Code d'option *</label>
+                                <input type="text" id="codeOptionCoach" name="codeOptionCoach" class="form-control" 
+                                       pattern="[A-Z]{3}\d{3}" placeholder="Ex: COA123" required>
+                                <small class="form-hint">Format: 3 lettres majuscules suivies de 3 chiffres</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Champs Athlète -->
+                        <div id="athleteFields" class="role-fields" style="display: none;">
+                            <h3><i class="fas fa-running"></i> Informations athlète</h3>
+                            
+                            <div class="form-group">
+                                <label for="sportAthlete" class="form-label">Sport *</label>
+                                <select id="sportAthlete" name="sportAthlete" class="form-select" required>
+                                    <option value="">S&eacute;lectionnez un sport</option>
+                                    <option value="football">Football</option>
+                                    <option value="basketball">Basketball</option>
+                                    <option value="handball">Handball</option>
+                                    <option value="volleyball">Volleyball</option>
+                                    <option value="tennis">Tennis</option>
+                                    <option value="natation">Natation</option>
+                                    <option value="athletisme">Athl&eacute;tisme</option>
+                                    <option value="judo">Judo</option>
+                                    <option value="karate">Karate</option>
+                                    <option value="gymnastique">Gymnastique</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="niveauAthlete" class="form-label">Niveau *</label>
+                                <select id="niveauAthlete" name="niveauAthlete" class="form-select" required>
+                                    <option value="">S&eacute;lectionnez un niveau</option>
+                                    <option value="debutant">Débutant</option>
+                                    <option value="intermediaire">Intermédiaire</option>
+                                    <option value="avance">Avancé</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="certificatMedicalAthlete" class="form-label">Certificat m&eacute;dical *</label>
+                                <input type="file" id="certificatMedicalAthlete" name="certificatMedicalAthlete" class="form-control" 
+                                       accept=".pdf,.jpg,.png" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="hasMaladieAthlete" name="hasMaladieAthlete">
+                                    <label for="hasMaladieAthlete">J'ai une maladie chronique</label>
+                                </div>
+                                <input type="text" id="nomMaladieAthlete" name="nomMaladieAthlete" class="form-control" 
+                                       placeholder="Nom de la maladie" style="display: none; margin-top: 10px;">
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="photoAthlete" class="form-label">Photo *</label>
+                                    <input type="file" id="photoAthlete" name="photoAthlete" class="form-control" 
+                                           accept=".jpg,.jpeg,.png" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="extraitNaissanceAthlete" class="form-label">Extrait de naissance *</label>
+                                    <input type="file" id="extraitNaissanceAthlete" name="extraitNaissanceAthlete" class="form-control" 
+                                           accept=".pdf,.jpg,.png" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Champs Parent -->
+                        <div id="parentFields" class="role-fields" style="display: none;">
+                            <h3><i class="fas fa-user-friends"></i> Informations parent</h3>
+                            
+                            <div class="form-group">
+                                <label for="relationEnfant" class="form-label">Relation avec l'enfant *</label>
+                                <select id="relationEnfant" name="relationEnfant" class="form-select" required>
+                                    <option value="">S&eacute;lectionnez</option>
+                                    <option value="pere">P&egrave;re</option>
+                                    <option value="mere">M&egrave;re</option>
+                                    <option value="tuteur">Tuteur l&eacute;gal</option>
+                                </select>
+                            </div>
+                            
+                            <div id="enfantsContainer">
+                                <!-- Le premier enfant sera ajoutà dynamiquement -->
+                            </div>
+                            
+                            <button type="button" id="ajouterEnfant" class="btn btn-secondary">
+                                <i class="fas fa-plus"></i> Ajouter un enfant
+                            </button>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary prev-step" data-prev="stepInfo">Pr&eacute;c&eacute;dent</button>
+                            <button type="submit" class="btn btn-primary">S'inscrire</button>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>D?jà membre à <a href="connexion.html">Connectez-vous ici</a></p>
+                    <p>En vous inscrivant, vous acceptez nos <a href="#conditions" data-modal="conditions">Conditions d'utilisation</a> et notre <a href="#confidentialite" data-modal="confidentialite">Politique de confidentialit&eacute;</a>.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <i class="fas fa-running"></i>
+                        <h3>MANAR SPORT</h3>
+                    </div>
+                    <p>Association Sportive Manar<br>
+                    Usto, Oran - Algérie<br>
+                    Tél: +213 41 12 34 56</p>
+                    <div class="social-links">
+                        <a href="#" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook"></i></a>
+                        <a href="#" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                        <a href="#" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i></a>
+                        <a href="#" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
+                        <a href="#" target="_blank" rel="noopener noreferrer"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Liens Rapides</h4>
+                    <ul>
+                        <li><a href="../index.html">Accueil</a></li>
+                        <li><a href="historique.html">Historique</a></li>
+                        <li><a href="equipes.html">Équipes</a></li>
+                        <li><a href="planning.html">Planning</a></li>
+                        <li><a href="tarifs.html">Tarifs</a></li>
+                        <li><a href="actualites.html">Actualités</a></li>
+                        <li><a href="galerie.html">Galerie</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Informations</h4>
+                    <ul>
+                        <li><a href="#" data-modal="conditions">Conditions d'utilisation</a></li>
+                        <li><a href="#" data-modal="confidentialite">Politique de confidentialit&eacute;</a></li>
+                        <li><a href="#" data-modal="cookies">Politique des cookies</a></li>
+                        <li><a href="#contact">Contactez-nous</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Horaires d'Ouverture</h4>
+                    <p>Lundi - Vendredi: 8h - 22h<br>
+                    Samedi: 9h - 20h<br>
+                    Dimanche: 9h - 18h</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Association Sportive Manar Oran. Tous droits r&eacute;serv&eacute;s.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <div id="modalConditions" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-contract"></i> Conditions d'Utilisation</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4>1. Acceptation des conditions</h4>
+                <p>En utilisant ce site, vous acceptez les pr&eacute;sentes conditions d'utilisation.</p>
+                
+                <h4>2. Inscription et compte</h4>
+                <p>Les utilisateurs doivent fournir des informations exactes et maintenir la confidentialità de leur compte.</p>
+                
+                <h4>3. Responsabilit?s</h4>
+                <p>L'association d&eacute;cline toute responsabilità pour les blessures survenues pendant les activités sportives.</p>
+                
+                <h4>4. Propri?tà intellectuelle</h4>
+                <p>Tous les contenus du site sont la propri?tà de l'Association Sportive Manar.</p>
+                
+                <h4>5. Modification des conditions</h4>
+                <p>Nous nous r&eacute;servons le droit de modifier ces conditions à tout moment.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalConfidentialite" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-shield-alt"></i> Politique de Confidentialit&eacute;</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4>Collecte des donn&eacute;es</h4>
+                <p>Nous collectons uniquement les donn&eacute;es n&eacute;cessaires à votre inscription et à la gestion de votre compte.</p>
+                
+                <h4>Utilisation des donn&eacute;es</h4>
+                <p>Vos donn&eacute;es sont utilis&eacute;es pour :</p>
+                <ul>
+                    <li>G&eacute;rer votre inscription et participation</li>
+                    <li>Vous envoyer des informations importantes</li>
+                    <li>Am&eacute;liorer nos services</li>
+                </ul>
+                
+                <h4>Protection des donn&eacute;es</h4>
+                <p>Nous mettons en à"uvre des mesures de s?curità pour prot&eacute;ger vos donn&eacute;es.</p>
+                
+                <h4>Vos droits</h4>
+                <p>Vous avez le droit d'acc?der, de modifier ou de supprimer vos donn&eacute;es.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalCookies" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-cookie-bite"></i> Politique des Cookies</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4>Qu'est-ce qu'un cookie à</h4>
+                <p>Un cookie est un petit fichier stockà sur votre appareil pour am&eacute;liorer votre exp&eacute;rience.</p>
+                
+                <h4>Cookies utilis&eacute;s</h4>
+                <p>Nous utilisons :</p>
+                <ul>
+                    <li>Cookies essentiels (connexion, s&eacute;curit&eacute;)</li>
+                    <li>Cookies de performance (analyse d'usage)</li>
+                    <li>Cookies de fonctionnalità (pr?f?rences)</li>
+                </ul>
+                
+                <h4>Gestion des cookies</h4>
+                <p>Vous pouvez contr&ocirc;ler les cookies via les param?tres de votre navigateur.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer"></div>
+
+    <script src="../script.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/forms.js"></script>
+</body>
+</html>
+
+

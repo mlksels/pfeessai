@@ -1,0 +1,380 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/js/sync.js"></script>
+    <title>Galerie - Association Sportive Manar Oran</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../assets/css/gallery.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        <div class="logo-icon">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <div class="logo-text">
+                            <h1>MANAR SPORT</h1>
+                            <p>Usto Oran - Association Sportive</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <nav class="nav-menu" id="navMenu">
+                    <ul>
+                        <li><a href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+                        <li><a href="historique.html"><i class="fas fa-history"></i> Historique</a></li>
+                        <li><a href="equipes.html"><i class="fas fa-users"></i> Équipes</a></li>
+                        <li><a href="planning.html"><i class="fas fa-calendar-alt"></i> Planning</a></li>
+                        <li><a href="tarifs.html"><i class="fas fa-tags"></i> Tarifs</a></li>
+                        <li><a href="actualites.html"><i class="fas fa-newspaper"></i> Actualités</a></li>
+                        <li><a href="galerie.html" class="active"><i class="fas fa-images"></i> Galerie</a></li>
+                        <!-- Liens de connexion (cach&eacute;s si connect&eacute;) -->
+                        <li class="auth-links">
+                            <a href="connexion.html" class="btn-login" id="loginLink">
+                                <i class="fas fa-sign-in-alt"></i> Connexion
+                            </a>
+                        </li>
+                        <li class="auth-links">
+                            <a href="inscription.html" class="btn-register" id="registerLink">
+                                <i class="fas fa-user-plus"></i> Inscription
+                            </a>
+                        </li>
+                        <!-- Menu utilisateur connectà (cachà par d&eacute;faut) -->
+                        <li class="user-menu-item" id="userMenuItem" style="display: none;">
+                            <div class="user-dropdown-container">
+                                <a href="#" class="btn-user" id="userMenuToggle">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span id="userName">Mon Compte</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </a>
+                                <div class="user-dropdown" id="userDropdown">
+                                    <div class="dropdown-header">
+                                        <strong id="userFullName"></strong>
+                                        <span id="userRole"></span>
+                                    </div>
+                                    <div class="dropdown-divider"></div>
+                                    <a href="profil.html" id="profileLink">
+                                        <i class="fas fa-id-card"></i> Mon Profil
+                                    </a>
+                                    <a href="planning.html" id="planningLink">
+                                        <i class="fas fa-calendar-alt"></i> Planning
+                                    </a>
+                                    <div class="dropdown-divider" id="adminDivider" style="display: none;"></div>
+                                    <a href="../admin/dashboard.html" id="adminDashboardLink" style="display: none;">
+                                        <i class="fas fa-tachometer-alt"></i> Dashboard Admin
+                                    </a>
+                                    <div class="dropdown-divider"></div>
+                                    <a href="#" id="logoutBtn">
+                                        <i class="fas fa-sign-out-alt"></i> D&eacute;connexion
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section Galerie -->
+    <section class="page-hero galerie-hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Galerie Photos & Vid&eacute;os</h1>
+                <p>Découvrez les moments forts de notre association en images</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Navigation -->
+    <section class="gallery-nav">
+        <div class="container">
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-gallery="photos">
+                    <i class="fas fa-camera"></i> Photos
+                </button>
+                <button class="nav-tab" data-gallery="videos">
+                    <i class="fas fa-video"></i> Vid&eacute;os
+                </button>
+                <button class="nav-tab" data-gallery="albums">
+                    <i class="fas fa-images"></i> Albums
+                </button>
+            </div>
+            
+            <!-- Actions - VISIBLES UNIQUEMENT POUR ADMIN -->
+            <div class="gallery-actions" id="galleryAdminActions" style="display: none;">
+                <button class="btn btn-primary" id="uploadMedia">
+                    <i class="fas fa-upload"></i> Ajouter une photo
+                </button>
+                <button class="btn btn-secondary" id="createAlbum">
+                    <i class="fas fa-plus-circle"></i> Créer un album
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Filters -->
+    <section class="gallery-filters">
+        <div class="container">
+            <div class="filters-container">
+                <div class="category-filters">
+                    <button class="category-btn active" data-category="all">
+                        <i class="fas fa-globe"></i> Toutes les catégories
+                    </button>
+                    <button class="category-btn" data-category="competitions">
+                        <i class="fas fa-trophy"></i> Compétitions
+                    </button>
+                    <button class="category-btn" data-category="entrainements">
+                        <i class="fas fa-dumbbell"></i> Entraînements
+                    </button>
+                    <button class="category-btn" data-category="evenements">
+                        <i class="fas fa-calendar-star"></i> Événements
+                    </button>
+                    <button class="category-btn" data-category="equipes">
+                        <i class="fas fa-users"></i> Équipes
+                    </button>
+                    <button class="category-btn" data-category="infrastructures">
+                        <i class="fas fa-building"></i> Infrastructures
+                    </button>
+                </div>
+                
+                <div class="date-filter">
+                    <select id="dateFilter" class="form-select">
+                        <option value="all">Toutes les dates</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                        <option value="2021">2021</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Photos Gallery -->
+    <section class="photos-section active" id="photosGallery">
+        <div class="container">
+            <div class="gallery-grid" id="photosGrid">
+                <!-- Photos charg&eacute;es dynamiquement -->
+            </div>
+            
+            <div class="loading-spinner" id="photosLoader" style="display: none;">
+                <div class="spinner"></div>
+                <p>Chargement des photos...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Videos Gallery -->
+    <section class="videos-section" id="videosGallery" style="display: none;">
+        <div class="container">
+            <div class="section-title">
+                <h2><i class="fas fa-video"></i> Nos Vid&eacute;os</h2>
+                <p>Revivez les moments forts en vidéo</p>
+            </div>
+            
+            <div class="videos-grid" id="videosGrid">
+                <!-- Vid&eacute;os charg&eacute;es dynamiquement -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Albums Section -->
+    <section class="albums-section" id="albumsGallery" style="display: none;">
+        <div class="container">
+            <div class="section-title">
+                <h2><i class="fas fa-images"></i> Albums Photos</h2>
+                <p>Explorez nos albums thématiques</p>
+            </div>
+            
+            <div class="albums-grid" id="albumsGrid">
+                <!-- Albums charg&eacute;s dynamiquement -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <i class="fas fa-running"></i>
+                        <h3>MANAR SPORT</h3>
+                    </div>
+                    <p>Association Sportive Manar<br>
+                    Usto, Oran - Algérie<br>
+                    Tél: +213 41 12 34 56</p>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Liens Rapides</h4>
+                    <ul>
+                        <li><a href="../index.html">Accueil</a></li>
+                        <li><a href="historique.html">Historique</a></li>
+                        <li><a href="equipes.html">Équipes</a></li>
+                        <li><a href="planning.html">Planning</a></li>
+                        <li><a href="tarifs.html">Tarifs</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Cat&eacute;gories</h4>
+                    <ul>
+                        <li><a href="#" data-category="competitions">Compétitions</a></li>
+                        <li><a href="#" data-category="entrainements">Entraînements</a></li>
+                        <li><a href="#" data-category="evenements">Événements</a></li>
+                        <li><a href="#" data-category="equipes">Équipes</a></li>
+                        <li><a href="#" data-category="infrastructures">Infrastructures</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Suivez-nous</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                    <!-- Lien admin dans le footer - visible uniquement pour admin -->
+                    <div id="footerAdminLink" style="display: none; margin-top: 15px;">
+                        <a href="../admin/dashboard.html" style="color: #ffc107;">
+                            <i class="fas fa-tachometer-alt"></i> Administration
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Association Sportive Manar Oran. Tous droits r&eacute;serv&eacute;s.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox">
+        <button class="lightbox-close">&times;</button>
+        <button class="lightbox-prev"><i class="fas fa-chevron-left"></i></button>
+        <button class="lightbox-next"><i class="fas fa-chevron-right"></i></button>
+        <div class="lightbox-content">
+            <img src="" alt="" id="lightboxImage">
+            <div class="lightbox-info">
+                <h3 id="lightboxTitle"></h3>
+                <p id="lightboxDescription"></p>
+                <div class="lightbox-meta">
+                    <span id="lightboxAuthor"></span>
+                    <span id="lightboxDate"></span>
+                    <span id="lightboxCategory"></span>
+                </div>
+                <!-- Actions admin dans la lightbox -->
+                <div class="lightbox-admin-actions" id="lightboxAdminActions" style="display: none; margin-top: 15px; gap: 10px;">
+                    <button class="btn btn-primary btn-sm" id="lightboxEditBtn">
+                        <i class="fas fa-edit"></i> Modifier
+                    </button>
+                    <button class="btn btn-danger btn-sm" id="lightboxDeleteBtn">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Upload (Admin seulement) -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-upload"></i> Ajouter une photo</h3>
+                <button class="modal-close" id="closeUploadModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label for="uploadTitle">Titre *</label>
+                        <input type="text" id="uploadTitle" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="uploadDescription">Description</label>
+                        <textarea id="uploadDescription" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="uploadCategory">Cat&eacute;gorie *</label>
+                        <select id="uploadCategory" class="form-control" required>
+                            <option value="">Choisir...</option>
+                            <option value="competitions">Compétitions</option>
+                            <option value="entrainements">Entraînements</option>
+                            <option value="evenements">Événements</option>
+                            <option value="equipes">Équipes</option>
+                            <option value="infrastructures">Infrastructures</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="uploadImage">Image *</label>
+                        <input type="file" id="uploadImage" accept="image/*" class="form-control" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Publier</button>
+                        <button type="button" class="btn btn-secondary" id="cancelUpload">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Modification (Admin seulement) -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Modifier la photo</h3>
+                <button class="modal-close" id="closeEditModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <div class="form-group">
+                        <label for="editTitle">Titre *</label>
+                        <input type="text" id="editTitle" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDescription">Description</label>
+                        <textarea id="editDescription" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCategory">Cat&eacute;gorie *</label>
+                        <select id="editCategory" class="form-control" required>
+                            <option value="competitions">Compétitions</option>
+                            <option value="entrainements">Entraînements</option>
+                            <option value="evenements">Événements</option>
+                            <option value="equipes">Équipes</option>
+                            <option value="infrastructures">Infrastructures</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                        <button type="button" class="btn btn-secondary" id="cancelEdit">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="../script.js"></script>
+    <script src="../assets/js/galerie.js"></script>
+</body>
+</html>
+
+
+
+
+

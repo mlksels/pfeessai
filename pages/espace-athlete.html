@@ -1,0 +1,293 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Athl?te - Manar Sport</title>
+    <script src="../assets/js/sync.js"></script>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .dashboard-header { background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%); color: white; padding: 30px 0; }
+        .dashboard-header h1 { margin: 0 0 5px; font-size: 1.8rem; }
+        .dashboard-header p { margin: 0; opacity: 0.85; }
+        .welcome-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 10px; }
+        .dashboard-body { padding: 30px 0; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); display: flex; align-items: center; gap: 15px; }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+        .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-icon.blue { background: #dbeafe; color: #1e40af; }
+        .stat-icon.orange { background: #ffedd5; color: #ea580c; }
+        .stat-icon.red { background: #fee2e2; color: #dc2626; }
+        .stat-info h3 { margin: 0 0 3px; font-size: 1.6rem; color: #16a34a; }
+        .stat-info p { margin: 0; color: #6b7280; font-size: 0.85rem; }
+        .content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        @media (max-width: 900px) { .content-grid { grid-template-columns: 1fr; } }
+        .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); overflow: hidden; margin-bottom: 25px; }
+        .card-header { padding: 18px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+        .card-header h2 { margin: 0; font-size: 1rem; color: #16a34a; display: flex; align-items: center; gap: 8px; }
+        .card-body { padding: 20px; }
+        .seance-item { display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+        .seance-item:last-child { border-bottom: none; }
+        .seance-date { text-align: center; min-width: 50px; }
+        .seance-date .jour { font-size: 1.4rem; font-weight: bold; color: #16a34a; }
+        .seance-date .mois { font-size: 0.75rem; color: #6b7280; text-transform: uppercase; }
+        .seance-info h4 { margin: 0 0 3px; font-size: 0.95rem; }
+        .seance-info p { margin: 0; color: #6b7280; font-size: 0.83rem; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-left: auto; }
+        .badge-green { background: #dcfce7; color: #16a34a; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .progress-item { margin-bottom: 16px; }
+        .progress-label { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.87rem; }
+        .progress-bar { height: 8px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 10px; transition: width 1s ease; }
+        .objectif-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+        .objectif-item:last-child { border-bottom: none; }
+        .objectif-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .action-btn { padding: 14px; border-radius: 10px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform 0.2s; text-decoration: none; color: inherit; }
+        .action-btn:hover { transform: translateY(-2px); }
+        .action-btn.green { background: #dcfce7; color: #16a34a; }
+        .action-btn.blue { background: #dbeafe; color: #1e40af; }
+        .action-btn.orange { background: #ffedd5; color: #ea580c; }
+        .action-btn.purple { background: #f3e8ff; color: #7c3aed; }
+        .action-btn i { font-size: 1.3rem; }
+        header.header { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 100; }
+        .header .container { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; }
+        .logo a { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-icon { background: linear-gradient(135deg, #16a34a, #22c55e); color: white; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .logo-text h1 { margin: 0; font-size: 1.1rem; color: #16a34a; }
+        .logo-text p { margin: 0; font-size: 0.75rem; color: #6b7280; }
+        nav.nav-menu ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 5px; }
+        nav.nav-menu ul li a { padding: 8px 14px; border-radius: 8px; text-decoration: none; color: #374151; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+        nav.nav-menu ul li a:hover, nav.nav-menu ul li a.active { background: #dcfce7; color: #16a34a; }
+        nav.nav-menu ul li a#logoutBtn { color: #dc2626; }
+        nav.nav-menu ul li a#logoutBtn:hover { background: #fee2e2; }
+        :root { --dashboard-primary: #1e3a8a; --dashboard-secondary: #3b82f6; --dashboard-accent: #fbbf24; --dashboard-accent-soft: #fef3c7; }
+        .dashboard-header, .logo-icon { background: linear-gradient(135deg, var(--dashboard-primary), var(--dashboard-secondary)); }
+        .logo-text h1, .card-header h2, .stat-info h3, .seance-date .jour { color: var(--dashboard-primary); }
+        nav.nav-menu ul li a:hover, nav.nav-menu ul li a.active { background: var(--dashboard-accent-soft); color: #d97706; }
+        .stat-icon.green, .action-btn.green { background: #dbeafe; color: var(--dashboard-primary); }
+        .stat-icon.orange, .action-btn.orange { background: var(--dashboard-accent-soft); color: #d97706; }
+        .action-btn.purple { background: #eff6ff; color: var(--dashboard-secondary); }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <div class="logo-icon"><i class="fas fa-running"></i></div>
+                    <div class="logo-text">
+                        <h1>MANAR SPORT</h1>
+                        <p>Espace Athl?te</p>
+                    </div>
+                </a>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="espace-athlete.html" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="planning.html"><i class="fas fa-calendar-alt"></i> Planning</a></li>
+                    <li><a href="galerie.html"><i class="fas fa-images"></i> Galerie</a></li>
+                    <li><a href="profil.html"><i class="fas fa-user"></i> Mon Profil</a></li>
+                    <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> D?connexion</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="welcome-badge"><i class="fas fa-running"></i> Athl?te</div>
+            <h1 id="athleteWelcome">Bonjour, Athl?te !</h1>
+            <p>Suivez vos performances, consultez votre planning et restez motiv?</p>
+        </div>
+    </div>
+
+    <div class="dashboard-body">
+        <div class="container">
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon green"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="stat-info"><h3 id="seancesCount">0</h3><p>S?ances ? venir</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-info"><h3>+12%</h3><p>Progression ce mois</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange"><i class="fas fa-medal"></i></div>
+                    <div class="stat-info"><h3 id="badgesCount">3</h3><p>Badges obtenus</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon red"><i class="fas fa-fire"></i></div>
+                    <div class="stat-info"><h3>7</h3><p>Jours cons?cutifs</p></div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div>
+                    <!-- Prochaines s&eacute;ances -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-calendar-alt"></i> Mes Prochaines S?ances</h2>
+                            <a href="planning.html" style="font-size:0.85rem;color:#16a34a;text-decoration:none;">Voir le planning</a>
+                        </div>
+                        <div class="card-body" id="seancesList"></div>
+                    </div>
+
+                    <!-- Performances -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-chart-bar"></i> Mes Performances</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="progress-item">
+                                <div class="progress-label"><span>Endurance</span><span>78%</span></div>
+                                <div class="progress-bar"><div class="progress-fill" style="width:78%;background:linear-gradient(135deg,#16a34a,#22c55e)"></div></div>
+                            </div>
+                            <div class="progress-item">
+                                <div class="progress-label"><span>Vitesse</span><span>65%</span></div>
+                                <div class="progress-bar"><div class="progress-fill" style="width:65%;background:linear-gradient(135deg,#2563eb,#60a5fa)"></div></div>
+                            </div>
+                            <div class="progress-item">
+                                <div class="progress-label"><span>Force</span><span>82%</span></div>
+                                <div class="progress-bar"><div class="progress-fill" style="width:82%;background:linear-gradient(135deg,#ea580c,#fb923c)"></div></div>
+                            </div>
+                            <div class="progress-item">
+                                <div class="progress-label"><span>Technique</span><span>70%</span></div>
+                                <div class="progress-bar"><div class="progress-fill" style="width:70%;background:linear-gradient(135deg,#7c3aed,#a78bfa)"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <!-- Actions rapides -->
+                    <div class="card">
+                        <div class="card-header"><h2><i class="fas fa-bolt"></i> Actions Rapides</h2></div>
+                        <div class="card-body">
+                            <div class="quick-actions">
+                                <a href="planning.html" class="action-btn green"><i class="fas fa-calendar-alt"></i><span>Planning</span></a>
+                                <a href="galerie.html" class="action-btn blue"><i class="fas fa-images"></i><span>Galerie</span></a>
+                                <a href="profil.html" class="action-btn orange"><i class="fas fa-user-edit"></i><span>Profil</span></a>
+                                <a href="../index.html" class="action-btn purple"><i class="fas fa-home"></i><span>Accueil</span></a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mes objectifs -->
+                    <div class="card">
+                        <div class="card-header"><h2><i class="fas fa-bullseye"></i> Mes Objectifs</h2></div>
+                        <div class="card-body" id="objectifsList"></div>
+                    </div>
+
+                    <!-- Mon profil -->
+                    <div class="card">
+                        <div class="card-header"><h2><i class="fas fa-id-card"></i> Mon Compte</h2></div>
+                        <div class="card-body" style="text-align:center;">
+                            <div id="profileAvatarAthlete" style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#16a34a,#22c55e);color:white;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto 10px;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <p id="profileNameAthlete" style="font-weight:600;margin:0 0 3px;"></p>
+                            <p style="color:#6b7280;font-size:0.85rem;margin:0 0 15px;">Athl?te</p>
+                            <a href="profil.html" style="background:#dcfce7;color:#16a34a;padding:8px 20px;border-radius:8px;text-decoration:none;font-size:0.85rem;font-weight:600;">Modifier le profil</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    <script>
+    function getUserBookings(userId) {
+        return JSON.parse(localStorage.getItem('userBookings') || '[]')
+            .filter(res => res.userId === userId)
+            .sort((a, b) => new Date(a.start) - new Date(b.start));
+    }
+
+    function renderAthleteDashboard() {
+        const session = localStorage.getItem('currentSession') || localStorage.getItem('ms_session');
+        if (!session) { window.location.href = '../pages/connexion.html'; return; }
+        const user = JSON.parse(session);
+        if (user.role !== 'athlete') { window.location.href = '../index.html'; return; }
+
+        document.getElementById('athleteWelcome').textContent = `Bonjour, ${user.prenom || user.nom || 'Athl?f?te'} !`;
+        const profileNameAthlete = document.getElementById('profileNameAthlete');
+        if (profileNameAthlete) {
+            profileNameAthlete.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim();
+        }
+        const profileAvatarAthlete = document.getElementById('profileAvatarAthlete');
+        if (profileAvatarAthlete) {
+            if (user.profilePicture) {
+                profileAvatarAthlete.innerHTML = `<img src="${user.profilePicture}" alt="Avatar ${user.prenom || user.nom || 'athlète'}">`;
+            } else {
+                profileAvatarAthlete.innerHTML = '<i class="fas fa-user"></i>';
+            }
+        }
+
+        const reservations = getUserBookings(user.id);
+        document.getElementById('seancesCount').textContent = reservations.length;
+
+        const seancesList = document.getElementById('seancesList');
+        if (seancesList) {
+            if (reservations.length === 0) {
+                seancesList.innerHTML = '<p style="color:#6b7280;margin:0;">Aucune s&eacute;ance r?f?serv?f?e pour le moment.</p>';
+            } else {
+                seancesList.innerHTML = reservations.slice(0, 4).map(res => {
+                    const start = new Date(res.start);
+                    const end = res.end ? new Date(res.end) : null;
+                    return `
+                        <div class="seance-item">
+                            <div class="seance-date"><div class="jour">${start.toLocaleDateString('fr-FR', { day: '2-digit' })}</div><div class="mois">${start.toLocaleDateString('fr-FR', { month: 'short' })}</div></div>
+                            <div class="seance-info">
+                                <h4>${res.title}</h4>
+                                <p><i class="fas fa-clock" style="width:14px"></i> ${start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}${end ? ` - ${end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : ''} &nbsp;|&nbsp; <i class="fas fa-map-marker-alt" style="width:14px"></i> ${res.location || 'Lieu ?f? d?f?finir'}</p>
+                            </div>
+                            <span class="badge badge-green">Confirm?f?e</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        const objectifs = [
+            { text: 'Courir 5km en moins de 25 min', icon: 'fas fa-running', color: '#dcfce7', textColor: '#16a34a', done: true },
+            { text: 'Marquer 10 buts ce mois', icon: 'fas fa-futbol', color: '#dbeafe', textColor: '#1e40af', done: false },
+            { text: 'Participer ?f? 15 s&eacute;ances', icon: 'fas fa-calendar-check', color: '#ffedd5', textColor: '#ea580c', done: reservations.length >= 15 },
+        ];
+        const objectifsList = document.getElementById('objectifsList');
+        if (objectifsList) {
+            objectifsList.innerHTML = objectifs.map(o => `
+                <div class="objectif-item">
+                    <div class="objectif-icon" style="background:${o.color};color:${o.textColor}"><i class="${o.icon}"></i></div>
+                    <span style="font-size:0.88rem;flex:1;${o.done ? 'text-decoration:line-through;color:#9ca3af;' : ''}">${o.text}</span>
+                    ${o.done ? '<i class="fas fa-check-circle" style="color:#16a34a"></i>' : ''}
+                </div>
+            `).join('');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderAthleteDashboard();
+
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('currentSession');
+            window.location.href = '../index.html';
+        });
+
+        window.addEventListener('storage', function(event) {
+            if (['userBookings', 'currentSession', 'ms_session'].includes(event.key)) {
+                renderAthleteDashboard();
+            }
+        });
+    });
+    </script>
+</body>
+</html>
+
+
+

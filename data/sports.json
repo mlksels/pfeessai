@@ -1,0 +1,31 @@
+{
+  "sports": [
+    {
+      "id": 1,
+      "name": "Football",
+      "icon": "futbol",
+      "description": "Sport collectif opposant deux équipes de onze joueurs.",
+      "levels": ["Débutant", "Loisir", "Compétition"],
+      "ageGroups": ["U8", "U10", "U12", "U15", "U18", "Senior"],
+      "equipment": ["Chaussures à crampons", "Protège-tibias", "Maillot"]
+    },
+    {
+      "id": 2,
+      "name": "Basketball",
+      "icon": "basketball-ball",
+      "description": "Sport collectif de balle opposant deux équipes de cinq joueurs.",
+      "levels": ["Débutant", "Loisir", "Compétition"],
+      "ageGroups": ["U12", "U15", "U18", "Senior"],
+      "equipment": ["Chaussures de sport", "Maillot", "Short"]
+    },
+    {
+      "id": 3,
+      "name": "Volleyball",
+      "icon": "volleyball-ball",
+      "description": "Sport collectif mettant en jeu deux équipes de six joueurs.",
+      "levels": ["Débutant", "Loisir", "Compétition"],
+      "ageGroups": ["U14", "U16", "U18", "Senior"],
+      "equipment": ["Chaussures de sport", "Genouillères", "Maillot"]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "title": "Tournoi de Football U20",
+      "description": "Tournoi annuel des moins de 20 ans",
+      "date": "2024-12-15",
+      "endDate": "2024-12-20",
+      "startTime": "09:00",
+      "endTime": "18:00",
+      "sport": "football",
+      "location": "Stade Municipal d'Oran",
+      "type": "competition",
+      "level": "Compétition",
+      "maxParticipants": 200,
+      "registered": 150,
+      "status": "confirmed",
+      "organizer": "Association Sportive Manar",
+      "contact": "tournoi@manarsport.dz",
+      "registrationDeadline": "2024-12-10",
+      "fees": "5000 DZD par équipe",
+      "prizes": ["Trophée + 100000 DZD", "Médaille + 50000 DZD", "Médaille + 25000 DZD"],
+      "rules": "Tournoi FIFA officiel - Carton jaune = 1000 DZD d'amende"
+    },
+    {
+      "id": 2,
+      "title": "Stage de Natation Été",
+      "description": "Stage intensif de natation pour tous niveaux",
+      "date": "2024-07-01",
+      "endDate": "2024-07-15",
+      "startTime": "08:00",
+      "endTime": "12:00",
+      "sport": "natation",
+      "location": "Piscine Olympique d'Oran",
+      "type": "training",
+      "level": "Tous niveaux",
+      "maxParticipants": 50,
+      "registered": 35,
+      "status": "open",
+      "organizer": "Coach Leila Bensalem",
+      "contact": "natation@manarsport.dz",
+      "registrationDeadline": "2024-06-25",
+      "fees": "15000 DZD",
+      "requirements": "Certificat médical obligatoire - Bonnet de bain"
+    }
+  ]
+}

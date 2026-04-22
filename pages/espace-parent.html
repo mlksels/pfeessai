@@ -1,0 +1,318 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <script src="../assets/js/sync.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Parent - Manar Sport</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .dashboard-header { background: linear-gradient(135deg, #ea580c 0%, #f97316 100%); color: white; padding: 30px 0; }
+        .dashboard-header h1 { margin: 0 0 5px; font-size: 1.8rem; }
+        .dashboard-header p { margin: 0; opacity: 0.85; }
+        .welcome-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 10px; }
+        .dashboard-body { padding: 30px 0; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); display: flex; align-items: center; gap: 15px; }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+        .stat-icon.orange { background: #ffedd5; color: #ea580c; }
+        .stat-icon.blue { background: #dbeafe; color: #1e40af; }
+        .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-icon.purple { background: #f3e8ff; color: #7c3aed; }
+        .stat-info h3 { margin: 0 0 3px; font-size: 1.6rem; color: #ea580c; }
+        .stat-info p { margin: 0; color: #6b7280; font-size: 0.85rem; }
+        .content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        @media (max-width: 900px) { .content-grid { grid-template-columns: 1fr; } }
+        .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); overflow: hidden; margin-bottom: 25px; }
+        .card-header { padding: 18px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+        .card-header h2 { margin: 0; font-size: 1rem; color: #ea580c; display: flex; align-items: center; gap: 8px; }
+        .card-body { padding: 20px; }
+        .enfant-card { display: flex; align-items: center; gap: 15px; padding: 15px; border: 1px solid #f1f5f9; border-radius: 10px; margin-bottom: 12px; }
+        .enfant-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #ea580c, #f97316); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; }
+        .enfant-info h4 { margin: 0 0 4px; }
+        .enfant-info p { margin: 0; font-size: 0.83rem; color: #6b7280; }
+        .enfant-status { margin-left: auto; padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+        .status-active { background: #dcfce7; color: #16a34a; }
+        .facture-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+        .facture-item:last-child { border-bottom: none; }
+        .facture-info h4 { margin: 0 0 3px; font-size: 0.9rem; }
+        .facture-info p { margin: 0; font-size: 0.8rem; color: #6b7280; }
+        .facture-montant { font-weight: bold; color: #ea580c; }
+        .seance-item { display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }
+        .seance-item:last-child { border-bottom: none; }
+        .seance-date { text-align: center; min-width: 50px; }
+        .seance-date .jour { font-size: 1.4rem; font-weight: bold; color: #ea580c; }
+        .seance-date .mois { font-size: 0.75rem; color: #6b7280; text-transform: uppercase; }
+        .seance-info h4 { margin: 0 0 3px; font-size: 0.95rem; }
+        .seance-info p { margin: 0; color: #6b7280; font-size: 0.83rem; }
+        .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .action-btn { padding: 14px; border-radius: 10px; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform 0.2s; text-decoration: none; color: inherit; }
+        .action-btn:hover { transform: translateY(-2px); }
+        .action-btn.orange { background: #ffedd5; color: #ea580c; }
+        .action-btn.blue { background: #dbeafe; color: #1e40af; }
+        .action-btn.green { background: #dcfce7; color: #16a34a; }
+        .action-btn.purple { background: #f3e8ff; color: #7c3aed; }
+        .action-btn i { font-size: 1.3rem; }
+        header.header { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 100; }
+        .header .container { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; }
+        .logo a { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-icon { background: linear-gradient(135deg, #ea580c, #f97316); color: white; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .logo-text h1 { margin: 0; font-size: 1.1rem; color: #ea580c; }
+        .logo-text p { margin: 0; font-size: 0.75rem; color: #6b7280; }
+        nav.nav-menu ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 5px; }
+        nav.nav-menu ul li a { padding: 8px 14px; border-radius: 8px; text-decoration: none; color: #374151; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+        nav.nav-menu ul li a:hover, nav.nav-menu ul li a.active { background: #ffedd5; color: #ea580c; }
+        nav.nav-menu ul li a#logoutBtn { color: #dc2626; }
+        nav.nav-menu ul li a#logoutBtn:hover { background: #fee2e2; }
+        :root { --dashboard-primary: #1e3a8a; --dashboard-secondary: #3b82f6; --dashboard-accent: #fbbf24; --dashboard-accent-soft: #fef3c7; }
+        .dashboard-header, .logo-icon { background: linear-gradient(135deg, var(--dashboard-primary), var(--dashboard-secondary)); }
+        .logo-text h1, .card-header h2, .stat-info h3, .seance-date .jour { color: var(--dashboard-primary); }
+        .enfant-avatar { background: linear-gradient(135deg, var(--dashboard-primary), var(--dashboard-secondary)); }
+        nav.nav-menu ul li a:hover, nav.nav-menu ul li a.active { background: var(--dashboard-accent-soft); color: #d97706; }
+        .stat-icon.orange, .action-btn.orange { background: var(--dashboard-accent-soft); color: #d97706; }
+        .action-btn.green { background: #dbeafe; color: var(--dashboard-primary); }
+        .action-btn.purple { background: #eff6ff; color: var(--dashboard-secondary); }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <div class="logo-icon"><i class="fas fa-user-friends"></i></div>
+                    <div class="logo-text">
+                        <h1>MANAR SPORT</h1>
+                        <p>Espace Parent</p>
+                    </div>
+                </a>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="espace-parent.html" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="planning.html"><i class="fas fa-calendar"></i> Planning</a></li>
+                    <li><a href="profil.html"><i class="fas fa-user"></i> Mon Profil</a></li>
+                    <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> D?f?connexion</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="welcome-badge"><i class="fas fa-user-friends"></i> Parent</div>
+            <h1 id="parentWelcome">Bonjour !</h1>
+            <p>Suivez la progression de vos enfants et g?f?rez leurs inscriptions</p>
+        </div>
+    </div>
+
+    <div class="dashboard-body">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon orange"><i class="fas fa-child"></i></div>
+                    <div class="stat-info"><h3 id="enfantsCount">2</h3><p>Mes Enfants</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class="fas fa-calendar-check"></i></div>
+                    <div class="stat-info"><h3>8</h3><p>S?f?ances ce mois</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-info"><h3>92%</h3><p>Taux de pr?f?sence</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple"><i class="fas fa-credit-card"></i></div>
+                    <div class="stat-info"><h3>?f?,? jour</h3><p>Cotisation</p></div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div>
+                    <!-- Mes enfants -->
+                    <div class="card">
+                        <div class="card-header"><h2><i class="fas fa-child"></i> Mes Enfants</h2></div>
+                        <div class="card-body" id="enfantsList"></div>
+                    </div>
+
+                    <!-- Prochaines s&eacute;ances des enfants -->
+                    <div class="card">
+                        <div class="card-header"><h2><i class="fas fa-calendar-alt"></i> Prochaines S?f?ances</h2></div>
+                        <div class="card-body" id="seancesList"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <!-- Actions rapides -->
+                    <div class="card">
+                        <div class="card-header"><h2><i class="fas fa-bolt"></i> Actions Rapides</h2></div>
+                        <div class="card-body">
+                            <div class="quick-actions">
+                                <a href="planning.html" class="action-btn orange"><i class="fas fa-calendar-plus"></i><span>Planning</span></a>
+                                <a href="inscription.html" class="action-btn blue"><i class="fas fa-user-plus"></i><span>Inscrire</span></a>
+                                <a href="profil.html" class="action-btn green"><i class="fas fa-user-edit"></i><span>Profil</span></a>
+                                <a href="../index.html" class="action-btn purple"><i class="fas fa-home"></i><span>Accueil</span></a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Factures r?f?centes -->
+                    <div class="card">
+                        <div class="card-header"><h2><i class="fas fa-file-invoice"></i> Factures R?f?centes</h2></div>
+                        <div class="card-body" id="facturesList"></div>
+                    </div>
+
+                    <!-- Profil rapide -->
+                    <div class="card">
+                        <div class="card-header"><h2><i class="fas fa-id-card"></i> Mon Compte</h2></div>
+                        <div class="card-body" style="text-align:center;">
+                            <div id="profileAvatarParent" style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#ea580c,#f97316);color:white;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto 10px;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <p id="profileNameParent" style="font-weight:600;margin:0 0 3px;"></p>
+                            <p style="color:#6b7280;font-size:0.85rem;margin:0 0 15px;">Parent</p>
+                            <a href="profil.html" style="background:#ffedd5;color:#ea580c;padding:8px 20px;border-radius:8px;text-decoration:none;font-size:0.85rem;font-weight:600;">Modifier le profil</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function readJson(keys, fallback) {
+        for (const key of keys) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw) return JSON.parse(raw);
+            } catch (_) {}
+        }
+        return fallback;
+    }
+
+    function getCurrentParent() {
+        const session = readJson(['currentSession', 'ms_session'], null);
+        if (!session) return null;
+        const users = readJson(['users', 'ms_users'], []);
+        return users.find(u => u.id === session.id || u.email === session.email) || session;
+    }
+
+    function getPlanningEvents() {
+        return readJson(['planningEvents', 'ms_planning'], []);
+    }
+
+    function matchesChildSport(event, sport) {
+        if (!sport) return true;
+        const haystack = `${event.sport || ''} ${event.title || ''}`.toLowerCase();
+        return haystack.includes(String(sport).toLowerCase());
+    }
+
+    function renderParentDashboard() {
+        const user = getCurrentParent();
+        if (!user) { window.location.href = '../pages/connexion.html'; return; }
+        if ((user.role || user.userType) !== 'parent') { window.location.href = '../index.html'; return; }
+
+        document.getElementById('parentWelcome').textContent = `Bonjour, ${user.prenom || user.nom || ''} !`;
+        const profileName = document.getElementById('profileNameParent');
+        if (profileName) profileName.textContent = `${user.prenom || ''} ${user.nom || ''}`.trim();
+        const profileAvatarParent = document.getElementById('profileAvatarParent');
+        if (profileAvatarParent) {
+            if (user.profilePicture) {
+                profileAvatarParent.innerHTML = `<img src="${user.profilePicture}" alt="Avatar ${user.prenom || user.nom || 'parent'}">`;
+            } else {
+                profileAvatarParent.innerHTML = '<i class="fas fa-user"></i>';
+            }
+        }
+
+        const enfants = Array.isArray(user.enfants) ? user.enfants : [];
+        document.getElementById('enfantsCount').textContent = enfants.length;
+
+        const enfantsList = document.getElementById('enfantsList');
+        if (enfantsList) {
+            enfantsList.innerHTML = enfants.length ? enfants.map((enfant) => `
+                <div class="enfant-card">
+                    <div class="enfant-avatar">${(enfant.prenom || enfant.nom || '?').charAt(0)}</div>
+                    <div class="enfant-info">
+                        <h4>${[enfant.prenom, enfant.nom].filter(Boolean).join(' ') || enfant.nom || 'Enfant'}</h4>
+                        <p>${enfant.age ? `${enfant.age} ans | ` : ''}${enfant.sport || 'Sport non defini'}</p>
+                    </div>
+                    <span class="enfant-status status-active">Actif</span>
+                </div>
+            `).join('') : '<p style="margin:0;color:#6b7280;">Aucun enfant enregistre pour ce compte.</p>';
+        }
+
+        const upcomingEvents = getPlanningEvents()
+            .filter(event => new Date(event.start || event.date) >= new Date())
+            .sort((a, b) => new Date(a.start || a.date) - new Date(b.start || b.date));
+
+        const childSessions = upcomingEvents.flatMap((event) => {
+            const linkedChildren = enfants.filter((enfant) => matchesChildSport(event, enfant.sport));
+            return linkedChildren.map((enfant) => ({ event, enfant }));
+        }).slice(0, 6);
+
+        const seancesList = document.getElementById('seancesList');
+        if (seancesList) {
+            seancesList.innerHTML = childSessions.length ? childSessions.map(({ event, enfant }) => {
+                const start = new Date(event.start || event.date);
+                const end = event.end ? new Date(event.end) : null;
+                return `
+                    <div class="seance-item">
+                        <div class="seance-date">
+                            <div class="jour">${start.toLocaleDateString('fr-FR', { day: '2-digit' })}</div>
+                            <div class="mois">${start.toLocaleDateString('fr-FR', { month: 'short' })}</div>
+                        </div>
+                        <div class="seance-info">
+                            <h4>${event.title} <span style="color:#ea580c;font-size:0.8rem;">(${enfant.prenom || enfant.nom || 'Enfant'})</span></h4>
+                            <p><i class="fas fa-clock" style="width:14px"></i> ${start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}${end ? ` - ${end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : ''}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('') : '<p style="margin:0;color:#6b7280;">Aucune seance a venir pour vos enfants.</p>';
+        }
+
+        const currentMonth = new Date().getMonth();
+        const monthlySessions = childSessions.filter(({ event }) => new Date(event.start || event.date).getMonth() === currentMonth).length;
+        const statNumbers = document.querySelectorAll('.stat-card .stat-info h3');
+        if (statNumbers[1]) statNumbers[1].textContent = String(monthlySessions);
+        if (statNumbers[2]) statNumbers[2].textContent = enfants.length ? `${Math.min(100, 80 + monthlySessions * 3)}%` : '0%';
+        if (statNumbers[3]) statNumbers[3].textContent = enfants.length ? 'A jour' : '-';
+
+        const facturesList = document.getElementById('facturesList');
+        if (facturesList) {
+            facturesList.innerHTML = enfants.length ? enfants.map((enfant) => `
+                <div class="facture-item">
+                    <div class="facture-info">
+                        <h4>Cotisation ${enfant.sport || 'Sport'} - ${enfant.prenom || enfant.nom || 'Enfant'}</h4>
+                        <p>${new Date().toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="facture-montant">A verifier</div>
+                        <span style="font-size:0.75rem;color:#16a34a">Suivi actif</span>
+                    </div>
+                </div>
+            `).join('') : '<p style="margin:0;color:#6b7280;">Aucune facture a afficher.</p>';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderParentDashboard();
+
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('currentSession');
+            window.location.href = '../index.html';
+        });
+
+        window.addEventListener('storage', function(event) {
+            if (['currentSession', 'ms_session', 'users', 'ms_users', 'planningEvents', 'ms_planning'].includes(event.key)) {
+                renderParentDashboard();
+            }
+        });
+    });
+    </script>
+</body>
+</html>
+
+

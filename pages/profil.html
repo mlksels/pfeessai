@@ -1,0 +1,370 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/js/sync.js"></script>
+    <title>Mon Profil - Manar Sport</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #f0f4f8; }
+        .page-container { max-width: 850px; margin: 40px auto; padding: 0 20px; }
+        .profile-card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
+        .profile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 40px; text-align: center; position: relative;
+        }
+        .profile-avatar {
+            width: 100px; height: 100px; background: rgba(255,255,255,0.2);
+            border-radius: 50%; margin: 0 auto 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; border: 3px solid rgba(255,255,255,0.4);
+            overflow: hidden;
+        }
+        .profile-avatar img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .profile-header h1 { margin: 0 0 5px; font-size: 1.5rem; }
+        .profile-header .role-badge {
+            display: inline-block; background: rgba(255,255,255,0.25);
+            padding: 4px 15px; border-radius: 20px; font-size: 0.85rem;
+        }
+        .edit-btn {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .edit-btn:hover { background: rgba(255,255,255,0.35); }
+        .profile-body { padding: 35px; }
+
+        /* Vue info */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+        .info-group { background: #f8fafc; border-radius: 10px; padding: 15px; }
+        .info-label { font-size: 0.8rem; color: #6b7280; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-value { font-size: 1rem; font-weight: 500; color: #1e293b; }
+
+        /* Formulaire d'édition */
+        .edit-form { display: none; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; color: #374151; }
+        .form-group input, .form-group select {
+            padding: 10px 14px; border: 1.5px solid #e5e7eb; border-radius: 8px;
+            font-size: 0.95rem; transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; }
+        .form-group.full { grid-column: 1 / -1; }
+
+        .btn { padding: 10px 24px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+        .btn-secondary { background: #f1f5f9; color: #374151; }
+        .btn-secondary:hover { background: #e2e8f0; }
+
+        .btn-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; display: none; align-items: center; gap: 10px; }
+        .alert.success { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+        .alert.error { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+        .alert.show { display: flex; }
+
+        .password-section { margin-top: 25px; padding-top: 25px; border-top: 1px solid #f1f5f9; }
+        .password-section h3 { margin: 0 0 15px; font-size: 1rem; color: #374151; }
+
+        header.header { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .header .container { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; }
+        .logo a { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-icon { background: linear-gradient(135deg, #667eea, #764ba2); color: white; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .logo-text h1 { margin: 0; font-size: 1rem; color: #1e3a8a; }
+        .logo-text p { margin: 0; font-size: 0.75rem; color: #6b7280; }
+        nav.nav-menu ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 5px; }
+        nav.nav-menu ul li a { padding: 8px 14px; border-radius: 8px; text-decoration: none; color: #374151; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+        nav.nav-menu ul li a:hover { background: #f1f5f9; }
+        nav.nav-menu ul li a#logoutBtn { color: #dc2626; }
+        nav.nav-menu ul li a#logoutBtn:hover { background: #fee2e2; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <div class="logo-icon"><i class="fas fa-running"></i></div>
+                    <div class="logo-text"><h1>MANAR SPORT</h1><p>Mon Profil</p></div>
+                </a>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+                    <li><a href="javascript:history.back()"><i class="fas fa-arrow-left"></i> Retour</a></li>
+                    <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="page-container">
+        <div id="alertBox" class="alert"></div>
+
+        <div class="profile-card">
+            <div class="profile-header">
+                <button class="edit-btn" id="toggleEditBtn" onclick="toggleEdit()">
+                    <i class="fas fa-edit"></i> Modifier
+                </button>
+                <div class="profile-avatar"><i class="fas fa-user-circle"></i></div>
+                <h1 id="profileName">Mon Profil</h1>
+                <span class="role-badge" id="profileRole">Membre</span>
+            </div>
+
+            <div class="profile-body">
+                <!-- VUE AFFICHAGE -->
+                <div id="viewMode">
+                    <div class="info-grid">
+                        <div class="info-group">
+                            <div class="info-label"><i class="fas fa-user"></i> Prénom</div>
+                            <div class="info-value" id="displayPrenom">-</div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label"><i class="fas fa-user"></i> Nom</div>
+                            <div class="info-value" id="displayNom">-</div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label"><i class="fas fa-envelope"></i> Email</div>
+                            <div class="info-value" id="displayEmail">-</div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label"><i class="fas fa-phone"></i> Téléphone</div>
+                            <div class="info-value" id="displayPhone">Non renseigné</div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label"><i class="fas fa-birthday-cake"></i> Date de naissance</div>
+                            <div class="info-value" id="displayBirth">Non renseigné</div>
+                        </div>
+                        <div class="info-group">
+                            <div class="info-label"><i class="fas fa-shield-alt"></i> Rôle</div>
+                            <div class="info-value" id="displayRoleInfo">Membre</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FORMULAIRE D'ÉDITION -->
+                <div id="editMode" class="edit-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="editPrenom">Prénom *</label>
+                            <input type="text" id="editPrenom" placeholder="Votre prénom">
+                        </div>
+                        <div class="form-group">
+                            <label for="editNom">Nom *</label>
+                            <input type="text" id="editNom" placeholder="Votre nom">
+                        </div>
+                        <div class="form-group full">
+                            <label for="editEmail">Email *</label>
+                            <input type="email" id="editEmail" placeholder="votre@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="editPhone">Téléphone</label>
+                            <input type="tel" id="editPhone" placeholder="0550 00 00 00">
+                        </div>
+                        <div class="form-group">
+                            <label for="editBirth">Date de naissance</label>
+                            <input type="date" id="editBirth">
+                        </div>
+                    </div>
+
+                    <!-- Changement de mot de passe -->
+                    <div class="password-section">
+                        <h3><i class="fas fa-lock"></i> Changer le mot de passe (optionnel)</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="editCurrentPwd">Mot de passe actuel</label>
+                                <input type="password" id="editCurrentPwd" placeholder="Mot de passe actuel">
+                            </div>
+                            <div class="form-group">
+                                <label for="editNewPwd">Nouveau mot de passe</label>
+                                <input type="password" id="editNewPwd" placeholder="Nouveau mot de passe">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btn-actions">
+                        <button class="btn btn-primary" onclick="saveProfile()"><i class="fas fa-save"></i> Sauvegarder</button>
+                        <button class="btn btn-secondary" onclick="cancelEdit()"><i class="fas fa-times"></i> Annuler</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let currentUser = null;
+    let isEditMode = false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const session = localStorage.getItem('currentSession') || localStorage.getItem('ms_session');
+        if (!session) { window.location.href = 'connexion.html'; return; }
+
+        currentUser = JSON.parse(session);
+        renderProfile();
+
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('currentSession');
+            localStorage.removeItem('ms_session');
+            window.location.href = '../index.html';
+        });
+
+        window.addEventListener('storage', function(event) {
+            if (['currentSession', 'ms_session', 'users', 'ms_users'].includes(event.key)) {
+                const newSession = localStorage.getItem('currentSession') || localStorage.getItem('ms_session');
+                if (newSession) {
+                    currentUser = JSON.parse(newSession);
+                    renderProfile();
+                }
+            }
+        });
+    });
+
+    function renderProfile() {
+        if (!currentUser) return;
+        const prenom = currentUser.prenom || '';
+        const nom = currentUser.nom || '';
+        const fullName = `${prenom} ${nom}`.trim() || 'Utilisateur';
+
+        document.getElementById('profileName').textContent = fullName;
+        const profileAvatar = document.getElementById('profileAvatar');
+        if (profileAvatar) {
+            let picture = currentUser.profilePicture;
+            if (!picture) {
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                const storedUser = users.find(u => u.id === currentUser.id || u.email === currentUser.email);
+                if (storedUser) {
+                    const docs = Array.isArray(storedUser.documents) ? storedUser.documents : [];
+                    const photoDoc = docs.find(d => /photo/i.test(d.name || '') && d.dataUrl && d.dataUrl.startsWith('data:image'));
+                    picture = photoDoc ? photoDoc.dataUrl : null;
+                }
+            }
+            if (picture) {
+                profileAvatar.innerHTML = `<img src="${picture}" alt="Avatar ${fullName}">`;
+            } else {
+                profileAvatar.innerHTML = '<i class="fas fa-user-circle"></i>';
+            }
+        }
+        document.getElementById('displayPrenom').textContent = prenom || '-';
+        document.getElementById('displayNom').textContent = nom || '-';
+        document.getElementById('displayEmail').textContent = currentUser.email || '-';
+        document.getElementById('displayPhone').textContent = currentUser.telephone || 'Non renseigné';
+        // ✅ CORRIGÉ : opérateur ternaire ? au lieu de à
+        document.getElementById('displayBirth').textContent = currentUser.dateNaissance
+            ? new Date(currentUser.dateNaissance).toLocaleDateString('fr-FR') : 'Non renseigné';
+
+        const roleLabels = { admin: 'Administrateur', coach: 'Coach', athlete: 'Athlète', parent: 'Parent', membre: 'Membre' };
+        const roleText = roleLabels[currentUser.role] || 'Membre';
+        document.getElementById('profileRole').textContent = roleText;
+        document.getElementById('displayRoleInfo').textContent = roleText;
+    }
+
+    function toggleEdit() {
+        isEditMode = !isEditMode;
+        const viewMode = document.getElementById('viewMode');
+        const editMode = document.getElementById('editMode');
+        const btn = document.getElementById('toggleEditBtn');
+
+        if (isEditMode) {
+            viewMode.style.display = 'none';
+            editMode.style.display = 'block';
+            btn.innerHTML = '<i class="fas fa-times"></i> Annuler';
+            // Préremplir le formulaire
+            document.getElementById('editPrenom').value = currentUser.prenom || '';
+            document.getElementById('editNom').value = currentUser.nom || '';
+            document.getElementById('editEmail').value = currentUser.email || '';
+            document.getElementById('editPhone').value = currentUser.telephone || '';
+            document.getElementById('editBirth').value = currentUser.dateNaissance || '';
+        } else {
+            cancelEdit();
+        }
+    }
+
+    function cancelEdit() {
+        isEditMode = false;
+        document.getElementById('viewMode').style.display = 'block';
+        document.getElementById('editMode').style.display = 'none';
+        document.getElementById('toggleEditBtn').innerHTML = '<i class="fas fa-edit"></i> Modifier';
+        hideAlert();
+    }
+
+    function saveProfile() {
+        const prenom = document.getElementById('editPrenom').value.trim();
+        const nom = document.getElementById('editNom').value.trim();
+        const email = document.getElementById('editEmail').value.trim();
+        const phone = document.getElementById('editPhone').value.trim();
+        const birth = document.getElementById('editBirth').value;
+        const currentPwd = document.getElementById('editCurrentPwd').value;
+        const newPwd = document.getElementById('editNewPwd').value;
+
+        if (!prenom || !nom || !email) {
+            showAlert('Veuillez remplir les champs obligatoires (Prénom, Nom, Email).', 'error');
+            return;
+        }
+
+        // Vérifier changement de mot de passe
+        if (newPwd) {
+            if (!currentPwd) {
+                showAlert('Veuillez entrer votre mot de passe actuel pour le modifier.', 'error');
+                return;
+            }
+            // Vérifier le mot de passe actuel
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const userInStore = users.find(u => u.id === currentUser.id);
+            if (userInStore && userInStore.password !== currentPwd) {
+                showAlert('Mot de passe actuel incorrect.', 'error');
+                return;
+            }
+            if (newPwd.length < 6) {
+                showAlert('Le nouveau mot de passe doit contenir au moins 6 caractères.', 'error');
+                return;
+            }
+        }
+
+        // Mettre à jour l'utilisateur
+        currentUser.prenom = prenom;
+        currentUser.nom = nom;
+        currentUser.email = email;
+        currentUser.telephone = phone;
+        currentUser.dateNaissance = birth;
+
+        // Sauvegarder la session
+        localStorage.setItem('currentSession', JSON.stringify(currentUser));
+
+        // Mettre à jour dans la liste users
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const idx = users.findIndex(u => u.id === currentUser.id);
+        if (idx !== -1) {
+            users[idx] = { ...users[idx], ...currentUser };
+            if (newPwd) users[idx].password = newPwd;
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        renderProfile();
+        cancelEdit();
+        showAlert('Profil mis à jour avec succès !', 'success');
+    }
+
+    function showAlert(msg, type) {
+        const alert = document.getElementById('alertBox');
+        alert.className = `alert ${type} show`;
+        // ✅ CORRIGÉ : opérateur ternaire ? au lieu de à
+        alert.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${msg}`;
+        if (type === 'success') setTimeout(hideAlert, 4000);
+    }
+
+    function hideAlert() {
+        document.getElementById('alertBox').className = 'alert';
+    }
+    </script>
+</body>
+</html>

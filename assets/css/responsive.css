@@ -1,0 +1,581 @@
+/* Responsive Design Styles */
+@media (max-width: 1400px) {
+    .container {
+        max-width: 1200px;
+    }
+    
+    .hero-content h2 {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .container {
+        max-width: 100%;
+        padding: 0 var(--space-xl);
+    }
+    
+    .footer-grid,
+    .pub-grid,
+    .sports-grid,
+    .features-grid,
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .video-wrapper {
+        grid-template-columns: 1fr;
+    }
+    
+    .contact-card {
+        grid-template-columns: 1fr;
+    }
+    
+    .testimonial-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 992px) {
+    h1 { font-size: 2.5rem; }
+    h2 { font-size: 2rem; }
+    h3 { font-size: 1.5rem; }
+    
+    .hero-content h2 {
+        font-size: 2.5rem;
+    }
+    
+    .nav-menu {
+        position: fixed;
+        top: var(--topbar-height);
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        flex-direction: column;
+        padding: var(--space-lg);
+        transform: translateY(-100%);
+        opacity: 0;
+        transition: var(--transition);
+        z-index: 999;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .nav-menu.active {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    
+    .nav-menu ul {
+        flex-direction: column;
+        gap: var(--space-sm);
+        width: 100%;
+    }
+    
+    .nav-menu a {
+        width: 100%;
+        justify-content: center;
+        padding: var(--space-md);
+    }
+    
+    .menu-toggle {
+        display: block;
+    }
+    
+    .hero {
+        height: 70vh;
+        min-height: 500px;
+    }
+    
+    .section-title h2 {
+        font-size: 1.8rem;
+    }
+    
+    .btn-hero, .btn-hero-outline {
+        padding: 0.875rem 2rem;
+        font-size: 1rem;
+        margin-bottom: var(--space-sm);
+    }
+    
+    .timeline::before {
+        left: 30px;
+    }
+    
+    .timeline-item {
+        flex-direction: row !important;
+        margin-left: 60px;
+    }
+    
+    .timeline-year {
+        left: 0;
+        transform: translateX(-50%);
+    }
+    
+    .timeline-content {
+        width: 100%;
+        margin: 0 !important;
+    }
+    
+    .timeline-content::before {
+        left: -10px !important;
+        right: auto !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0 var(--space-lg);
+    }
+    
+    .header-content {
+        flex-wrap: wrap;
+    }
+    
+    .logo {
+        flex: 1;
+    }
+    
+    .menu-toggle {
+        order: 1;
+    }
+    
+    .nav-menu {
+        order: 2;
+        width: 100%;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+    
+    .nav-menu.active {
+        max-height: 500px;
+        margin-top: var(--space-md);
+    }
+    
+    .hero-content h2 {
+        font-size: 2rem;
+    }
+    
+    .hero-content p {
+        font-size: 1.1rem;
+    }
+    
+    .section-title h2 {
+        font-size: 1.6rem;
+    }
+    
+    .pub-grid,
+    .sports-grid,
+    .features-grid,
+    .stats-grid,
+    .footer-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .footer-bottom-content {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-md);
+    }
+    
+    .cookie-content {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-md);
+    }
+    
+    .cookie-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .slider-controls {
+        right: var(--space-md);
+        bottom: var(--space-md);
+    }
+    
+    .testimonial-content {
+        padding: var(--space-lg);
+    }
+    
+    .modal-content {
+        margin: var(--space-md);
+    }
+    
+    .notification {
+        left: var(--space-md);
+        right: var(--space-md);
+        min-width: auto;
+    }
+    
+    .auth-form {
+        padding: var(--space-lg);
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding: 0 var(--space-md);
+    }
+    
+    h1 { font-size: 2rem; }
+    h2 { font-size: 1.75rem; }
+    h3 { font-size: 1.3rem; }
+    
+    .hero {
+        height: 60vh;
+        min-height: 400px;
+    }
+    
+    .hero-content h2 {
+        font-size: 1.8rem;
+    }
+    
+    .btn-hero, .btn-hero-outline {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        display: block;
+        margin: var(--space-sm) 0;
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+    }
+    
+    .section-title h2 {
+        font-size: 1.4rem;
+    }
+    
+    .section-title p {
+        font-size: 1rem;
+    }
+    
+    .testimonial-author {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-sm);
+    }
+    
+    .testimonial-author img {
+        margin: 0 auto;
+    }
+    
+    .contact-methods {
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+    
+    .contact-method {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-sm);
+    }
+    
+    .social-links {
+        justify-content: center;
+    }
+    
+    .newsletter-form {
+        flex-direction: column;
+    }
+    
+    .newsletter-form input {
+        width: 100%;
+    }
+    
+    .btn-newsletter {
+        width: 100%;
+    }
+    
+    /* Admin Responsive */
+    .admin-sidebar {
+        width: var(--sidebar-collapsed);
+    }
+    
+    .admin-sidebar:not(.collapsed) {
+        width: var(--sidebar-width);
+    }
+    
+    .admin-main {
+        margin-left: var(--sidebar-collapsed);
+    }
+    
+    .admin-sidebar:not(.collapsed) ~ .admin-main {
+        margin-left: var(--sidebar-width);
+    }
+    
+    .stats-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .topbar-right .search-box,
+    .topbar-right .quick-actions {
+        display: none;
+    }
+}
+
+@media (max-width: 400px) {
+    .logo-text h1 {
+        font-size: 1.5rem;
+    }
+    
+    .hero-content h2 {
+        font-size: 1.5rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .modal-content {
+        margin: var(--space-sm);
+        padding: var(--space-sm);
+    }
+    
+    .modal-header {
+        padding: var(--space-md);
+    }
+    
+    .modal-body {
+        padding: var(--space-md);
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .btn:hover,
+    .nav-menu a:hover,
+    .social-links a:hover {
+        transform: none;
+    }
+    
+    .card:hover,
+    .team-card:hover,
+    .coach-card:hover {
+        transform: none;
+        box-shadow: var(--shadow);
+    }
+    
+    .pub-card:hover {
+        transform: none;
+        border-color: transparent;
+    }
+    
+    input, select, textarea {
+        font-size: 16px; /* Prevent iOS zoom */
+    }
+}
+
+/* Print Styles */
+@media print {
+    .header,
+    .footer,
+    .cookie-banner,
+    .nav-menu,
+    .slider-controls,
+    .btn,
+    .notification,
+    .modal {
+        display: none !important;
+    }
+    
+    body {
+        font-size: 12pt;
+        line-height: 1.5;
+        color: #000;
+        background: #fff;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: none;
+        padding: 0;
+    }
+    
+    a {
+        color: #000;
+        text-decoration: underline;
+    }
+    
+    .hero {
+        height: auto;
+        background: none !important;
+        color: #000;
+    }
+    
+    .hero-content h2 {
+        color: #000;
+        font-size: 18pt;
+    }
+    
+    .section-title h2 {
+        color: #000;
+        border-bottom: 2px solid #000;
+    }
+    
+    .table {
+        border: 1px solid #000;
+    }
+    
+    .table th {
+        background: #ddd !important;
+        color: #000 !important;
+    }
+    
+    .page-break {
+        page-break-before: always;
+    }
+    
+    @page {
+        margin: 2cm;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    :root {
+        --primary-blue: #0000ff;
+        --primary-yellow: #ffff00;
+        --white: #ffffff;
+        --black: #000000;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        border: 2px solid #000;
+    }
+    
+    .nav-menu a {
+        border: 1px solid #000;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .hero-slider .slide {
+        transition: none;
+    }
+    
+    .animation-fadein,
+    .animation-slideleft,
+    .animation-slideright,
+    .animation-slideup,
+    .animation-pulse,
+    .animation-bounce,
+    .animation-float {
+        animation: none;
+    }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --dark-gray: #f3f4f6;
+        --light-gray: #1f2937;
+        --lighter-gray: #111827;
+        --white: #1f2937;
+        --black: #f3f4f6;
+        --medium-gray: #9ca3af;
+    }
+    
+    body {
+        background-color: var(--lighter-gray);
+        color: var(--dark-gray);
+    }
+    
+    .card,
+    .team-card,
+    .coach-card,
+    .pub-card,
+    .feature-card,
+    .sport-card,
+    .modal-content,
+    .auth-container,
+    .video-info,
+    .testimonial-content,
+    .contact-card,
+    .alumni-card,
+    .founder-card,
+    .timeline-content {
+        background-color: var(--white);
+        color: var(--dark-gray);
+    }
+    
+    .form-control,
+    .form-select,
+    .form-textarea {
+        background-color: var(--light-gray);
+        color: var(--dark-gray);
+        border-color: #4b5563;
+    }
+    
+    .table {
+        background-color: var(--white);
+    }
+    
+    .table th {
+        background-color: var(--light-gray);
+        color: var(--dark-gray);
+    }
+    
+    .table td {
+        border-color: #4b5563;
+    }
+}
+
+/* Orientation Specific */
+@media (orientation: portrait) {
+    .hero {
+        height: 50vh;
+    }
+    
+    .video-wrapper {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+    .hero {
+        height: 100vh;
+    }
+    
+    .hero-content h2 {
+        font-size: 2rem;
+    }
+    
+    .nav-menu ul {
+        gap: var(--space-sm);
+    }
+    
+    .nav-menu a {
+        padding: var(--space-xs) var(--space-sm);
+    }
+}

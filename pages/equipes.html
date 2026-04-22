@@ -1,0 +1,325 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nos Équipes - Association Sportive Manar Oran</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../assets/js/sync.js"></script>
+    <link rel="stylesheet" href="../assets/css/equipes.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        <div class="logo-icon">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <div class="logo-text">
+                            <h1>MANAR SPORT</h1>
+                            <p>Usto Oran - Association Sportive</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <nav class="nav-menu" id="navMenu">
+                    <ul>
+                        <li><a href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+                        <li><a href="historique.html"><i class="fas fa-history"></i> Historique</a></li>
+                        <li><a href="equipes.html" class="active"><i class="fas fa-users"></i> Équipes</a></li>
+                        <li><a href="planning.html"><i class="fas fa-calendar-alt"></i> Planning</a></li>
+                        <li><a href="tarifs.html"><i class="fas fa-tags"></i> Tarifs</a></li>
+                        <li><a href="actualites.html"><i class="fas fa-newspaper"></i> Actualités</a></li>
+                        <li><a href="galerie.html"><i class="fas fa-images"></i> Galerie</a></li>
+                        <li><a href="connexion.html" class="btn-login"><i class="fas fa-sign-in-alt"></i> Connexion</a></li>
+                        <li><a href="inscription.html" class="btn-register"><i class="fas fa-user-plus"></i> Inscription</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section Équipes -->
+    <section class="page-hero" style="background: linear-gradient(rgba(251, 191, 36, 0.9), rgba(251, 191, 36, 0.9)), url('../assets/images/equipes-hero.jpg');">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Nos Équipes</h1>
+                <p>Découvrez nos diff&eacute;rentes sections et rencontrez nos coachs</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filtres Sports -->
+    <section class="sports-filters">
+        <div class="container">
+            <div class="filters-container">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-sport="all">
+                        <i class="fas fa-globe"></i> Tous les sports
+                    </button>
+                    <button class="filter-btn" data-sport="football">
+                        <i class="fas fa-futbol"></i> Football
+                    </button>
+                    <button class="filter-btn" data-sport="basketball">
+                        <i class="fas fa-basketball-ball"></i> Basketball
+                    </button>
+                    <button class="filter-btn" data-sport="volleyball">
+                        <i class="fas fa-volleyball-ball"></i> Volleyball
+                    </button>
+                    <button class="filter-btn" data-sport="natation">
+                        <i class="fas fa-swimming-pool"></i> Natation
+                    </button>
+                    <button class="filter-btn" data-sport="athletisme">
+                        <i class="fas fa-running"></i> Athl&eacute;tisme
+                    </button>
+                    <button class="filter-btn" data-sport="arts-martiaux">
+                        <i class="fas fa-user-ninja"></i> Arts Martiaux
+                    </button>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" id="teamSearch" placeholder="Rechercher une àquipe...">
+                    <button type="button" id="searchBtn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Grille des Équipes -->
+    <section class="teams-section">
+        <div class="container">
+            <div class="teams-grid" id="teamsContainer">
+                <!-- Équipes charg&eacute;es dynamiquement -->
+            </div>
+            
+            <div class="loading-spinner" id="teamsLoader">
+                <div class="spinner"></div>
+                <p>Chargement des Équipes...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Coaches -->
+    <section class="coaches-section">
+        <div class="container">
+            <div class="section-title">
+                <h2><i class="fas fa-chalkboard-teacher"></i> Nos Coaches</h2>
+                <p>Des professionnels passionnés pour vous accompagner</p>
+            </div>
+            
+            <div class="coaches-grid" id="coachesContainer">
+                <!-- Coaches charg&eacute;s dynamiquement -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Niveaux -->
+    <section class="levels-section">
+        <div class="container">
+            <div class="section-title">
+                <h2><i class="fas fa-signal"></i> Nos Niveaux</h2>
+                <p>Des programmes adapt&eacute;s à tous les niveaux</p>
+            </div>
+            
+            <div class="levels-grid">
+                <div class="level-card">
+                    <div class="level-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <h3>Débutant</h3>
+                    <p>D&eacute;couverte du sport et apprentissage des bases</p>
+                    <ul class="level-features">
+                        <li><i class="fas fa-check"></i> Cours d'initiation</li>
+                        <li><i class="fas fa-check"></i> Encadrement renforc&eacute;</li>
+                        <li><i class="fas fa-check"></i> Mat&eacute;riel fourni</li>
+                    </ul>
+                </div>
+                
+                <div class="level-card">
+                    <div class="level-icon">
+                        <i class="fas fa-tree"></i>
+                    </div>
+                    <h3>Intermédiaire</h3>
+                    <p>Perfectionnement technique et pr&eacute;paration physique</p>
+                    <ul class="level-features">
+                        <li><i class="fas fa-check"></i> Entraînements r&eacute;guliers</li>
+                        <li><i class="fas fa-check"></i> Compétitions locales</li>
+                        <li><i class="fas fa-check"></i> Suivi personnalis&eacute;</li>
+                    </ul>
+                </div>
+                
+                <div class="level-card">
+                    <div class="level-icon">
+                        <i class="fas fa-mountain"></i>
+                    </div>
+                    <h3>Avancé</h3>
+                    <p>Performance et comp&eacute;tition de haut niveau</p>
+                    <ul class="level-features">
+                        <li><i class="fas fa-check"></i> Entraînements intensifs</li>
+                        <li><i class="fas fa-check"></i> Compétitions nationales</li>
+                        <li><i class="fas fa-check"></i> Pr&eacute;paration mentale</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Inscription à&eacute;quipe -->
+    <section class="team-registration">
+        <div class="container">
+            <div class="registration-card">
+                <div class="registration-info">
+                    <h2><i class="fas fa-user-plus"></i> Rejoindre une à&eacute;quipe</h2>
+                    <p>Intéressé pour int&eacute;grer l'une de nos Équipes à</p>
+                    <div class="registration-steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Contactez-nous</h4>
+                                <p>Prenez rendez-vous pour une séance d'essai gratuite</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>&Eacute;valuation</h4>
+                                <p>Nos coachs àvaluent votre niveau et vous conseillent</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Int&eacute;gration</h4>
+                                <p>Rejoignez l'&eacute;quipe qui correspond à vos objectifs</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="registration-form">
+                    <h3>Demande d'information</h3>
+                    <form id="teamContactForm">
+                        <div class="form-group">
+                            <input type="text" placeholder="Votre nom" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" placeholder="Votre email" required>
+                        </div>
+                        <div class="form-group">
+                            <select required>
+                                <option value="">Sport d'int&eacute;r&ecirc;t</option>
+                                <option value="football">Football</option>
+                                <option value="basketball">Basketball</option>
+                                <option value="volleyball">Volleyball</option>
+                                <option value="natation">Natation</option>
+                                <option value="athletisme">Athl&eacute;tisme</option>
+                                <option value="arts-martiaux">Arts Martiaux</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <select required>
+                                <option value="">Niveau actuel</option>
+                                <option value="debutant">Débutant</option>
+                                <option value="intermediaire">Intermédiaire</option>
+                                <option value="avance">Avancé</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <textarea placeholder="Votre message (optionnel)" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Envoyer la demande
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <i class="fas fa-running"></i>
+                        <h3>MANAR SPORT</h3>
+                    </div>
+                    <p>Association Sportive Manar<br>
+                    Usto, Oran - Algérie<br>
+                    Tél: +213 41 12 34 56</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Liens Rapides</h4>
+                    <ul>
+                        <li><a href="../index.html">Accueil</a></li>
+                        <li><a href="historique.html">Historique</a></li>
+                        <li><a href="equipes.html">Équipes</a></li>
+                        <li><a href="planning.html">Planning</a></li>
+                        <li><a href="tarifs.html">Tarifs</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Informations</h4>
+                    <ul>
+                        <li><a href="#" data-modal="conditions">Conditions d'utilisation</a></li>
+                        <li><a href="#" data-modal="confidentialite">Politique de confidentialit&eacute;</a></li>
+                        <li><a href="#" data-modal="cookies">Politique des cookies</a></li>
+                        <li><a href="#contact">Contactez-nous</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Horaires d'Ouverture</h4>
+                    <p>Lundi - Vendredi: 8h - 22h<br>
+                    Samedi: 9h - 20h<br>
+                    Dimanche: 9h - 18h</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Association Sportive Manar Oran. Tous droits r&eacute;serv&eacute;s.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal Détails à&eacute;quipe -->
+    <div id="teamModal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="modalTeamName"></h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Contenu chargà dynamiquement -->
+            </div>
+        </div>
+    </div>
+
+    <script src="../script.js"></script>
+    <script src="../assets/js/equipes.js"></script>
+</body>
+</html>
+
+
+
+

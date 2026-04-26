@@ -38,12 +38,25 @@ class PublicGalleryManager {
     }
 
     readJson(key, fallback) {
+        if (window.DS?.get && typeof key === 'string' && key.startsWith('ms_')) {
+            const value = window.DS.get(key);
+            return value ?? fallback;
+        }
         try {
             const raw = localStorage.getItem(key);
             return raw ? JSON.parse(raw) : fallback;
         } catch (_) {
             return fallback;
         }
+    }
+
+    savePhotos() {
+        if (window.DS?.set && window.DS.KEYS?.gallery) {
+            window.DS.set(window.DS.KEYS.gallery, this.photos);
+        }
+        localStorage.setItem('galleryPhotos', JSON.stringify(this.photos));
+        localStorage.setItem('gallery', JSON.stringify(this.photos));
+        localStorage.setItem('ms_gallery', JSON.stringify(this.photos));
     }
 
     normalizePhoto(photo) {
@@ -64,10 +77,12 @@ class PublicGalleryManager {
     }
 
     loadData() {
-        const rawPhotos = this.readJson('galleryPhotos', []);
+        const rawPhotos = this.readJson(window.DS?.KEYS?.gallery || 'ms_gallery', [])
+            || this.readJson('gallery', [])
+            || this.readJson('galleryPhotos', []);
         this.photos = (rawPhotos.length ? rawPhotos : this.seedPhotos()).map((photo) => this.normalizePhoto(photo));
         if (!rawPhotos.length) {
-            localStorage.setItem('galleryPhotos', JSON.stringify(this.photos));
+            this.savePhotos();
         }
 
         this.videos = this.readJson('galleryVideos', this.seedVideos());
@@ -212,7 +227,7 @@ class PublicGalleryManager {
         });
 
         window.addEventListener('storage', (event) => {
-            if (!['galleryPhotos', 'gallery', 'galleryVideos', 'galleryAlbums', 'currentSession'].includes(event.key)) return;
+            if (!['galleryPhotos', 'gallery', 'ms_gallery', 'galleryVideos', 'galleryAlbums', 'currentSession', 'ms_session'].includes(event.key)) return;
             this.checkAuth();
             this.loadData();
             this.switchTab(this.currentView);
@@ -262,9 +277,9 @@ class PublicGalleryManager {
         }
 
         container.innerHTML = this.filteredPhotos.map((photo) => {
-            const date = new Date(photo.date).toLocaleDateString('fr-FR', {
-                day: 'numeric',
-                month: 'long',
+            const date = window.ManarDate?.format(photo.date) || new Date(photo.date).toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
                 year: 'numeric'
             });
             return `
@@ -349,7 +364,7 @@ class PublicGalleryManager {
         document.getElementById('lightboxTitle').textContent = photo.title;
         document.getElementById('lightboxDescription').textContent = photo.description || '';
         document.getElementById('lightboxAuthor').innerHTML = `<i class="fas fa-user"></i> ${photo.author}`;
-        document.getElementById('lightboxDate').innerHTML = `<i class="fas fa-calendar"></i> ${new Date(photo.date).toLocaleDateString('fr-FR')}`;
+        document.getElementById('lightboxDate').innerHTML = `<i class="fas fa-calendar"></i> ${window.ManarDate?.format(photo.date) || new Date(photo.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
         document.getElementById('lightboxCategory').innerHTML = `<i class="fas fa-tag"></i> ${photo.category}`;
         document.getElementById('lightboxAdminActions').style.display = this.isAdmin ? 'flex' : 'none';
         document.getElementById('lightbox').classList.add('show');
@@ -395,7 +410,7 @@ class PublicGalleryManager {
             });
 
             this.photos.unshift(photo);
-            localStorage.setItem('galleryPhotos', JSON.stringify(this.photos));
+            this.savePhotos();
             document.getElementById('uploadModal').style.display = 'none';
             this.switchTab('photos');
             this.notify('Photo ajoutee avec succes', 'success');
@@ -422,7 +437,7 @@ class PublicGalleryManager {
         photo.title = document.getElementById('editTitle').value.trim();
         photo.description = document.getElementById('editDescription').value.trim();
         photo.category = document.getElementById('editCategory').value;
-        localStorage.setItem('galleryPhotos', JSON.stringify(this.photos));
+        this.savePhotos();
         document.getElementById('editModal').style.display = 'none';
         this.switchTab(this.currentView);
         this.notify('Photo modifiee avec succes', 'success');
@@ -432,7 +447,7 @@ class PublicGalleryManager {
         if (!this.isAdmin) return;
         if (!confirm('Supprimer cette photo ?')) return;
         this.photos = this.photos.filter((photo) => photo.id !== photoId);
-        localStorage.setItem('galleryPhotos', JSON.stringify(this.photos));
+        this.savePhotos();
         this.closeLightbox();
         this.switchTab(this.currentView);
         this.notify('Photo supprimee', 'success');

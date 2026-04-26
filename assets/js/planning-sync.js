@@ -84,7 +84,7 @@
                             <p><i class="fas fa-map-marker-alt"></i> ${booking.location || 'Lieu a definir'}</p>
                         </div>
                         <div class="booking-date">
-                            <div class="booking-day">${start.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })}</div>
+                            <div class="booking-day">${window.ManarDate ? window.ManarDate.format(start) : start.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
                             <div class="booking-time">${start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}${end ? ` - ${end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
                         </div>
                         <div class="booking-status"><span class="status-confirmed">Confirmee</span></div>
@@ -241,7 +241,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div>
                             <h4 style="margin: 0 0 5px;">${event.title}</h4>
-                            <p style="margin: 0; color: var(--gray-600);"><i class="fas fa-calendar"></i> ${new Date(event.start).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} a ${new Date(event.start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
+                            <p style="margin: 0; color: var(--gray-600);"><i class="fas fa-calendar"></i> ${window.ManarDate ? window.ManarDate.format(event.start) : new Date(event.start).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })} a ${new Date(event.start).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
                             <p style="margin: 5px 0 0; color: var(--gray-600);"><i class="fas fa-user-tie"></i> ${event.coach}</p>
                         </div>
                         <div>
@@ -283,7 +283,7 @@
             const startOfWeek = this.getStartOfWeek(this.currentWeekDate);
             const endOfWeek = new Date(startOfWeek);
             endOfWeek.setDate(endOfWeek.getDate() + 6);
-            weekSpan.textContent = `${startOfWeek.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - ${endOfWeek.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+            weekSpan.textContent = `${window.ManarDate ? window.ManarDate.format(startOfWeek) : startOfWeek.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })} - ${window.ManarDate ? window.ManarDate.format(endOfWeek) : endOfWeek.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
         };
 
         manager.navigateWeek = function (direction) {

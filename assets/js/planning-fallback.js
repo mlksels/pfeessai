@@ -1,8 +1,9 @@
 (function () {
     function currentDayValue() {
         const input = document.getElementById('currentDay');
-        if (!input) return new Date().toISOString().split('T')[0];
-        if (!input.value) input.value = new Date().toISOString().split('T')[0];
+        const today = window.ManarDate?.toInputValue(new Date()) || new Date().toLocaleDateString('fr-FR');
+        if (!input) return today;
+        if (!input.value) input.value = today;
         return input.value;
     }
 

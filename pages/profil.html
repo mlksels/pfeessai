@@ -172,7 +172,7 @@
                         </div>
                         <div class="form-group">
                             <label for="editBirth">Date de naissance</label>
-                            <input type="date" id="editBirth">
+                            <input type="text" id="editBirth" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" autocomplete="off">
                         </div>
                     </div>
 
@@ -204,6 +204,40 @@
     let currentUser = null;
     let isEditMode = false;
 
+    const profileDate = {
+        parse(value) {
+            if (!value) return null;
+            if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : new Date(value);
+            const str = String(value).trim();
+            let match = str.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (match) {
+                const [, day, month, year] = match.map(Number);
+                const date = new Date(year, month - 1, day);
+                return (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) ? date : null;
+            }
+            match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (match) {
+                const [, year, month, day] = match.map(Number);
+                const date = new Date(year, month - 1, day);
+                return (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) ? date : null;
+            }
+            const parsed = new Date(str);
+            return Number.isNaN(parsed.getTime()) ? null : parsed;
+        },
+        format(value) {
+            const date = this.parse(value);
+            return date ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+        },
+        toStorage(value) {
+            const date = this.parse(value);
+            if (!date) return '';
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
         const session = localStorage.getItem('currentSession') || localStorage.getItem('ms_session');
         if (!session) { window.location.href = 'connexion.html'; return; }
@@ -226,6 +260,11 @@
                     renderProfile();
                 }
             }
+        });
+
+        document.getElementById('editBirth').addEventListener('blur', function() {
+            const normalized = profileDate.format(this.value);
+            if (normalized || !this.value.trim()) this.value = normalized;
         });
     });
 
@@ -260,7 +299,7 @@
         document.getElementById('displayPhone').textContent = currentUser.telephone || 'Non renseigné';
         // ✅ CORRIGÉ : opérateur ternaire ? au lieu de à
         document.getElementById('displayBirth').textContent = currentUser.dateNaissance
-            ? new Date(currentUser.dateNaissance).toLocaleDateString('fr-FR') : 'Non renseigné';
+            ? profileDate.format(currentUser.dateNaissance) : 'Non renseigné';
 
         const roleLabels = { admin: 'Administrateur', coach: 'Coach', athlete: 'Athlète', parent: 'Parent', membre: 'Membre' };
         const roleText = roleLabels[currentUser.role] || 'Membre';
@@ -283,7 +322,7 @@
             document.getElementById('editNom').value = currentUser.nom || '';
             document.getElementById('editEmail').value = currentUser.email || '';
             document.getElementById('editPhone').value = currentUser.telephone || '';
-            document.getElementById('editBirth').value = currentUser.dateNaissance || '';
+            document.getElementById('editBirth').value = profileDate.format(currentUser.dateNaissance);
         } else {
             cancelEdit();
         }
@@ -302,7 +341,7 @@
         const nom = document.getElementById('editNom').value.trim();
         const email = document.getElementById('editEmail').value.trim();
         const phone = document.getElementById('editPhone').value.trim();
-        const birth = document.getElementById('editBirth').value;
+        const birthInput = document.getElementById('editBirth').value.trim();
         const currentPwd = document.getElementById('editCurrentPwd').value;
         const newPwd = document.getElementById('editNewPwd').value;
 
@@ -330,12 +369,19 @@
             }
         }
 
+        if (birthInput && !profileDate.parse(birthInput)) {
+            showAlert('La date de naissance doit être au format dd/mm/yyyy.', 'error');
+            return;
+        }
+
+        const birth = profileDate.toStorage(birthInput);
+
         // Mettre à jour l'utilisateur
         currentUser.prenom = prenom;
         currentUser.nom = nom;
         currentUser.email = email;
         currentUser.telephone = phone;
-        currentUser.dateNaissance = birth;
+        currentUser.dateNaissance = birth || '';
 
         // Sauvegarder la session
         localStorage.setItem('currentSession', JSON.stringify(currentUser));

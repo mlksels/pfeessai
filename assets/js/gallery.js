@@ -482,9 +482,9 @@ class GalleryManager {
     }
 
     createPhotoCard(photo) {
-        const date = new Date(photo.date).toLocaleDateString('fr-FR', {
-            day: 'numeric',
-            month: 'long',
+        const date = window.ManarDate?.format(photo.date) || new Date(photo.date).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
             year: 'numeric'
         });
         
@@ -602,9 +602,9 @@ class GalleryManager {
         if (lightboxDesc) lightboxDesc.textContent = photo.description || '';
         if (lightboxAuthor) lightboxAuthor.innerHTML = `<i class="fas fa-user"></i> ${photo.author}`;
         
-        const formattedDate = new Date(photo.date).toLocaleDateString('fr-FR', {
-            day: 'numeric',
-            month: 'long',
+        const formattedDate = window.ManarDate?.format(photo.date) || new Date(photo.date).toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
             year: 'numeric'
         });
         if (lightboxDate) lightboxDate.innerHTML = `<i class="fas fa-calendar"></i> ${formattedDate}`;

@@ -411,7 +411,7 @@
                     <div class="seance-item">
                         <div class="seance-date">
                             <div class="jour">${start.toLocaleDateString('fr-FR', { day: '2-digit' })}</div>
-                            <div class="mois">${start.toLocaleDateString('fr-FR', { month: 'short' })}</div>
+                            <div class="mois">${start.toLocaleDateString('fr-FR', { month: '2-digit', year: 'numeric' })}</div>
                         </div>
                         <div class="seance-info">
                             <h4>${event.title}</h4>

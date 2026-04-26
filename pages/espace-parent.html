@@ -261,7 +261,7 @@
                     <div class="seance-item">
                         <div class="seance-date">
                             <div class="jour">${start.toLocaleDateString('fr-FR', { day: '2-digit' })}</div>
-                            <div class="mois">${start.toLocaleDateString('fr-FR', { month: 'short' })}</div>
+                            <div class="mois">${start.toLocaleDateString('fr-FR', { month: '2-digit', year: 'numeric' })}</div>
                         </div>
                         <div class="seance-info">
                             <h4>${event.title} <span style="color:#ea580c;font-size:0.8rem;">(${enfant.prenom || enfant.nom || 'Enfant'})</span></h4>
@@ -285,7 +285,7 @@
                 <div class="facture-item">
                     <div class="facture-info">
                         <h4>Cotisation ${enfant.sport || 'Sport'} - ${enfant.prenom || enfant.nom || 'Enfant'}</h4>
-                        <p>${new Date().toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}</p>
+                        <p>${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
                     </div>
                     <div style="text-align:right;">
                         <div class="facture-montant">A verifier</div>

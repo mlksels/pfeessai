@@ -1,324 +1,832 @@
-// assets/js/planning.js - Gestion complÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨te du planning avec permissions par rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â´le
+// Planning public synchronise avec le dashboard et les reservations
 
 class PlanningManager {
     constructor() {
         this.currentUser = null;
-        this.isAdmin = false;
-        this.isCoach = false;
-        this.canManageBookings = false;
+        this.canManageEvents = false;
+        this.canBookEvents = false;
         this.currentView = 'calendar';
+        this.currentWeekDate = this.startOfWeek(new Date());
+        this.currentEventId = null;
+        this.currentListSort = 'date';
         this.calendar = null;
         this.events = [];
         this.bookings = [];
-        this.filteredEvents = null;
-        this.currentWeekDate = new Date();
-        this.currentEventId = null;
-        
+        this.hours = Array.from({ length: 17 }, (_, index) => index + 6);
+
         this.init();
     }
 
-    async init() {
-        // VÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rifier l'utilisateur connectÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©
+    init() {
         this.checkAuth();
-        
-        // Charger les donnÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©es
-        await this.loadData();
-        
-        // Initialiser le calendrier
-        this.initCalendar();
-        
-        // Initialiser l'interface
+        this.loadData();
         this.initUI();
-        
-        // Lier les ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nements
+        this.initCalendar();
         this.bindEvents();
+        this.renderAll();
     }
 
     checkAuth() {
         try {
-            const session = localStorage.getItem('currentSession') || localStorage.getItem('ms_session');
+            this.currentUser = window.getCurrentUser ? window.getCurrentUser() : JSON.parse(localStorage.getItem('currentSession'));
+        } catch (_) {
             this.currentUser = null;
-            this.isAdmin = false;
-            this.isCoach = false;
-            this.canManageBookings = false;
-            if (session) {
-                this.currentUser = JSON.parse(session);
-                const role = this.currentUser.role || this.currentUser.userType || '';
-                this.isAdmin = role === 'admin';
-                this.isCoach = role === 'coach';
-                this.canManageBookings = role === 'athlete' || role === 'parent';
-            }
-        } catch (e) {
-            console.error('Erreur vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rification auth:', e);
         }
-        
-        console.log('Mode admin:', this.isAdmin);
-        console.log('Mode coach:', this.isCoach);
-    }
 
-    async loadData() {
-        try {
-            // Charger les ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nements depuis localStorage ou utiliser les donnÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©es par dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©faut
-            const storedEvents = localStorage.getItem('planningEvents') || localStorage.getItem('ms_planning');
-            if (storedEvents) {
-                this.events = JSON.parse(storedEvents);
-            } else {
-                this.events = this.generateSampleEvents();
-                localStorage.setItem('planningEvents', JSON.stringify(this.events));
-                localStorage.setItem('ms_planning', JSON.stringify(this.events));
-            }
-            
-            // Charger les rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©servations
-            const storedBookings = localStorage.getItem('userBookings') || localStorage.getItem('ms_bookings');
-            this.bookings = storedBookings ? JSON.parse(storedBookings) : [];
-            if (!storedBookings) {
-                localStorage.setItem('userBookings', JSON.stringify([]));
-                localStorage.setItem('ms_bookings', JSON.stringify([]));
-            }
-            this.syncParticipantsWithBookings();
-        } catch (error) {
-            console.error('Erreur chargement planning:', error);
-            this.showNotification('Erreur de chargement du planning', 'error');
+        const role = this.currentUser?.role || this.currentUser?.userType || '';
+        this.canManageEvents = role === 'admin' || role === 'coach';
+        this.canBookEvents = role === 'athlete' || role === 'parent';
+
+        const adminActions = document.getElementById('planningAdminActions');
+        if (adminActions) {
+            adminActions.style.display = this.canManageEvents ? 'flex' : 'none';
         }
     }
 
-    generateSampleEvents() {
+    readList(...keys) {
+        for (const key of keys) {
+            if (!key) continue;
+            try {
+                if (window.DS?.get && key.startsWith('ms_')) {
+                    const value = window.DS.get(key);
+                    if (Array.isArray(value)) return value;
+                }
+
+                const raw = localStorage.getItem(key);
+                if (!raw) continue;
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return parsed;
+            } catch (_) {
+                // ignore broken payload and keep searching
+            }
+        }
+        return [];
+    }
+
+    loadData() {
+        const dashboardEvents = this.readList(window.DS?.KEYS?.events || 'ms_events', 'events');
+        const planningEvents = this.readList(window.DS?.KEYS?.planning || 'ms_planning', 'planningEvents');
+        const sourceEvents = this.mergeEventSources(dashboardEvents, planningEvents);
+
+        this.events = (sourceEvents.length ? sourceEvents : this.generateFallbackEvents())
+            .map((event) => this.normalizeEvent(event))
+            .filter(Boolean)
+            .sort((left, right) => new Date(left.start) - new Date(right.start));
+
+        this.bookings = this.readList(window.DS?.KEYS?.bookings || 'ms_bookings', 'userBookings');
+        this.syncParticipantsWithBookings();
+        this.updateCoachFilter();
+    }
+
+    mergeEventSources(dashboardEvents, planningEvents) {
+        const byId = new Map();
+
+        planningEvents.forEach((event) => {
+            const id = Number(event?.id) || `planning-${Math.random()}`;
+            byId.set(id, { ...event, id });
+        });
+
+        dashboardEvents.forEach((event) => {
+            const id = Number(event?.id) || `dashboard-${Math.random()}`;
+            const current = byId.get(id) || {};
+            byId.set(id, { ...current, ...event, id });
+        });
+
+        return Array.from(byId.values());
+    }
+
+    generateFallbackEvents() {
         const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        const nextWeek = new Date(today);
-        nextWeek.setDate(nextWeek.getDate() + 7);
-        
+        const tomorrow = this.addDays(today, 1);
+        const nextWeek = this.addDays(today, 5);
+
         return [
             {
                 id: 1,
-                title: 'EntraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â®nement Football U20',
-                start: this.formatDate(today, '18:00'),
-                end: this.formatDate(today, '20:00'),
+                title: 'Entrainement Football U20',
+                date: this.formatStorageDate(today),
+                start: this.combineDateAndTime(today, '18:00').toISOString(),
+                end: this.combineDateAndTime(today, '20:00').toISOString(),
                 sport: 'football',
                 type: 'training',
                 level: 'avance',
-                coach: 'Mohamed Ali',
+                coach: 'Karim Benali',
                 location: 'Terrain A',
-                description: 'EntraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â®nement intensif pour les U20',
+                description: 'Seance hebdomadaire du groupe U20.',
                 maxParticipants: 25,
-                participants: 18,
-                color: '#4361ee'
+                participants: 18
             },
             {
                 id: 2,
-                title: 'Match de Basketball',
-                start: this.formatDate(tomorrow, '15:00'),
-                end: this.formatDate(tomorrow, '17:00'),
-                sport: 'basketball',
-                type: 'competition',
-                level: 'intermediaire',
-                coach: 'Leila Bensalem',
-                location: 'Gymnase',
-                description: 'Match amical contre l\'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©quipe de la ville',
-                maxParticipants: 15,
-                participants: 12,
-                color: '#f72585'
-            },
-            {
-                id: 3,
-                title: 'Cours de Natation DÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©butants',
-                start: this.formatDate(tomorrow, '10:00'),
-                end: this.formatDate(tomorrow, '11:30'),
+                title: 'Cours de natation',
+                date: this.formatStorageDate(tomorrow),
+                start: this.combineDateAndTime(tomorrow, '10:00').toISOString(),
+                end: this.combineDateAndTime(tomorrow, '11:30').toISOString(),
                 sport: 'natation',
                 type: 'training',
                 level: 'debutant',
-                coach: 'Karim Benali',
+                coach: 'Leila Mansour',
                 location: 'Piscine',
-                description: 'Apprentissage des bases de la natation',
-                maxParticipants: 10,
-                participants: 6,
-                color: '#4cc9f0'
+                description: 'Travail technique et respiration.',
+                maxParticipants: 12,
+                participants: 7
             },
             {
-                id: 4,
-                title: 'Tournoi de Volleyball',
-                start: this.formatDate(nextWeek, '09:00'),
-                end: this.formatDate(nextWeek, '18:00'),
-                sport: 'volleyball',
+                id: 3,
+                title: 'Match amical basketball',
+                date: this.formatStorageDate(nextWeek),
+                start: this.combineDateAndTime(nextWeek, '16:00').toISOString(),
+                end: this.combineDateAndTime(nextWeek, '18:00').toISOString(),
+                sport: 'basketball',
                 type: 'competition',
-                level: 'all',
-                coach: 'Samir Touati',
+                level: 'intermediaire',
+                coach: 'Yasmine Touati',
                 location: 'Salle omnisports',
-                description: 'Tournoi annuel inter-clubs',
-                maxParticipants: 50,
-                participants: 32,
-                color: '#f8961e'
+                description: 'Rencontre amicale avec une equipe invitee.',
+                maxParticipants: 20,
+                participants: 14
             }
         ];
     }
 
-    formatDate(date, time) {
-        const d = new Date(date);
-        const [hours, minutes] = time.split(':');
-        d.setHours(parseInt(hours), parseInt(minutes), 0);
-        return d.toISOString();
-    }
+    normalizeEvent(rawEvent) {
+        if (!rawEvent || typeof rawEvent !== 'object') return null;
 
-    saveBookings() {
-        localStorage.setItem('userBookings', JSON.stringify(this.bookings));
-        localStorage.setItem('ms_bookings', JSON.stringify(this.bookings));
-    }
+        const schedule = this.extractSchedule(rawEvent.schedule);
+        const baseDate = this.parseDateInput(rawEvent.date || rawEvent.start || rawEvent.startDate || rawEvent.eventDate) || new Date();
+        const startTime = rawEvent.startTime || this.extractTime(rawEvent.start) || schedule.start || '09:00';
+        const endTime = rawEvent.endTime || this.extractTime(rawEvent.end) || schedule.end || this.addMinutesToTime(startTime, 90);
+        const start = this.parseDateTime(baseDate, startTime);
+        const endBase = this.parseDateInput(rawEvent.endDate || rawEvent.end || rawEvent.date || baseDate) || baseDate;
+        let end = this.parseDateTime(endBase, endTime);
 
-    saveEvents() {
-        localStorage.setItem('planningEvents', JSON.stringify(this.events));
-        localStorage.setItem('ms_planning', JSON.stringify(this.events));
-    }
-
-    syncParticipantsWithBookings() {
-        const counts = this.bookings.reduce((acc, booking) => {
-            acc[booking.eventId] = (acc[booking.eventId] || 0) + 1;
-            return acc;
-        }, {});
-
-        this.events = this.events.map(event => ({
-            ...event,
-            participants: counts[event.id] || 0
-        }));
-
-        this.saveEvents();
-    }
-
-    getCurrentUserBookings() {
-        if (!this.currentUser) return [];
-
-        return this.bookings
-            .filter(booking => booking.userId === this.currentUser.id)
-            .sort((a, b) => new Date(a.start) - new Date(b.start));
-    }
-
-    isBooked(eventId) {
-        return this.getCurrentUserBookings().some(booking => booking.eventId === eventId);
-    }
-
-    getCurrentRole() {
-        const role = this.currentUser?.role || this.currentUser?.userType;
-        if (role) return role;
-
-        try {
-            const rawSession = localStorage.getItem('currentSession') || localStorage.getItem('ms_session');
-            if (!rawSession) return '';
-            const session = JSON.parse(rawSession);
-            return session.role || session.userType || '';
-        } catch (_) {
-            return '';
+        if (!start) return null;
+        if (!end || end <= start) {
+            end = new Date(start.getTime() + 90 * 60000);
         }
-    }
 
-    getSportIcon(sport) {
-        const icons = {
-            football: 'futbol',
-            basketball: 'basketball-ball',
-            volleyball: 'volleyball-ball',
-            natation: 'swimmer',
-            athletisme: 'running',
-            'arts-martiaux': 'hand-rock'
+        const participantsBase = Number(rawEvent.registeredBase ?? rawEvent.participants ?? rawEvent.registered ?? 0) || 0;
+        const maxParticipants = Number(rawEvent.maxParticipants ?? rawEvent.capacity ?? 0) || 0;
+        const sport = this.normalizeSportKey(rawEvent.sport || rawEvent.discipline || rawEvent.category || 'football');
+        const type = this.normalizeType(rawEvent.type || 'event');
+
+        return {
+            ...rawEvent,
+            id: Number(rawEvent.id) || Date.now() + Math.floor(Math.random() * 1000),
+            title: rawEvent.title || rawEvent.name || 'Evenement',
+            sport,
+            type,
+            level: rawEvent.level || 'all',
+            coach: rawEvent.coach || '',
+            location: rawEvent.location || rawEvent.place || '',
+            description: rawEvent.description || '',
+            start: start.toISOString(),
+            end: end.toISOString(),
+            startTime: this.formatTime(start),
+            endTime: this.formatTime(end),
+            date: this.formatStorageDate(start),
+            endDate: this.formatStorageDate(end),
+            schedule: `${this.formatTime(start)} - ${this.formatTime(end)}`,
+            maxParticipants,
+            registeredBase: participantsBase,
+            participants: participantsBase,
+            registered: participantsBase,
+            color: rawEvent.color || this.getEventColor(sport, type),
+            status: rawEvent.status || 'open'
         };
-
-        return icons[sport] || 'calendar-check';
     }
 
-    renderMyBookings() {
-        const container = document.getElementById('myBookings');
-        const empty = document.getElementById('noBookingsMessage');
-        if (!container || !empty) return;
+    normalizeSportKey(value) {
+        const sport = String(value || '').trim().toLowerCase();
+        const map = {
+            football: 'football',
+            basketball: 'basketball',
+            volleyball: 'volleyball',
+            natation: 'natation',
+            athletisme: 'athletisme',
+            'athlétisme': 'athletisme',
+            'athletisme ': 'athletisme',
+            'arts martiaux': 'arts-martiaux',
+            'arts-martiaux': 'arts-martiaux'
+        };
+        return map[sport] || sport || 'football';
+    }
 
-        const bookings = this.getCurrentUserBookings();
-        if (!this.currentUser || !this.canManageBookings || bookings.length === 0) {
-            container.innerHTML = '';
-            empty.style.display = 'block';
-            return;
+    normalizeType(value) {
+        const type = String(value || '').trim().toLowerCase();
+        if (['training', 'competition', 'event', 'meeting', 'workshop'].includes(type)) {
+            return type;
+        }
+        if (type.includes('entrain')) return 'training';
+        if (type.includes('compet')) return 'competition';
+        if (type.includes('reunion')) return 'meeting';
+        return 'event';
+    }
+
+    formatSportLabel(sport) {
+        const labels = {
+            football: 'Football',
+            basketball: 'Basketball',
+            volleyball: 'Volleyball',
+            natation: 'Natation',
+            athletisme: 'Athletisme',
+            'arts-martiaux': 'Arts martiaux'
+        };
+        return labels[this.normalizeSportKey(sport)] || 'Sport';
+    }
+
+    formatTypeLabel(type) {
+        const labels = {
+            training: 'Entrainement',
+            competition: 'Competition',
+            event: 'Evenement',
+            meeting: 'Reunion',
+            workshop: 'Atelier'
+        };
+        return labels[this.normalizeType(type)] || 'Evenement';
+    }
+
+    getEventColor(sport, type) {
+        const typeColors = {
+            training: '#3b82f6',
+            competition: '#ef4444',
+            event: '#10b981',
+            meeting: '#f59e0b',
+            workshop: '#8b5cf6'
+        };
+        const sportColors = {
+            football: '#2563eb',
+            basketball: '#db2777',
+            volleyball: '#f59e0b',
+            natation: '#0891b2',
+            athletisme: '#7c3aed',
+            'arts-martiaux': '#dc2626'
+        };
+        return typeColors[this.normalizeType(type)] || sportColors[this.normalizeSportKey(sport)] || '#64748b';
+    }
+
+    initUI() {
+        const currentDay = document.getElementById('currentDay');
+        if (currentDay && !currentDay.value) {
+            currentDay.value = window.ManarDate?.toInputValue(new Date()) || this.formatDisplayDate(new Date());
         }
 
-        empty.style.display = 'none';
-        container.innerHTML = bookings.map((booking) => {
-            const start = new Date(booking.start);
-            const end = booking.end ? new Date(booking.end) : null;
-            return `
-                <article class="booking-card">
-                    <div class="booking-sport-icon">
-                        <i class="fas fa-${this.getSportIcon(booking.sport)}"></i>
-                    </div>
-                    <div class="booking-details">
-                        <h4>${booking.title}</h4>
-                        <p><i class="fas fa-user-tie"></i> ${booking.coach || 'Coach non specifie'}</p>
-                        <p><i class="fas fa-map-marker-alt"></i> ${booking.location || 'Lieu a definir'}</p>
-                    </div>
-                    <div class="booking-date">
-                        <div class="booking-day">${start.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })}</div>
-                        <div class="booking-time">${start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}${end ? ` - ${end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
-                    </div>
-                    <div class="booking-status"><span class="status-confirmed">Confirmee</span></div>
-                    <div class="booking-actions">
-                        <button class="btn-cancel-booking" data-booking-id="${booking.id}">
-                            <i class="fas fa-times"></i> Annuler
-                        </button>
-                    </div>
-                </article>
-            `;
-        }).join('');
+        const eventDate = document.getElementById('eventDate');
+        if (eventDate && !eventDate.value) {
+            eventDate.value = window.ManarDate?.toInputValue(new Date()) || this.formatDisplayDate(new Date());
+        }
+    }
 
-        container.querySelectorAll('[data-booking-id]').forEach((button) => {
-            button.addEventListener('click', () => this.cancelBooking(Number(button.dataset.bookingId)));
+    initCalendar() {
+        const calendarElement = document.getElementById('calendar');
+        if (!calendarElement || typeof FullCalendar === 'undefined') return;
+
+        this.calendar = new FullCalendar.Calendar(calendarElement, {
+            initialView: 'dayGridMonth',
+            locale: 'fr',
+            height: 'auto',
+            firstDay: 1,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            buttonText: {
+                today: 'Aujourd hui',
+                month: 'Mois',
+                week: 'Semaine',
+                list: 'Liste'
+            },
+            eventClick: (info) => {
+                info.jsEvent.preventDefault();
+                this.showEventDetails(Number(info.event.id));
+            }
+        });
+
+        this.calendar.render();
+        this.renderCalendar();
+    }
+
+    bindEvents() {
+        document.querySelectorAll('.nav-tab').forEach((tab) => {
+            tab.addEventListener('click', (event) => {
+                event.preventDefault();
+                this.switchView(tab.dataset.view);
+            });
+        });
+
+        document.getElementById('applyFilters')?.addEventListener('click', () => this.renderAll());
+        document.getElementById('resetFilters')?.addEventListener('click', () => this.resetFilters());
+        document.getElementById('currentDay')?.addEventListener('change', () => this.loadDailyView());
+        document.getElementById('prevDay')?.addEventListener('click', () => this.moveCurrentDay(-1));
+        document.getElementById('nextDay')?.addEventListener('click', () => this.moveCurrentDay(1));
+        document.getElementById('prevWeek')?.addEventListener('click', () => this.moveCurrentWeek(-7));
+        document.getElementById('nextWeek')?.addEventListener('click', () => this.moveCurrentWeek(7));
+        document.getElementById('sortByDate')?.addEventListener('click', () => {
+            this.currentListSort = 'date';
+            this.loadListView();
+        });
+        document.getElementById('sortBySport')?.addEventListener('click', () => {
+            this.currentListSort = 'sport';
+            this.loadListView();
+        });
+
+        document.getElementById('addEventBtn')?.addEventListener('click', () => this.openAddEventModal());
+        document.getElementById('printPlanning')?.addEventListener('click', () => window.print());
+        document.getElementById('exportPlanning')?.addEventListener('click', () => this.exportPlanning());
+
+        document.getElementById('closeEventModal')?.addEventListener('click', () => this.closeModal('addEventModal'));
+        document.getElementById('cancelEventBtn')?.addEventListener('click', () => this.closeModal('addEventModal'));
+        document.getElementById('closeEditModal')?.addEventListener('click', () => this.closeModal('editEventModal'));
+        document.getElementById('cancelEditBtn')?.addEventListener('click', () => this.closeModal('editEventModal'));
+        document.getElementById('closeDetailModal')?.addEventListener('click', () => this.closeModal('eventDetailModal'));
+        document.getElementById('closeDetailBtn')?.addEventListener('click', () => this.closeModal('eventDetailModal'));
+        document.getElementById('editEventFromDetail')?.addEventListener('click', () => {
+            if (this.currentEventId) this.openEditModal(this.currentEventId);
+        });
+        document.getElementById('deleteEventFromDetail')?.addEventListener('click', () => {
+            if (this.currentEventId) this.deleteEvent(this.currentEventId);
+        });
+
+        document.getElementById('addEventForm')?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            this.handleAddEvent();
+        });
+        document.getElementById('editEventForm')?.addEventListener('submit', (event) => {
+            event.preventDefault();
+            this.handleEditEvent();
+        });
+
+        document.addEventListener('click', (event) => {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        });
+
+        if (window.DS?.on) {
+            const refresh = () => {
+                this.checkAuth();
+                this.loadData();
+                this.renderAll();
+            };
+            window.DS.on(window.DS.KEYS?.events || 'ms_events', refresh);
+            window.DS.on(window.DS.KEYS?.planning || 'ms_planning', refresh);
+            window.DS.on(window.DS.KEYS?.bookings || 'ms_bookings', refresh);
+            window.DS.on(window.DS.KEYS?.session || 'ms_session', refresh);
+        }
+
+        window.addEventListener('storage', (event) => {
+            if (!['events', 'ms_events', 'planningEvents', 'ms_planning', 'userBookings', 'ms_bookings', 'currentSession', 'ms_session'].includes(event.key)) {
+                return;
+            }
+            this.checkAuth();
+            this.loadData();
+            this.renderAll();
         });
     }
 
-    refreshAllViews() {
-        const sourceEvents = this.filteredEvents || this.events;
+    switchView(view) {
+        this.currentView = view || 'calendar';
+        ['calendar', 'weekly', 'daily', 'list'].forEach((name) => {
+            const section = document.getElementById(`${name}View`);
+            if (!section) return;
+            section.classList.toggle('active', name === this.currentView);
+            section.style.display = name === this.currentView ? 'block' : 'none';
+        });
 
-        if (this.calendar) {
-            this.calendar.removeAllEvents();
-            this.calendar.addEventSource(sourceEvents.map((event) => ({
-                id: event.id,
-                title: event.title,
-                start: event.start,
-                end: event.end,
-                color: event.color,
-                extendedProps: {
-                    sport: event.sport,
-                    type: event.type,
-                    level: event.level,
-                    coach: event.coach,
-                    location: event.location,
-                    description: event.description,
-                    maxParticipants: event.maxParticipants,
-                    participants: event.participants
-                }
-            })));
+        document.querySelectorAll('.nav-tab').forEach((tab) => {
+            tab.classList.toggle('active', tab.dataset.view === this.currentView);
+        });
+
+        if (this.currentView === 'weekly') this.loadWeeklyView();
+        if (this.currentView === 'daily') this.loadDailyView();
+        if (this.currentView === 'list') this.loadListView();
+        if (this.currentView === 'calendar') this.renderCalendar();
+    }
+
+    renderAll() {
+        this.updateCoachFilter();
+        this.updateStats();
+        this.renderCalendar();
+
+        if (this.currentView === 'weekly') this.loadWeeklyView();
+        if (this.currentView === 'daily') this.loadDailyView();
+        if (this.currentView === 'list') this.loadListView();
+    }
+
+    getFilteredEvents() {
+        const sport = document.getElementById('sportFilter')?.value || 'all';
+        const level = document.getElementById('levelFilter')?.value || 'all';
+        const coach = document.getElementById('coachFilter')?.value || 'all';
+        const dateInput = document.getElementById('dateFilter')?.value.trim() || '';
+        const selectedDate = this.parseDateInput(dateInput);
+
+        return this.events.filter((event) => {
+            if (sport !== 'all' && this.normalizeSportKey(event.sport) !== sport) return false;
+            if (level !== 'all' && (event.level || 'all') !== level) return false;
+            if (coach !== 'all' && (event.coach || '').toLowerCase() !== coach.toLowerCase()) return false;
+            if (selectedDate && this.getDateKey(event.start) !== this.getDateKey(selectedDate)) return false;
+            return true;
+        });
+    }
+
+    renderCalendar() {
+        if (!this.calendar) return;
+        this.calendar.removeAllEvents();
+        this.calendar.addEventSource(this.getFilteredEvents().map((event) => ({
+            id: String(event.id),
+            title: event.title,
+            start: event.start,
+            end: event.end,
+            classNames: [`fc-event-${event.type}`],
+            backgroundColor: event.color,
+            borderColor: event.color
+        })));
+    }
+
+    loadWeeklyView() {
+        const weeklyGrid = document.getElementById('weeklyGrid');
+        const currentWeek = document.getElementById('currentWeek');
+        if (!weeklyGrid) return;
+
+        const weekStart = this.startOfWeek(this.currentWeekDate);
+        const days = Array.from({ length: 7 }, (_, index) => this.addDays(weekStart, index));
+        const events = this.getFilteredEvents().filter((event) => {
+            const date = new Date(event.start);
+            return date >= weekStart && date < this.addDays(weekStart, 7);
+        });
+
+        if (currentWeek) {
+            currentWeek.textContent = `${this.formatDisplayDate(weekStart)} - ${this.formatDisplayDate(this.addDays(weekStart, 6))}`;
         }
 
-        this.renderMyBookings();
-        if (this.currentView === 'weekly') this.loadWeeklyView();
-        if (this.currentView === 'daily') this.loadDailyView(document.getElementById('currentDay')?.value);
-        if (this.currentView === 'list') this.loadListView();
-        this.updateStats();
+        const todayKey = this.getDateKey(new Date());
+        const header = `
+            <div class="week-days">
+                <div class="week-day"></div>
+                ${days.map((day) => `
+                    <div class="week-day ${this.getDateKey(day) === todayKey ? 'today' : ''}">
+                        <div class="week-day-header">
+                            <span class="week-day-date">${String(day.getDate()).padStart(2, '0')}</span>
+                            <span class="week-day-name">${day.toLocaleDateString('fr-FR', { weekday: 'short' })}</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        const body = [];
+        this.hours.forEach((hour) => {
+            body.push(`<div class="time-slot-header">${String(hour).padStart(2, '0')}:00</div>`);
+            days.forEach((day) => {
+                const cellEvents = events.filter((event) => {
+                    const start = new Date(event.start);
+                    return this.getDateKey(start) === this.getDateKey(day) && start.getHours() === hour;
+                });
+
+                body.push(`
+                    <div class="time-slot-cell">
+                        ${cellEvents.map((event) => `
+                            <div class="time-slot-event ${event.type}" data-event-id="${event.id}" style="position: relative; display: block; left: auto; right: auto; top: auto; margin-bottom: 4px; background: ${event.color};">
+                                <div class="event-title">${this.escapeHtml(event.title)}</div>
+                                <span class="event-time">${this.formatTimeRange(event)}</span>
+                                <span class="event-sport">${this.escapeHtml(this.formatSportLabel(event.sport))}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `);
+            });
+        });
+
+        weeklyGrid.innerHTML = `${header}<div class="week-time-slots">${body.join('')}</div>`;
+        this.bindInteractiveEvents(weeklyGrid);
+    }
+
+    loadDailyView(dateValue) {
+        const timeline = document.getElementById('dailyTimeline');
+        const currentDayInput = document.getElementById('currentDay');
+        if (!timeline) return;
+
+        const selectedDate = this.parseDateInput(dateValue || currentDayInput?.value) || new Date();
+        if (currentDayInput) {
+            currentDayInput.value = this.formatDisplayDate(selectedDate);
+        }
+
+        const events = this.getFilteredEvents()
+            .filter((event) => this.getDateKey(event.start) === this.getDateKey(selectedDate))
+            .sort((left, right) => new Date(left.start) - new Date(right.start));
+
+        if (!events.length) {
+            timeline.innerHTML = `
+                <div class="empty-state" style="text-align:center; padding: 3rem 1rem;">
+                    <i class="fas fa-calendar-day" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+                    <h3>Aucun evenement ce jour-la</h3>
+                    <p>Essayez un autre jour ou modifiez les filtres.</p>
+                </div>
+            `;
+            return;
+        }
+
+        timeline.innerHTML = `
+            <div class="timeline-hours">
+                ${this.hours.map((hour) => {
+                    const hourEvents = events.filter((event) => new Date(event.start).getHours() === hour);
+                    return `
+                        <div class="timeline-hour">
+                            <div class="timeline-hour-label">
+                                <span class="hour">${String(hour).padStart(2, '0')}:00</span>
+                            </div>
+                            <div class="timeline-hour-slot ${hourEvents.length ? 'has-event' : ''}">
+                                ${hourEvents.map((event) => {
+                                    const start = new Date(event.start);
+                                    const end = new Date(event.end);
+                                    const top = Math.max(0, Math.round((start.getMinutes() / 60) * 50));
+                                    const height = Math.max(56, Math.round(((end - start) / 3600000) * 78));
+                                    return `
+                                        <div class="timeline-event" data-event-id="${event.id}" style="top:${top}px; min-height:${height}px; background:${event.color};">
+                                            <div class="timeline-event-header">
+                                                <span class="timeline-event-time">${this.formatTimeRange(event)}</span>
+                                                <span class="timeline-event-sport">${this.escapeHtml(this.formatSportLabel(event.sport))}</span>
+                                            </div>
+                                            <div class="timeline-event-title">${this.escapeHtml(event.title)}</div>
+                                            <div class="timeline-event-coach"><i class="fas fa-user-tie"></i> ${this.escapeHtml(event.coach || 'Association Manar')}</div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+
+        this.bindInteractiveEvents(timeline);
+    }
+
+    loadListView() {
+        const list = document.getElementById('eventsList');
+        const pagination = document.getElementById('listPagination');
+        if (!list) return;
+
+        const events = [...this.getFilteredEvents()].sort((left, right) => {
+            if (this.currentListSort === 'sport') {
+                return this.formatSportLabel(left.sport).localeCompare(this.formatSportLabel(right.sport), 'fr');
+            }
+            return new Date(left.start) - new Date(right.start);
+        });
+
+        if (pagination) pagination.innerHTML = '';
+
+        if (!events.length) {
+            list.innerHTML = `
+                <div class="empty-state" style="text-align:center; padding: 3rem 1rem;">
+                    <i class="fas fa-list" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+                    <h3>Aucun evenement a afficher</h3>
+                    <p>Essayez de modifier les filtres ou revenez plus tard.</p>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = events.map((event) => {
+            const start = new Date(event.start);
+            return `
+                <div class="event-list-item" data-event-id="${event.id}">
+                    <div class="event-list-date">
+                        <span class="event-list-day">${String(start.getDate()).padStart(2, '0')}</span>
+                        <span class="event-list-month">${start.toLocaleDateString('fr-FR', { month: 'short' })}</span>
+                    </div>
+                    <div class="event-list-details">
+                        <div class="event-list-title">${this.escapeHtml(event.title)}</div>
+                        <div class="event-list-description">${this.escapeHtml(event.description || 'Aucune description disponible.')}</div>
+                    </div>
+                    <div class="event-list-info">
+                        <div class="event-list-time"><i class="fas fa-clock"></i> ${this.formatTimeRange(event)}</div>
+                        <div class="event-list-location"><i class="fas fa-location-dot"></i> ${this.escapeHtml(event.location || 'Lieu a confirmer')}</div>
+                    </div>
+                    <div class="event-list-sport">
+                        <span class="event-sport-badge" style="background:${event.color}; color:#fff;">${this.escapeHtml(this.formatSportLabel(event.sport))}</span>
+                        <small>${this.escapeHtml(this.formatTypeLabel(event.type))}</small>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        this.bindInteractiveEvents(list);
+    }
+
+    bindInteractiveEvents(root) {
+        root.querySelectorAll('[data-event-id]').forEach((element) => {
+            element.addEventListener('click', (event) => {
+                event.preventDefault();
+                const eventId = Number(element.dataset.eventId);
+                if (eventId) this.showEventDetails(eventId);
+            });
+        });
+    }
+
+    showEventDetails(eventId) {
+        const event = this.events.find((item) => item.id === Number(eventId));
+        const body = document.getElementById('eventDetailBody');
+        const modal = document.getElementById('eventDetailModal');
+        const title = document.getElementById('detailModalTitle');
+        const adminActions = document.getElementById('detailAdminActions');
+        const footer = document.getElementById('eventDetailFooter');
+        if (!event || !body || !modal || !title || !footer) return;
+
+        this.currentEventId = event.id;
+        title.innerHTML = `<i class="fas fa-calendar-alt"></i> ${this.escapeHtml(event.title)}`;
+
+        const confirmedBookings = this.getConfirmedBookings(event.id);
+        const isBooked = this.isCurrentUserBooked(event.id);
+        const slotsText = event.maxParticipants > 0
+            ? `${event.participants}/${event.maxParticipants}`
+            : `${event.participants}`;
+
+        body.innerHTML = `
+            <div class="event-detail-card">
+                <div style="display:grid; gap: 14px;">
+                    <div><strong>Date :</strong> ${this.formatDisplayDate(event.start)}</div>
+                    <div><strong>Horaire :</strong> ${this.escapeHtml(this.formatTimeRange(event))}</div>
+                    <div><strong>Sport :</strong> ${this.escapeHtml(this.formatSportLabel(event.sport))}</div>
+                    <div><strong>Type :</strong> ${this.escapeHtml(this.formatTypeLabel(event.type))}</div>
+                    <div><strong>Coach :</strong> ${this.escapeHtml(event.coach || 'Association Manar')}</div>
+                    <div><strong>Lieu :</strong> ${this.escapeHtml(event.location || 'A confirmer')}</div>
+                    <div><strong>Participants :</strong> ${slotsText}</div>
+                    ${confirmedBookings.length ? `<div><strong>Reservations confirmees :</strong> ${confirmedBookings.length}</div>` : ''}
+                    ${event.description ? `<div><strong>Description :</strong><p style="margin-top:8px;">${this.escapeHtml(event.description)}</p></div>` : ''}
+                </div>
+            </div>
+        `;
+
+        adminActions.style.display = this.canManageEvents ? 'flex' : 'none';
+        footer.querySelectorAll('.detail-booking-action').forEach((button) => button.remove());
+
+        if (this.canBookEvents) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `btn ${isBooked ? 'btn-secondary' : 'btn-primary'} detail-booking-action`;
+            button.textContent = isBooked ? 'Annuler ma reservation' : 'Reserver cette seance';
+            button.addEventListener('click', () => {
+                if (isBooked) {
+                    const booking = confirmedBookings.find((item) => item.userId === this.currentUser?.id);
+                    if (booking) this.cancelBooking(booking.id);
+                } else {
+                    this.bookEvent(event.id);
+                }
+            });
+            footer.insertBefore(button, footer.firstChild);
+        }
+
+        modal.style.display = 'block';
+    }
+
+    openAddEventModal(prefilledDate) {
+        if (!this.canManageEvents) return;
+        const form = document.getElementById('addEventForm');
+        if (!form) return;
+
+        form.reset();
+        document.getElementById('eventDate').value = prefilledDate || this.formatDisplayDate(new Date());
+        document.getElementById('eventStartTime').value = '09:00';
+        document.getElementById('eventEndTime').value = '10:30';
+        document.getElementById('eventMaxParticipants').value = '20';
+        document.getElementById('addEventModal').style.display = 'block';
+        window.ManarDatePicker?.refresh(document.getElementById('addEventModal'));
+    }
+
+    openEditModal(eventId) {
+        if (!this.canManageEvents) return;
+        const event = this.events.find((item) => item.id === Number(eventId));
+        if (!event) return;
+
+        this.currentEventId = event.id;
+        document.getElementById('editEventId').value = event.id;
+        document.getElementById('editEventTitle').value = event.title;
+        document.getElementById('editEventDate').value = this.formatDisplayDate(event.start);
+        document.getElementById('editEventStartTime').value = event.startTime;
+        document.getElementById('editEventEndTime').value = event.endTime;
+        document.getElementById('editEventSport').value = this.normalizeSportKey(event.sport);
+        document.getElementById('editEventType').value = this.normalizeType(event.type);
+        document.getElementById('editEventLevel').value = event.level || 'all';
+        document.getElementById('editEventCoach').value = event.coach || '';
+        document.getElementById('editEventLocation').value = event.location || '';
+        document.getElementById('editEventDescription').value = event.description || '';
+        document.getElementById('editEventMaxParticipants').value = event.maxParticipants || '';
+        this.closeModal('eventDetailModal');
+        document.getElementById('editEventModal').style.display = 'block';
+        window.ManarDatePicker?.refresh(document.getElementById('editEventModal'));
+    }
+
+    handleAddEvent() {
+        const payload = this.readEventForm('add');
+        if (!payload) return;
+
+        const event = this.normalizeEvent({
+            ...payload,
+            id: Date.now(),
+            participants: 0,
+            registeredBase: 0
+        });
+
+        this.events.push(event);
+        this.events.sort((left, right) => new Date(left.start) - new Date(right.start));
+        this.saveEvents();
+        this.closeModal('addEventModal');
+        this.renderAll();
+        this.switchView(this.currentView);
+        this.notify('Evenement ajoute avec succes.', 'success');
+    }
+
+    handleEditEvent() {
+        const payload = this.readEventForm('edit');
+        if (!payload) return;
+
+        const eventIndex = this.events.findIndex((item) => item.id === Number(payload.id));
+        if (eventIndex === -1) return;
+
+        const current = this.events[eventIndex];
+        const updated = this.normalizeEvent({
+            ...current,
+            ...payload,
+            registeredBase: current.registeredBase
+        });
+
+        this.events.splice(eventIndex, 1, updated);
+        this.events.sort((left, right) => new Date(left.start) - new Date(right.start));
+        this.saveEvents();
+        this.closeModal('editEventModal');
+        this.renderAll();
+        this.switchView(this.currentView);
+        this.notify('Evenement modifie avec succes.', 'success');
+    }
+
+    readEventForm(mode) {
+        const prefix = mode === 'edit' ? 'editEvent' : 'event';
+        const dateValue = document.getElementById(`${prefix}Date`)?.value.trim() || '';
+        const startTime = document.getElementById(`${prefix}StartTime`)?.value || '';
+        const endTime = document.getElementById(`${prefix}EndTime`)?.value || this.addMinutesToTime(startTime || '09:00', 90);
+        const date = this.parseDateInput(dateValue);
+
+        if (!document.getElementById(`${prefix}Title`)?.value.trim()) {
+            this.notify('Le titre est obligatoire.', 'warning');
+            return null;
+        }
+        if (!date || !startTime) {
+            this.notify('Renseignez une date valide au format dd/mm/yyyy et une heure de debut.', 'warning');
+            return null;
+        }
+
+        return {
+            id: mode === 'edit' ? Number(document.getElementById('editEventId')?.value) : undefined,
+            title: document.getElementById(`${prefix}Title`).value.trim(),
+            date: this.formatStorageDate(date),
+            startTime,
+            endTime,
+            sport: document.getElementById(`${prefix}Sport`)?.value || 'football',
+            type: document.getElementById(`${prefix}Type`)?.value || 'event',
+            level: document.getElementById(`${prefix}Level`)?.value || 'all',
+            coach: document.getElementById(`${prefix}Coach`)?.value.trim() || '',
+            location: document.getElementById(`${prefix}Location`)?.value.trim() || '',
+            description: document.getElementById(`${prefix}Description`)?.value.trim() || '',
+            maxParticipants: Number(document.getElementById(`${prefix}MaxParticipants`)?.value || 0) || 0
+        };
+    }
+
+    deleteEvent(eventId) {
+        if (!this.canManageEvents) return;
+        const event = this.events.find((item) => item.id === Number(eventId));
+        if (!event) return;
+
+        if (!window.confirm(`Supprimer "${event.title}" ?`)) return;
+
+        this.events = this.events.filter((item) => item.id !== Number(eventId));
+        this.bookings = this.bookings.filter((item) => Number(item.eventId) !== Number(eventId));
+        this.saveBookings();
+        this.saveEvents();
+        this.closeModal('eventDetailModal');
+        this.closeModal('editEventModal');
+        this.renderAll();
+        this.switchView(this.currentView);
+        this.notify('Evenement supprime.', 'success');
     }
 
     bookEvent(eventId) {
-        const role = this.getCurrentRole();
-        const canBook = !!this.currentUser && role !== 'admin' && role !== 'coach';
-
-        if (!canBook) {
-            this.showNotification('Connectez-vous avec un compte athlete ou parent pour reserver', 'warning');
+        if (!this.canBookEvents || !this.currentUser) {
+            this.notify('Connectez-vous avec un compte athlete ou parent pour reserver.', 'warning');
             return;
         }
 
-        const event = this.events.find((item) => item.id === eventId);
+        const event = this.events.find((item) => item.id === Number(eventId));
         if (!event) return;
 
-        if (this.isBooked(eventId)) {
-            this.showNotification('Vous avez deja reserve cette seance', 'info');
+        if (this.isCurrentUserBooked(eventId)) {
+            this.notify('Vous avez deja reserve cette seance.', 'info');
             return;
         }
 
-        if ((event.participants || 0) >= (event.maxParticipants || 0)) {
-            this.showNotification('Cette seance est complete', 'warning');
+        if (event.maxParticipants > 0 && event.participants >= event.maxParticipants) {
+            this.notify('Cette seance est complete.', 'warning');
             return;
         }
 
@@ -326,1248 +834,286 @@ class PlanningManager {
             id: Date.now(),
             eventId: event.id,
             userId: this.currentUser.id,
-            title: event.title,
-            sport: event.sport,
-            coach: event.coach,
-            location: event.location,
-            start: event.start,
-            end: event.end,
+            userName: `${this.currentUser.prenom || ''} ${this.currentUser.nom || ''}`.trim() || this.currentUser.email || 'Utilisateur',
             status: 'confirmed',
             createdAt: new Date().toISOString()
         });
 
         this.saveBookings();
         this.syncParticipantsWithBookings();
-        this.refreshAllViews();
-        this.showNotification('Reservation confirmee', 'success');
+        this.saveEvents();
+        this.renderAll();
+        this.showEventDetails(eventId);
+        this.notify('Reservation confirmee.', 'success');
     }
 
     cancelBooking(bookingId) {
-        this.bookings = this.bookings.filter((booking) => booking.id !== bookingId);
+        const booking = this.bookings.find((item) => item.id === Number(bookingId));
+        if (!booking) return;
+
+        this.bookings = this.bookings.filter((item) => item.id !== Number(bookingId));
         this.saveBookings();
         this.syncParticipantsWithBookings();
-        this.refreshAllViews();
-        this.showNotification('Reservation annulee', 'success');
+        this.saveEvents();
+        this.renderAll();
+        this.showEventDetails(booking.eventId);
+        this.notify('Reservation annulee.', 'success');
     }
 
-    initUI() {
-        // Mettre ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour l'interface selon les permissions
-        this.updateUIForPermissions();
-        
-        // Charger les filtres
-        this.loadFilters();
-
-        // Afficher les rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©servations utilisateur
-        this.renderMyBookings();
-        
-        // Afficher les statistiques
-        this.updateStats();
+    getConfirmedBookings(eventId) {
+        return this.bookings.filter((booking) => Number(booking.eventId) === Number(eventId) && booking.status !== 'cancelled');
     }
 
-    updateUIForPermissions() {
-        // Actions d'administration - VISIBLES UNIQUEMENT POUR ADMIN
-        const adminActions = document.getElementById('planningAdminActions');
-        
-        if (adminActions) {
-            // Les admins et les coaches peuvent voir les actions (mais avec des permissions diffÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rentes)
-            adminActions.style.display = (this.isAdmin || this.isCoach) ? 'flex' : 'none';
+    isCurrentUserBooked(eventId) {
+        if (!this.currentUser?.id) return false;
+        return this.getConfirmedBookings(eventId).some((booking) => Number(booking.userId) === Number(this.currentUser.id));
+    }
+
+    syncParticipantsWithBookings() {
+        this.events = this.events.map((event) => {
+            const confirmedCount = this.getConfirmedBookings(event.id).length;
+            const participants = Number(event.registeredBase || 0) + confirmedCount;
+            return {
+                ...event,
+                participants,
+                registered: participants
+            };
+        });
+    }
+
+    saveEvents() {
+        const eventsPayload = this.events.map((event) => ({
+            id: event.id,
+            title: event.title,
+            date: event.date,
+            endDate: event.endDate,
+            start: event.start,
+            end: event.end,
+            startTime: event.startTime,
+            endTime: event.endTime,
+            schedule: event.schedule,
+            sport: event.sport,
+            type: event.type,
+            level: event.level,
+            coach: event.coach,
+            location: event.location,
+            description: event.description,
+            maxParticipants: event.maxParticipants,
+            participants: event.registeredBase,
+            registeredBase: event.registeredBase,
+            registered: event.participants,
+            status: event.status,
+            color: event.color
+        }));
+
+        if (window.DS?.set) {
+            window.DS.set(window.DS.KEYS.events, eventsPayload);
+            window.DS.set(window.DS.KEYS.planning, eventsPayload);
+            return;
         }
-        
-        // Les boutons d'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©dition/suppression seront gÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s dans les ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nements
+
+        localStorage.setItem('events', JSON.stringify(eventsPayload));
+        localStorage.setItem('ms_events', JSON.stringify(eventsPayload));
+        localStorage.setItem('planningEvents', JSON.stringify(eventsPayload));
+        localStorage.setItem('ms_planning', JSON.stringify(eventsPayload));
     }
 
-    loadFilters() {
-        // Charger la liste des coaches pour le filtre
+    saveBookings() {
+        if (window.DS?.set && window.DS.KEYS?.bookings) {
+            window.DS.set(window.DS.KEYS.bookings, this.bookings);
+            return;
+        }
+
+        localStorage.setItem('userBookings', JSON.stringify(this.bookings));
+        localStorage.setItem('ms_bookings', JSON.stringify(this.bookings));
+    }
+
+    updateCoachFilter() {
         const coachFilter = document.getElementById('coachFilter');
-        if (coachFilter) {
-            coachFilter.innerHTML = '<option value="all">Tous les coaches</option>';
-            const coaches = [...new Set(this.events.map(e => e.coach).filter(Boolean))];
-            coaches.forEach(coach => {
-                const option = document.createElement('option');
-                option.value = coach;
-                option.textContent = coach;
-                coachFilter.appendChild(option);
-            });
-        }
-        
-        // DÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©finir la date du jour par dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©faut
-        const today = new Date().toISOString().split('T')[0];
-        const dateFilter = document.getElementById('dateFilter');
-        if (dateFilter) {
-            dateFilter.value = today;
-        }
-        
-        const currentDay = document.getElementById('currentDay');
-        if (currentDay) {
-            currentDay.value = today;
-        }
-        
-        // Mettre ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour l'affichage de la semaine
-        this.updateWeekDisplay();
-    }
+        if (!coachFilter) return;
 
-    initCalendar() {
-        const calendarEl = document.getElementById('calendar');
-        if (!calendarEl) return;
-        
-        this.calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'fr',
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            },
-            events: this.events.map(event => ({
-                id: event.id,
-                title: event.title,
-                start: event.start,
-                end: event.end,
-                color: event.color,
-                extendedProps: {
-                    sport: event.sport,
-                    type: event.type,
-                    level: event.level,
-                    coach: event.coach,
-                    location: event.location,
-                    description: event.description,
-                    maxParticipants: event.maxParticipants,
-                    participants: event.participants
-                }
-            })),
-            eventClick: (info) => this.handleEventClick(info),
-            dateClick: (info) => this.handleDateClick(info),
-            eventDidMount: (info) => this.customizeEventElement(info),
-            height: 'auto',
-            firstDay: 1,
-            slotMinTime: '08:00:00',
-            slotMaxTime: '22:00:00',
-            allDaySlot: false
-        });
-        
-        this.calendar.render();
-    }
-
-    customizeEventElement(info) {
-        // Ajouter des badges ou des icÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â´nes selon le type d'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nement
-        const eventEl = info.el;
-        const event = info.event;
-        
-        // Ajouter une classe selon le type
-        eventEl.classList.add(`event-type-${event.extendedProps.type}`);
-        
-        // Afficher le nombre de participants si disponible
-        if (event.extendedProps.participants !== undefined) {
-            const participantsBadge = document.createElement('span');
-            participantsBadge.className = 'event-participants-badge';
-            participantsBadge.innerHTML = `<i class="fas fa-users"></i> ${event.extendedProps.participants}/${event.extendedProps.maxParticipants}`;
-            participantsBadge.style.cssText = `
-                position: absolute;
-                bottom: 2px;
-                right: 4px;
-                font-size: 10px;
-                background: rgba(255,255,255,0.3);
-                padding: 2px 4px;
-                border-radius: 4px;
-            `;
-            eventEl.querySelector('.fc-event-main')?.appendChild(participantsBadge);
-        }
-    }
-
-    bindEvents() {
-        // Navigation entre les vues
-        document.querySelectorAll('.nav-tab').forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                e.preventDefault();
-                const view = tab.dataset.view;
-                this.switchView(view);
-                
-                // Mettre ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour l'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©tat actif
-                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-            });
-        });
-        
-        // Bouton ajout ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nement (admin/coach seulement)
-        const addEventBtn = document.getElementById('addEventBtn');
-        if (addEventBtn) {
-            addEventBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (this.isAdmin || this.isCoach) {
-                    this.openAddEventModal();
-                } else {
-                    this.showNotification('Seuls les administrateurs et coaches peuvent ajouter des ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nements', 'warning');
-                }
-            });
-        }
-        
-        // Impression
-        const printBtn = document.getElementById('printPlanning');
-        if (printBtn) {
-            printBtn.addEventListener('click', () => {
-                window.print();
-            });
-        }
-        
-        // Export
-        const exportBtn = document.getElementById('exportPlanning');
-        if (exportBtn) {
-            exportBtn.addEventListener('click', () => {
-                this.exportPlanning();
-            });
-        }
-        
-        // Filtres
-        const applyFilters = document.getElementById('applyFilters');
-        if (applyFilters) {
-            applyFilters.addEventListener('click', () => {
-                this.applyFilters();
-            });
-        }
-        
-        const resetFilters = document.getElementById('resetFilters');
-        if (resetFilters) {
-            resetFilters.addEventListener('click', () => {
-                this.resetFilters();
-            });
-        }
-        
-        // Navigation semaine
-        const prevWeek = document.getElementById('prevWeek');
-        const nextWeek = document.getElementById('nextWeek');
-        
-        if (prevWeek) {
-            prevWeek.addEventListener('click', () => {
-                this.navigateWeek(-1);
-            });
-        }
-        
-        if (nextWeek) {
-            nextWeek.addEventListener('click', () => {
-                this.navigateWeek(1);
-            });
-        }
-        
-        // Navigation jour
-        const prevDay = document.getElementById('prevDay');
-        const nextDay = document.getElementById('nextDay');
-        const currentDay = document.getElementById('currentDay');
-        
-        if (prevDay) {
-            prevDay.addEventListener('click', () => {
-                this.navigateDay(-1);
-            });
-        }
-        
-        if (nextDay) {
-            nextDay.addEventListener('click', () => {
-                this.navigateDay(1);
-            });
-        }
-        
-        if (currentDay) {
-            currentDay.addEventListener('change', () => {
-                this.loadDailyView(currentDay.value);
-            });
-        }
-        
-        // Tri
-        const sortByDate = document.getElementById('sortByDate');
-        const sortBySport = document.getElementById('sortBySport');
-        
-        if (sortByDate) {
-            sortByDate.addEventListener('click', () => {
-                this.sortEvents('date');
-            });
-        }
-        
-        if (sortBySport) {
-            sortBySport.addEventListener('click', () => {
-                this.sortEvents('sport');
-            });
-        }
-        
-        // Fermeture des modals
-        this.setupModals();
-        
-        // DÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©connexion
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                setTimeout(() => this.checkAuth(), 500);
-            });
-        }
-
-        window.addEventListener('storage', (event) => {
-            if (!['planningEvents', 'userBookings', 'currentSession', 'ms_planning', 'ms_bookings', 'ms_session'].includes(event.key)) return;
-            this.checkAuth();
-            this.loadData().then(() => this.refreshAllViews());
-        });
-    }
-
-    setupModals() {
-        // Modal Ajout
-        const addModal = document.getElementById('addEventModal');
-        const closeAddBtn = document.getElementById('closeEventModal');
-        const cancelAddBtn = document.getElementById('cancelEventBtn');
-        const addForm = document.getElementById('addEventForm');
-        
-        if (closeAddBtn) {
-            closeAddBtn.addEventListener('click', () => {
-                addModal.style.display = 'none';
-            });
-        }
-        
-        if (cancelAddBtn) {
-            cancelAddBtn.addEventListener('click', () => {
-                addModal.style.display = 'none';
-            });
-        }
-        
-        if (addForm) {
-            addForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleAddEvent();
-            });
-        }
-        
-        // Modal DÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©tails
-        const detailModal = document.getElementById('eventDetailModal');
-        const closeDetailBtn = document.getElementById('closeDetailModal');
-        const closeDetailFooterBtn = document.getElementById('closeDetailBtn');
-        
-        if (closeDetailBtn) {
-            closeDetailBtn.addEventListener('click', () => {
-                detailModal.style.display = 'none';
-            });
-        }
-        
-        if (closeDetailFooterBtn) {
-            closeDetailFooterBtn.addEventListener('click', () => {
-                detailModal.style.display = 'none';
-            });
-        }
-        
-        // Boutons d'action dans les dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©tails
-        const editFromDetail = document.getElementById('editEventFromDetail');
-        const deleteFromDetail = document.getElementById('deleteEventFromDetail');
-        
-        if (editFromDetail) {
-            editFromDetail.addEventListener('click', () => {
-                this.openEditModal(this.currentEventId);
-                detailModal.style.display = 'none';
-            });
-        }
-        
-        if (deleteFromDetail) {
-            deleteFromDetail.addEventListener('click', () => {
-                this.deleteEvent(this.currentEventId);
-                detailModal.style.display = 'none';
-            });
-        }
-        
-        // Modal Edit
-        const editModal = document.getElementById('editEventModal');
-        const closeEditBtn = document.getElementById('closeEditModal');
-        const cancelEditBtn = document.getElementById('cancelEditBtn');
-        const editForm = document.getElementById('editEventForm');
-        
-        if (closeEditBtn) {
-            closeEditBtn.addEventListener('click', () => {
-                editModal.style.display = 'none';
-            });
-        }
-        
-        if (cancelEditBtn) {
-            cancelEditBtn.addEventListener('click', () => {
-                editModal.style.display = 'none';
-            });
-        }
-        
-        if (editForm) {
-            editForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleEditEvent();
-            });
-        }
-        
-        // Fermer les modals en cliquant ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  l'extÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rieur
-        window.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                e.target.style.display = 'none';
-            }
-        });
-    }
-
-    switchView(view) {
-        this.currentView = view;
-
-        ['calendarView', 'weeklyView', 'dailyView', 'listView'].forEach((id) => {
-            const section = document.getElementById(id);
-            if (!section) return;
-            section.style.display = 'none';
-            section.classList.remove('active');
-        });
-
-        const activeSection = document.getElementById(view + 'View');
-        if (activeSection) {
-            activeSection.style.display = 'block';
-            activeSection.classList.add('active');
-        }
-
-        try {
-            if (view === 'calendar') {
-                if (this.calendar) {
-                    this.calendar.render();
-                }
-            } else if (view === 'weekly') {
-                this.loadWeeklyView();
-            } else if (view === 'daily') {
-                this.loadDailyView(document.getElementById('currentDay')?.value);
-            } else if (view === 'list') {
-                this.loadListView();
-            }
-        } catch (error) {
-            console.error('Erreur changement de vue planning:', error);
-            this.showNotification('Erreur d affichage de cet onglet du planning', 'error');
-        }
-    }
-    loadWeeklyView() {
-        const container = document.getElementById('weeklyGrid');
-        if (!container) return;
-        
-        const sourceEvents = this.filteredEvents || this.events;
-        const startOfWeek = this.getStartOfWeek(this.currentWeekDate);
-        const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
-        
-        let html = '<div class="weekly-header-grid">';
-        days.forEach(day => {
-            html += `<div class="weekly-day-header">${day}</div>`;
-        });
-        html += '</div><div class="weekly-body">';
-        
-        // CrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©er les crÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©neaux horaires
-        for (let hour = 8; hour <= 22; hour++) {
-            html += '<div class="weekly-hour-row">';
-            html += `<div class="weekly-hour-label">${hour}:00 - ${hour+1}:00</div>`;
-            
-            for (let day = 0; day < 7; day++) {
-                const currentDate = new Date(startOfWeek);
-                currentDate.setDate(startOfWeek.getDate() + day);
-                currentDate.setHours(hour, 0, 0, 0);
-                
-                const eventsAtTime = sourceEvents.filter(event => {
-                    const eventStart = new Date(event.start);
-                    return eventStart.toDateString() === currentDate.toDateString() &&
-                           eventStart.getHours() === hour;
-                });
-                
-                html += '<div class="weekly-day-cell">';
-                eventsAtTime.forEach(event => {
-                    html += this.createWeeklyEventCard(event);
-                });
-                html += '</div>';
-            }
-            html += '</div>';
-        }
-        
-        html += '</div>';
-        container.innerHTML = html;
-
-        container.querySelectorAll('.weekly-event').forEach(el => {
-            el.addEventListener('click', () => {
-                const eventId = parseInt(el.dataset.id);
-                this.showEventDetails(eventId);
-            });
-        });
-        this.bindDirectBookingButtons(container);
-    }
-
-    createWeeklyEventCard(event) {
-        const colors = {
-            football: '#4361ee',
-            basketball: '#f72585',
-            volleyball: '#f8961e',
-            natation: '#4cc9f0',
-            athletisme: '#7209b7',
-            'arts-martiaux': '#e63946'
-        };
-        
-        const color = colors[event.sport] || '#6c757d';
-        const role = this.getCurrentRole();
-        const canShowBookingAction = role !== 'admin' && role !== 'coach';
-        const isBooked = this.isBooked(event.id);
-        const isFull = (event.participants || 0) >= (event.maxParticipants || 0);
-        
-        return `
-            <div class="weekly-event" data-id="${event.id}" style="background: ${color}; color: white; padding: 5px; margin: 2px; border-radius: 4px; font-size: 11px; cursor: pointer;">
-                <strong>${event.title}</strong>
-                <div><small>${event.coach}</small></div>
-                ${canShowBookingAction ? `
-                    <button type="button" class="direct-booking-btn" data-event-id="${event.id}" style="margin-top:6px;width:100%;border:none;border-radius:4px;padding:4px 6px;font-size:10px;font-weight:700;cursor:pointer;background:${isBooked ? '#fee2e2' : '#fef3c7'};color:${isBooked ? '#b91c1c' : '#92400e'};" ${!this.currentUser || (!isBooked && isFull) ? 'disabled' : ''}>
-                        ${!this.currentUser ? 'Connexion requise' : (isBooked ? 'Annuler' : (isFull ? 'Complete' : 'Reserver'))}
-                    </button>
-                ` : ''}
-            </div>
+        const currentValue = coachFilter.value || 'all';
+        const coaches = [...new Set(this.events.map((event) => (event.coach || '').trim()).filter(Boolean))].sort((left, right) => left.localeCompare(right, 'fr'));
+        coachFilter.innerHTML = `
+            <option value="all">Tous les coaches</option>
+            ${coaches.map((coach) => `<option value="${this.escapeHtmlAttribute(coach)}">${this.escapeHtml(coach)}</option>`).join('')}
         `;
-    }
-
-    loadDailyView(dateStr) {
-        const container = document.getElementById('dailyTimeline');
-        if (!container) return;
-        
-        const sourceEvents = this.filteredEvents || this.events;
-        const date = dateStr ? new Date(dateStr) : new Date();
-        const selectedDate = date.toISOString().split('T')[0];
-        
-        const eventsOfDay = sourceEvents.filter(event => {
-            const eventDate = new Date(event.start).toISOString().split('T')[0];
-            return eventDate === selectedDate;
-        }).sort((a, b) => new Date(a.start) - new Date(b.start));
-        
-        if (eventsOfDay.length === 0) {
-            container.innerHTML = `
-                <div class="no-events">
-                    <i class="fas fa-calendar-times"></i>
-                    <h3>Aucun ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nement ce jour</h3>
-                </div>
-            `;
-            return;
-        }
-        
-        let html = '<div class="timeline">';
-        
-        eventsOfDay.forEach(event => {
-            const start = new Date(event.start);
-            const end = event.end ? new Date(event.end) : null;
-            const startStr = start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-            const endStr = end ? end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
-            
-            html += `
-                <div class="timeline-event" data-id="${event.id}" style="cursor: pointer;">
-                    <div class="timeline-time">${startStr}${endStr ? ` - ${endStr}` : ""}</div>
-                    <div class="timeline-content">
-                        <h4>${event.title}</h4>
-                        <p><i class="fas fa-user-tie"></i> ${event.coach}</p>
-                        <p><i class="fas fa-map-marker-alt"></i> ${event.location}</p>
-                        <p><i class="fas fa-users"></i> ${event.participants}/${event.maxParticipants}</p>
-                        ${(() => {
-                            const role = this.getCurrentRole();
-                            const canShowBookingAction = role !== 'admin' && role !== 'coach';
-                            if (!canShowBookingAction) return '';
-                            const isBooked = this.isBooked(event.id);
-                            const isFull = (event.participants || 0) >= (event.maxParticipants || 0);
-                            return `
-                                <button type="button" class="direct-booking-btn" data-event-id="${event.id}" style="margin-top:10px;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;background:${isBooked ? '#fee2e2' : '#dbeafe'};color:${isBooked ? '#b91c1c' : '#1d4ed8'};" ${!this.currentUser || (!isBooked && isFull) ? 'disabled' : ''}>
-                                    ${!this.currentUser ? 'Connexion requise' : (isBooked ? 'Annuler ma reservation' : (isFull ? 'Seance complete' : 'Reserver cette seance'))}
-                                </button>
-                            `;
-                        })()}
-                    </div>
-                </div>
-            `;
-        });
-        
-        html += '</div>';
-        container.innerHTML = html;
-        
-        // Ajouter les ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nements de clic
-        container.querySelectorAll('.timeline-event').forEach(el => {
-            el.addEventListener('click', () => {
-                const eventId = parseInt(el.dataset.id);
-                this.showEventDetails(eventId);
-            });
-        });
-        this.bindDirectBookingButtons(container);
-    }
-
-    loadListView() {
-        const container = document.getElementById('eventsList');
-        if (!container) return;
-        
-        const sourceEvents = this.filteredEvents || this.events;
-        const sortedEvents = [...sourceEvents].sort((a, b) => new Date(a.start) - new Date(b.start));
-        
-        if (sortedEvents.length === 0) {
-            container.innerHTML = `
-                <div class="no-events">
-                    <i class="fas fa-calendar-times"></i>
-                    <h3>Aucun ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nement ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  venir</h3>
-                </div>
-            `;
-            return;
-        }
-        
-        let html = '';
-        
-        sortedEvents.forEach(event => {
-            const date = new Date(event.start).toLocaleDateString('fr-FR', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            
-            const time = new Date(event.start).toLocaleTimeString('fr-FR', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            
-            const colors = {
-                football: '#4361ee',
-                basketball: '#f72585',
-                volleyball: '#f8961e',
-                natation: '#4cc9f0',
-                athletisme: '#7209b7',
-                'arts-martiaux': '#e63946'
-            };
-            
-            const color = colors[event.sport] || '#6c757d';
-            
-            html += `
-                <div class="list-event-card" data-id="${event.id}" style="border-left: 4px solid ${color}; margin-bottom: 15px; padding: 15px; background: white; border-radius: 8px; box-shadow: var(--box-shadow); cursor: pointer;">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div>
-                            <h4 style="margin: 0 0 5px;">${event.title}</h4>
-                            <p style="margin: 0; color: var(--gray-600);"><i class="fas fa-calendar"></i> ${date} ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  ${time}</p>
-                            <p style="margin: 5px 0 0; color: var(--gray-600);"><i class="fas fa-user-tie"></i> ${event.coach}</p>
-                        </div>
-                        <div>
-                            <span class="badge" style="background: ${color}; color: white; padding: 4px 8px; border-radius: 20px; font-size: 12px;">
-                                ${event.sport}
-                            </span>
-                        </div>
-                    </div>
-                    <div style="margin-top: 10px; display: flex; gap: 10px;">
-                        <span style="font-size: 12px; color: var(--gray-500);"><i class="fas fa-map-marker-alt"></i> ${event.location}</span>
-                        <span style="font-size: 12px; color: var(--gray-500);"><i class="fas fa-users"></i> ${event.participants}/${event.maxParticipants}</span>
-                    </div>
-                    ${(() => {
-                        const role = this.getCurrentRole();
-                        const canShowBookingAction = role !== 'admin' && role !== 'coach';
-                        if (!canShowBookingAction) return '';
-                        const isBooked = this.isBooked(event.id);
-                        const isFull = (event.participants || 0) >= (event.maxParticipants || 0);
-                        return `
-                            <div style="margin-top: 12px; display:flex; justify-content:flex-end;">
-                                <button type="button" class="direct-booking-btn" data-event-id="${event.id}" style="border:none;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;background:${isBooked ? '#fee2e2' : '#dbeafe'};color:${isBooked ? '#b91c1c' : '#1d4ed8'};" ${!this.currentUser || (!isBooked && isFull) ? 'disabled' : ''}>
-                                    ${!this.currentUser ? 'Connexion requise' : (isBooked ? 'Annuler ma reservation' : (isFull ? 'Seance complete' : 'Reserver cette seance'))}
-                                </button>
-                            </div>
-                        `;
-                    })()}
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-        
-        // Ajouter les ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nements de clic
-        container.querySelectorAll('.list-event-card').forEach(el => {
-            el.addEventListener('click', () => {
-                const eventId = parseInt(el.dataset.id);
-                this.showEventDetails(eventId);
-            });
-        });
-        this.bindDirectBookingButtons(container);
-    }
-
-    bindDirectBookingButtons(container) {
-        container.querySelectorAll('.direct-booking-btn').forEach((button) => {
-            button.addEventListener('click', (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-
-                const eventId = Number(button.dataset.eventId);
-                if (!this.currentUser) {
-                    this.showNotification('Connectez-vous pour reserver cette seance', 'warning');
-                    return;
-                }
-
-                if (this.isBooked(eventId)) {
-                    const booking = this.getCurrentUserBookings().find((item) => item.eventId === eventId);
-                    if (booking) this.cancelBooking(booking.id);
-                } else {
-                    this.bookEvent(eventId);
-                }
-            });
-        });
-    }
-
-    updateWeekDisplay() {
-        const weekSpan = document.getElementById('currentWeek');
-        if (!weekSpan) return;
-        
-        const startOfWeek = this.getStartOfWeek(this.currentWeekDate);
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(endOfWeek.getDate() + 6);
-        
-        const startStr = startOfWeek.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-        const endStr = endOfWeek.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
-        
-        weekSpan.textContent = `${startStr} - ${endStr}`;
-    }
-
-    getStartOfWeek(date) {
-        const d = new Date(date);
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        return new Date(d.setDate(diff));
-    }
-
-    navigateWeek(direction) {
-        this.currentWeekDate.setDate(this.currentWeekDate.getDate() + (direction * 7));
-        this.updateWeekDisplay();
-        this.loadWeeklyView();
-    }
-    navigateDay(direction) {
-        const currentDay = document.getElementById('currentDay');
-        if (!currentDay) return;
-        
-        const date = new Date(currentDay.value);
-        date.setDate(date.getDate() + direction);
-        
-        const newDate = date.toISOString().split('T')[0];
-        currentDay.value = newDate;
-        this.loadDailyView(newDate);
-    }
-
-    sortEvents(criteria) {
-        if (criteria === 'date') {
-            this.events.sort((a, b) => new Date(a.start) - new Date(b.start));
-        } else if (criteria === 'sport') {
-            this.events.sort((a, b) => a.sport.localeCompare(b.sport));
-        }
-        
-        this.loadListView();
-        this.showNotification('Liste triÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©e avec succÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨s', 'success');
-    }
-
-    applyFilters() {
-        const sport = document.getElementById('sportFilter').value;
-        const level = document.getElementById('levelFilter').value;
-        const coach = document.getElementById('coachFilter').value;
-        const date = document.getElementById('dateFilter').value;
-        
-        let filteredEvents = [...this.events];
-        
-        if (sport !== 'all') {
-            filteredEvents = filteredEvents.filter(e => e.sport === sport);
-        }
-        
-        if (level !== 'all') {
-            filteredEvents = filteredEvents.filter(e => e.level === level || e.level === 'all');
-        }
-        
-        if (coach !== 'all') {
-            filteredEvents = filteredEvents.filter(e => e.coach === coach);
-        }
-        
-        if (date) {
-            filteredEvents = filteredEvents.filter(e => {
-                const eventDate = new Date(e.start).toISOString().split('T')[0];
-                return eventDate === date;
-            });
-        }
-        
-        this.filteredEvents = filteredEvents;
-
-        // Mettre ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour l'affichage selon la vue actuelle
-        if (this.currentView === 'calendar' && this.calendar) {
-            this.calendar.removeAllEvents();
-            this.calendar.addEventSource(filteredEvents);
-        } else if (this.currentView === 'weekly') {
-            this.loadWeeklyView();
-        } else if (this.currentView === 'daily') {
-            this.loadDailyView(date);
-        } else if (this.currentView === 'list') {
-            this.loadListView();
-        }
-        
-        this.showNotification('Filtres appliquÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s', 'success');
-    }
-
-    resetFilters() {
-        document.getElementById('sportFilter').value = 'all';
-        document.getElementById('levelFilter').value = 'all';
-        document.getElementById('coachFilter').value = 'all';
-        
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('dateFilter').value = today;
-        
-        this.filteredEvents = null;
-        this.loadData();
-        this.refreshAllViews();
-        
-        this.showNotification('Filtres rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©initialisÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s', 'success');
-    }
-
-    handleEventClick(info) {
-        const eventId = parseInt(info.event.id);
-        this.showEventDetails(eventId);
-    }
-
-    handleDateClick(info) {
-        // Si l'utilisateur est admin ou coach, on peut proposer d'ajouter un ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nement ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  cette date
-        if (this.isAdmin || this.isCoach) {
-            if (confirm(`Voulez-vous ajouter un ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nement le ${info.dateStr} ?`)) {
-                this.openAddEventModal(info.dateStr);
-            }
-        }
-    }
-
-    showEventDetails(eventId) {
-        const event = this.events.find(e => e.id === eventId);
-        if (!event) return;
-        
-        this.currentEventId = eventId;
-        
-        const modal = document.getElementById('eventDetailModal');
-        const body = document.getElementById('eventDetailBody');
-        const adminActions = document.getElementById('detailAdminActions');
-        const footer = document.getElementById('eventDetailFooter');
-        
-        const startDate = new Date(event.start);
-        const endDate = event.end ? new Date(event.end) : null;
-        
-        const dateStr = startDate.toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        
-        const startTime = startDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-        const endTime = endDate ? endDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
-        
-        const typeLabels = {
-            training: 'EntraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â®nement',
-            competition: 'CompÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©tition',
-            event: 'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nement',
-            meeting: 'RÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©union'
-        };
-        
-        const levelLabels = {
-            all: 'Tous niveaux',
-            debutant: 'DÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©butant',
-            intermediaire: 'IntermÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©diaire',
-            avance: 'AvancÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©'
-        };
-        
-        const role = this.getCurrentRole();
-        const canShowBookingAction = role !== 'admin' && role !== 'coach';
-        const isBooked = this.isBooked(eventId);
-        const isFull = (event.participants || 0) >= (event.maxParticipants || 0);
-        const buttonLabel = !this.currentUser
-            ? 'Se connecter pour reserver'
-            : (isBooked ? 'Annuler ma reservation' : (isFull ? 'Seance complete' : 'Reserver cette seance'));
-
-        body.innerHTML = `
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: var(--primary-color); margin-bottom: 15px;">${event.title}</h4>
-                
-                <div style="display: grid; gap: 15px;">
-                    <div><i class="fas fa-calendar" style="width: 25px; color: var(--primary-color);"></i> <strong>Date:</strong> ${dateStr}</div>
-                    <div><i class="fas fa-clock" style="width: 25px; color: var(--primary-color);"></i> <strong>Horaire:</strong> ${startTime} - ${endTime}</div>
-                    <div><i class="fas fa-tag" style="width: 25px; color: var(--primary-color);"></i> <strong>Sport:</strong> ${event.sport}</div>
-                    <div><i class="fas fa-info-circle" style="width: 25px; color: var(--primary-color);"></i> <strong>Type:</strong> ${typeLabels[event.type] || event.type}</div>
-                    <div><i class="fas fa-signal" style="width: 25px; color: var(--primary-color);"></i> <strong>Niveau:</strong> ${levelLabels[event.level] || event.level}</div>
-                    <div><i class="fas fa-user-tie" style="width: 25px; color: var(--primary-color);"></i> <strong>Coach:</strong> ${event.coach || 'Non spÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©cifiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©'}</div>
-                    <div><i class="fas fa-map-marker-alt" style="width: 25px; color: var(--primary-color);"></i> <strong>Lieu:</strong> ${event.location || 'Non spÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©cifiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©'}</div>
-                    <div><i class="fas fa-users" style="width: 25px; color: var(--primary-color);"></i> <strong>Participants:</strong> ${event.participants || 0}/${event.maxParticipants || 'IllimitÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©'}</div>
-                </div>
-                
-                ${event.description ? `
-                    <div style="margin-top: 20px;">
-                        <h5 style="margin-bottom: 10px;">Description:</h5>
-                        <p style="color: var(--gray-600); line-height: 1.5;">${event.description}</p>
-                    </div>
-                ` : ''}
-
-                ${canShowBookingAction ? `
-                    <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end;">
-                        <button type="button" id="bookingActionBtn" class="btn ${isBooked ? 'btn-danger' : 'btn-primary'}" ${!this.currentUser || (!isBooked && isFull) ? 'disabled' : ''}>
-                            <i class="fas fa-${!this.currentUser ? 'lock' : (isBooked ? 'calendar-times' : 'calendar-check')}"></i>
-                            ${buttonLabel}
-                        </button>
-                    </div>
-                ` : ''}
-            </div>
-        `;
-        
-        const persistentBookingButton = document.getElementById('persistentBookingActionBtn');
-
-        // Afficher les actions admin si l'utilisateur est admin ou coach
-        if (adminActions) {
-            adminActions.style.display = (this.isAdmin || this.isCoach) ? 'flex' : 'none';
-        }
-
-        if (persistentBookingButton) {
-            if (canShowBookingAction) {
-                persistentBookingButton.style.display = 'inline-flex';
-                persistentBookingButton.className = `btn ${isBooked ? 'btn-danger' : 'btn-primary'}`;
-                persistentBookingButton.disabled = !this.currentUser || (!isBooked && isFull);
-                persistentBookingButton.innerHTML = `
-                    <i class="fas fa-${!this.currentUser ? 'lock' : (isBooked ? 'calendar-times' : 'calendar-check')}"></i>
-                    ${buttonLabel}
-                `;
-            } else {
-                persistentBookingButton.style.display = 'none';
-            }
-        }
-
-        const bookingButton = document.getElementById('bookingActionBtn');
-        if (bookingButton) {
-            bookingButton.addEventListener('click', () => {
-                if (this.isBooked(eventId)) {
-                    const booking = this.getCurrentUserBookings().find((item) => item.eventId === eventId);
-                    if (booking) this.cancelBooking(booking.id);
-                } else {
-                    this.bookEvent(eventId);
-                }
-                modal.style.display = 'none';
-            });
-        }
-
-        if (persistentBookingButton && canShowBookingAction) {
-            persistentBookingButton.onclick = () => {
-                if (this.isBooked(eventId)) {
-                    const booking = this.getCurrentUserBookings().find((item) => item.eventId === eventId);
-                    if (booking) this.cancelBooking(booking.id);
-                } else {
-                    this.bookEvent(eventId);
-                }
-                modal.style.display = 'none';
-            };
-        }
-        
-        modal.style.display = 'block';
-    }
-
-    openAddEventModal(dateStr) {
-        if (!this.isAdmin && !this.isCoach) {
-            this.showNotification('Vous n\'avez pas les droits pour ajouter des ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nements', 'error');
-            return;
-        }
-        
-        const modal = document.getElementById('addEventModal');
-        const form = document.getElementById('addEventForm');
-        
-        if (dateStr) {
-            document.getElementById('eventDate').value = dateStr;
-        }
-        
-        if (modal) {
-            form.reset();
-            if (!dateStr) {
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('eventDate').value = today;
-            }
-            modal.style.display = 'block';
-        }
-    }
-
-    handleAddEvent() {
-        if (!this.isAdmin && !this.isCoach) return;
-        
-        const title = document.getElementById('eventTitle').value;
-        const date = document.getElementById('eventDate').value;
-        const startTime = document.getElementById('eventStartTime').value;
-        const endTime = document.getElementById('eventEndTime').value;
-        const sport = document.getElementById('eventSport').value;
-        const type = document.getElementById('eventType').value;
-        const level = document.getElementById('eventLevel').value;
-        const coach = document.getElementById('eventCoach').value;
-        const location = document.getElementById('eventLocation').value;
-        const description = document.getElementById('eventDescription').value;
-        const maxParticipants = document.getElementById('eventMaxParticipants').value;
-        
-        if (!title || !date || !startTime || !sport || !type) {
-            this.showNotification('Veuillez remplir tous les champs obligatoires', 'warning');
-            return;
-        }
-        
-        const start = new Date(date + 'T' + startTime);
-        const end = endTime ? new Date(date + 'T' + endTime) : null;
-        
-        const colors = {
-            football: '#4361ee',
-            basketball: '#f72585',
-            volleyball: '#f8961e',
-            natation: '#4cc9f0',
-            athletisme: '#7209b7',
-            'arts-martiaux': '#e63946'
-        };
-        
-        const newEvent = {
-            id: Date.now(),
-            title: title,
-            start: start.toISOString(),
-            end: end ? end.toISOString() : null,
-            sport: sport,
-            type: type,
-            level: level,
-            coach: coach || 'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©terminer',
-            location: location || 'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©finir',
-            description: description || '',
-            maxParticipants: parseInt(maxParticipants) || 20,
-            participants: 0,
-            color: colors[sport] || '#6c757d'
-        };
-        
-        this.events.push(newEvent);
-        localStorage.setItem('planningEvents', JSON.stringify(this.events));
-        
-        // Fermer le modal
-        document.getElementById('addEventModal').style.display = 'none';
-        
-        // Mettre ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour le calendrier
-        if (this.calendar) {
-            this.calendar.addEvent({
-                id: newEvent.id,
-                title: newEvent.title,
-                start: newEvent.start,
-                end: newEvent.end,
-                color: newEvent.color,
-                extendedProps: {
-                    sport: newEvent.sport,
-                    type: newEvent.type,
-                    level: newEvent.level,
-                    coach: newEvent.coach,
-                    location: newEvent.location,
-                    description: newEvent.description,
-                    maxParticipants: newEvent.maxParticipants,
-                    participants: newEvent.participants
-                }
-            });
-        }
-        
-        // Recharger les vues
-        if (this.currentView === 'weekly') this.loadWeeklyView();
-        if (this.currentView === 'daily') this.loadDailyView(date);
-        if (this.currentView === 'list') this.loadListView();
-        
-        this.updateStats();
-        
-        this.showNotification('ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nement ajoutÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© avec succÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨s !', 'success');
-    }
-
-    openEditModal(eventId) {
-        if (!this.isAdmin && !this.isCoach) {
-            this.showNotification('Vous n\'avez pas les droits pour modifier des ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nements', 'error');
-            return;
-        }
-        
-        const event = this.events.find(e => e.id === eventId);
-        if (!event) return;
-        
-        const startDate = new Date(event.start);
-        const dateStr = startDate.toISOString().split('T')[0];
-        const startTime = startDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-        
-        let endTime = '';
-        if (event.end) {
-            const endDate = new Date(event.end);
-            endTime = endDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-        }
-        
-        document.getElementById('editEventId').value = event.id;
-        document.getElementById('editEventTitle').value = event.title;
-        document.getElementById('editEventDate').value = dateStr;
-        document.getElementById('editEventStartTime').value = startTime;
-        document.getElementById('editEventEndTime').value = endTime;
-        document.getElementById('editEventSport').value = event.sport;
-        document.getElementById('editEventType').value = event.type;
-        document.getElementById('editEventLevel').value = event.level || 'all';
-        document.getElementById('editEventCoach').value = event.coach || '';
-        document.getElementById('editEventLocation').value = event.location || '';
-        document.getElementById('editEventDescription').value = event.description || '';
-        document.getElementById('editEventMaxParticipants').value = event.maxParticipants || 20;
-        
-        document.getElementById('editEventModal').style.display = 'block';
-    }
-
-    handleEditEvent() {
-        if (!this.isAdmin && !this.isCoach) return;
-        
-        const id = parseInt(document.getElementById('editEventId').value);
-        const title = document.getElementById('editEventTitle').value;
-        const date = document.getElementById('editEventDate').value;
-        const startTime = document.getElementById('editEventStartTime').value;
-        const endTime = document.getElementById('editEventEndTime').value;
-        const sport = document.getElementById('editEventSport').value;
-        const type = document.getElementById('editEventType').value;
-        const level = document.getElementById('editEventLevel').value;
-        const coach = document.getElementById('editEventCoach').value;
-        const location = document.getElementById('editEventLocation').value;
-        const description = document.getElementById('editEventDescription').value;
-        const maxParticipants = document.getElementById('editEventMaxParticipants').value;
-        
-        const eventIndex = this.events.findIndex(e => e.id === id);
-        if (eventIndex === -1) return;
-        
-        const start = new Date(date + 'T' + startTime);
-        const end = endTime ? new Date(date + 'T' + endTime) : null;
-        
-        const colors = {
-            football: '#4361ee',
-            basketball: '#f72585',
-            volleyball: '#f8961e',
-            natation: '#4cc9f0',
-            athletisme: '#7209b7',
-            'arts-martiaux': '#e63946'
-        };
-        
-        this.events[eventIndex] = {
-            ...this.events[eventIndex],
-            title: title,
-            start: start.toISOString(),
-            end: end ? end.toISOString() : null,
-            sport: sport,
-            type: type,
-            level: level,
-            coach: coach || 'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©terminer',
-            location: location || 'ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ dÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©finir',
-            description: description || '',
-            maxParticipants: parseInt(maxParticipants) || 20,
-            color: colors[sport] || '#6c757d'
-        };
-        
-        localStorage.setItem('planningEvents', JSON.stringify(this.events));
-        
-        // Fermer le modal
-        document.getElementById('editEventModal').style.display = 'none';
-        
-        // Mettre ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â  jour le calendrier
-        if (this.calendar) {
-            const event = this.calendar.getEventById(id);
-            if (event) {
-                event.setProp('title', title);
-                event.setStart(start);
-                event.setEnd(end);
-                event.setProp('color', colors[sport] || '#6c757d');
-                event.setExtendedProp('sport', sport);
-                event.setExtendedProp('type', type);
-                event.setExtendedProp('level', level);
-                event.setExtendedProp('coach', coach);
-                event.setExtendedProp('location', location);
-                event.setExtendedProp('description', description);
-                event.setExtendedProp('maxParticipants', parseInt(maxParticipants));
-            }
-        }
-        
-        // Recharger les vues
-        if (this.currentView === 'weekly') this.loadWeeklyView();
-        if (this.currentView === 'daily') this.loadDailyView(date);
-        if (this.currentView === 'list') this.loadListView();
-        
-        this.showNotification('ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nement modifiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© avec succÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨s !', 'success');
-    }
-
-    deleteEvent(eventId) {
-        if (!this.isAdmin && !this.isCoach) {
-            this.showNotification('Vous n\'avez pas les droits pour supprimer des ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nements', 'error');
-            return;
-        }
-        
-        if (confirm('ÃƒÆ’Ã†â€™Ãƒâ€¦Ã‚Â tes-vous sÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â»r de vouloir supprimer cet ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nement ?')) {
-            this.events = this.events.filter(e => e.id !== eventId);
-            localStorage.setItem('planningEvents', JSON.stringify(this.events));
-            
-            // Supprimer du calendrier
-            if (this.calendar) {
-                const event = this.calendar.getEventById(eventId);
-                if (event) {
-                    event.remove();
-                }
-            }
-            
-            // Recharger les vues
-            if (this.currentView === 'weekly') this.loadWeeklyView();
-            if (this.currentView === 'daily') this.loadDailyView();
-            if (this.currentView === 'list') this.loadListView();
-            
-            this.updateStats();
-            
-            this.showNotification('ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°vÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©nement supprimÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© avec succÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨s !', 'success');
-        }
+        coachFilter.value = coaches.includes(currentValue) ? currentValue : 'all';
     }
 
     updateStats() {
-        const totalParticipants = this.events.reduce((sum, e) => sum + (e.participants || 0), 0);
-        document.getElementById('totalParticipants').textContent = totalParticipants;
-        document.getElementById('totalSessions').textContent = this.events.length;
-        
-        // Sport le plus populaire
-        const sportCounts = {};
-        this.events.forEach(e => {
-            sportCounts[e.sport] = (sportCounts[e.sport] || 0) + 1;
+        const weekStart = this.startOfWeek(new Date());
+        const weekEnd = this.addDays(weekStart, 7);
+        const weekEvents = this.events.filter((event) => {
+            const date = new Date(event.start);
+            return date >= weekStart && date < weekEnd;
         });
-        
-        let mostPopular = '-';
-        let maxCount = 0;
-        for (const [sport, count] of Object.entries(sportCounts)) {
-            if (count > maxCount) {
-                maxCount = count;
-                mostPopular = sport;
-            }
+
+        const totalParticipants = weekEvents.reduce((sum, event) => sum + Number(event.participants || 0), 0);
+        const totalSessions = weekEvents.length;
+        const bySport = weekEvents.reduce((map, event) => {
+            const key = this.normalizeSportKey(event.sport);
+            map[key] = (map[key] || 0) + Number(event.participants || 0);
+            return map;
+        }, {});
+        const popularSport = Object.entries(bySport).sort((left, right) => right[1] - left[1])[0]?.[0] || '-';
+        const capacity = weekEvents.reduce((sum, event) => sum + Number(event.maxParticipants || 0), 0);
+        const attendanceRate = capacity > 0 ? Math.round((totalParticipants / capacity) * 100) : 0;
+
+        this.setText('totalParticipants', String(totalParticipants));
+        this.setText('totalSessions', String(totalSessions));
+        this.setText('mostPopularSport', popularSport === '-' ? '-' : this.formatSportLabel(popularSport));
+        this.setText('attendanceRate', `${attendanceRate}%`);
+    }
+
+    resetFilters() {
+        this.setValue('sportFilter', 'all');
+        this.setValue('levelFilter', 'all');
+        this.setValue('coachFilter', 'all');
+        this.setValue('dateFilter', '');
+        this.renderAll();
+    }
+
+    moveCurrentDay(offset) {
+        const currentDayInput = document.getElementById('currentDay');
+        const baseDate = this.parseDateInput(currentDayInput?.value) || new Date();
+        const nextDate = this.addDays(baseDate, offset);
+        if (currentDayInput) {
+            currentDayInput.value = this.formatDisplayDate(nextDate);
         }
-        document.getElementById('mostPopularSport').textContent = mostPopular;
-        
-        // Taux de frÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©quentation moyen
-        const totalCapacity = this.events.reduce((sum, e) => sum + (e.maxParticipants || 20), 0);
-        const attendanceRate = totalCapacity > 0 ? Math.round((totalParticipants / totalCapacity) * 100) : 0;
-        document.getElementById('attendanceRate').textContent = attendanceRate + '%';
+        this.loadDailyView(nextDate);
+    }
+
+    moveCurrentWeek(offset) {
+        this.currentWeekDate = this.addDays(this.currentWeekDate, offset);
+        this.loadWeeklyView();
     }
 
     exportPlanning() {
-        const dataStr = JSON.stringify(this.events, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        
-        const exportFileDefaultName = `planning_${new Date().toISOString().split('T')[0]}.json`;
-        
-        const linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', exportFileDefaultName);
-        linkElement.click();
-        
-        this.showNotification('Planning exportÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© avec succÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨s', 'success');
+        const payload = JSON.stringify(this.getFilteredEvents(), null, 2);
+        const blob = new Blob([payload], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'planning-manar.json';
+        link.click();
+        URL.revokeObjectURL(link.href);
     }
 
-    showNotification(message, type = 'info') {
-        // CrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©er une notification
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
-            color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
-            border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
-            border-radius: 4px;
-            z-index: 10003;
-            animation: slideIn 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        `;
-        notification.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-            <span>${message}</span>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
+    closeModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) modal.style.display = 'none';
+    }
+
+    notify(message, type = 'info') {
+        if (window.showToast) {
+            window.showToast(message, type);
+            return;
+        }
+        alert(message);
+    }
+
+    setText(id, value) {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    }
+
+    setValue(id, value) {
+        const element = document.getElementById(id);
+        if (element) element.value = value;
+    }
+
+    parseDateInput(value) {
+        if (window.ManarDate?.parse) {
+            const parsed = window.ManarDate.parse(value);
+            if (parsed) return parsed;
+        }
+
+        if (!value) return null;
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    parseDateTime(dateValue, timeValue) {
+        const date = this.parseDateInput(dateValue);
+        if (!date) return null;
+        const [hours, minutes] = String(timeValue || '00:00').split(':').map(Number);
+        date.setHours(Number.isFinite(hours) ? hours : 0, Number.isFinite(minutes) ? minutes : 0, 0, 0);
+        return date;
+    }
+
+    combineDateAndTime(dateValue, timeValue) {
+        return this.parseDateTime(dateValue, timeValue) || new Date();
+    }
+
+    extractSchedule(schedule) {
+        const match = String(schedule || '').match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+        return match ? { start: match[1], end: match[2] } : { start: '', end: '' };
+    }
+
+    extractTime(value) {
+        const match = String(value || '').match(/T(\d{2}:\d{2})/);
+        return match ? match[1] : '';
+    }
+
+    addMinutesToTime(timeValue, minutesToAdd) {
+        const [hours, minutes] = String(timeValue || '00:00').split(':').map(Number);
+        const total = (Number.isFinite(hours) ? hours : 0) * 60 + (Number.isFinite(minutes) ? minutes : 0) + minutesToAdd;
+        const normalized = ((total % (24 * 60)) + (24 * 60)) % (24 * 60);
+        const nextHours = Math.floor(normalized / 60);
+        const nextMinutes = normalized % 60;
+        return `${String(nextHours).padStart(2, '0')}:${String(nextMinutes).padStart(2, '0')}`;
+    }
+
+    formatTime(value) {
+        const date = value instanceof Date ? value : new Date(value);
+        return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    }
+
+    formatTimeRange(event) {
+        return `${event.startTime || this.formatTime(event.start)} - ${event.endTime || this.formatTime(event.end)}`;
+    }
+
+    formatDisplayDate(value) {
+        return window.ManarDate?.format(value) || new Date(value).toLocaleDateString('fr-FR');
+    }
+
+    formatStorageDate(value) {
+        return window.ManarDate?.toStorage(value) || new Date(value).toISOString().split('T')[0];
+    }
+
+    getDateKey(value) {
+        return this.formatStorageDate(value);
+    }
+
+    startOfWeek(value) {
+        const date = new Date(value);
+        const day = date.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        date.setDate(date.getDate() + diff);
+        date.setHours(0, 0, 0, 0);
+        return date;
+    }
+
+    addDays(value, days) {
+        const date = new Date(value);
+        date.setDate(date.getDate() + days);
+        return date;
+    }
+
+    escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    escapeHtmlAttribute(value) {
+        return this.escapeHtml(value).replace(/`/g, '&#96;');
     }
 }
 
-// Initialisation
 document.addEventListener('DOMContentLoaded', () => {
     window.planningManager = new PlanningManager();
 });

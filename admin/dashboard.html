@@ -1164,6 +1164,39 @@
         .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; cursor: pointer; }
         .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); }
 
+        /* ========== ADMIN EXTRA TABS ========== */
+        .admin-dual-grid {
+            display: grid;
+            grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .records-table td strong {
+            color: var(--gray-900);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .records-table td small {
+            color: var(--gray-500);
+            font-size: 0.75rem;
+        }
+
+        .helper-text {
+            margin-top: 8px;
+            font-size: 0.78rem;
+            color: var(--gray-500);
+            line-height: 1.5;
+        }
+
+        .file-meta {
+            margin-top: 8px;
+            font-size: 0.78rem;
+            color: var(--gray-500);
+            word-break: break-word;
+        }
+
         /* ========== RESPONSIVE ========== */
         @media (max-width: 1100px) { .charts-grid { grid-template-columns: 1fr; } }
 
@@ -1176,6 +1209,7 @@
             .stats-grid { grid-template-columns: 1fr 1fr; }
             .charts-grid { grid-template-columns: 1fr; }
             .form-grid { grid-template-columns: 1fr; }
+            .admin-dual-grid { grid-template-columns: 1fr; }
             .search-wrap { display: none; }
             .topbar-user-info { display: none; }
         }
@@ -1225,6 +1259,9 @@
             <a class="nav-item" data-section="evenements" data-tooltip="?v?nements">
                 <i class="fas fa-calendar-check"></i><span>?v?nements</span>
             </a>
+            <a class="nav-item" data-section="materiel" data-tooltip="Materiel">
+                <i class="fas fa-toolbox"></i><span>Materiel</span>
+            </a>
 
             <div class="nav-section-label">Contenu</div>
             <a class="nav-item" data-section="galerie" data-tooltip="Galerie">
@@ -1234,6 +1271,9 @@
                 <i class="fas fa-envelope"></i><span>Messages</span>
                 <span class="nav-badge" id="messageBadge">0</span>
             </a>
+            <a class="nav-item" data-section="factures" data-tooltip="Factures">
+                <i class="fas fa-file-invoice"></i><span>Factures</span>
+            </a>
 
             <div class="nav-section-label">Analyses</div>
             <a class="nav-item" data-section="finances" data-tooltip="Finances">
@@ -1241,6 +1281,9 @@
             </a>
             <a class="nav-item" data-section="statistiques" data-tooltip="Statistiques">
                 <i class="fas fa-chart-bar"></i><span>Statistiques</span>
+            </a>
+            <a class="nav-item" data-section="resultats" data-tooltip="Resultats">
+                <i class="fas fa-medal"></i><span>Resultats</span>
             </a>
 
             <div class="nav-section-label">Syst?me</div>
@@ -1519,6 +1562,98 @@
                 <div id="eventsList"></div>
             </section>
 
+            <!-- ===== MATERIEL ===== -->
+            <section id="materiel" class="section">
+                <div class="section-top">
+                    <h2><i class="fas fa-toolbox"></i> Materiel</h2>
+                    <button class="btn btn-success" onclick="app.addMaterialRecord()">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+
+                <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Operationnel</div>
+                            <div class="stat-value" id="materialOperationalCount">0</div>
+                            <div class="stat-change up">elements</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red"><i class="fas fa-times-circle"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Defectueux</div>
+                            <div class="stat-value" id="materialDefectiveCount">0</div>
+                            <div class="stat-change warn">elements</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fas fa-boxes"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">En stock</div>
+                            <div class="stat-value" id="materialStockCount">0</div>
+                            <div class="stat-change neutral">elements</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-dual-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-clipboard-list"></i> Ajouter un materiel</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-grid cols-1">
+                                <div class="form-group">
+                                    <label class="form-label">Date</label>
+                                    <input type="text" class="form-control" id="materialDate" placeholder="dd/mm/yyyy">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Nom du materiel</label>
+                                    <input type="text" class="form-control" id="materialName" placeholder="Ex: Ballon, chasuble, filet...">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Etat</label>
+                                    <select class="form-select" id="materialStatus">
+                                        <option value="operationnel">Operationnel</option>
+                                        <option value="defectueux">Defectueux</option>
+                                        <option value="stock">En stock</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Quantite</label>
+                                    <input type="number" class="form-control" id="materialQuantity" min="1" value="1">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Notes</label>
+                                    <textarea class="form-control" id="materialNote" placeholder="Details utiles pour l'admin"></textarea>
+                                </div>
+                            </div>
+                            <p class="helper-text">L'admin peut enregistrer ici le materiel operationnel, defectueux ou disponible en stock avec la date, le nom et la quantite.</p>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <div class="card-header">
+                            <h3><i class="fas fa-toolbox"></i> Liste du materiel</h3>
+                        </div>
+                        <table class="records-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Materiel</th>
+                                    <th>Etat</th>
+                                    <th>Quantite</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="materialsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- ===== GALERIE ===== -->
             <section id="galerie" class="section">
                 <div class="section-top">
@@ -1666,6 +1801,204 @@
                 <div id="messagesList"></div>
             </section>
 
+            <!-- ===== FACTURES ===== -->
+            <section id="factures" class="section">
+                <div class="section-top">
+                    <h2><i class="fas fa-file-invoice"></i> Factures fournisseurs</h2>
+                    <button class="btn btn-success" onclick="app.addInvoiceRecord()">
+                        <i class="fas fa-save"></i> Ajouter
+                    </button>
+                </div>
+
+                <div class="admin-dual-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-receipt"></i> Nouvelle facture</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-grid cols-1">
+                                <div class="form-group">
+                                    <label class="form-label">Date</label>
+                                    <input type="text" class="form-control" id="invoiceDate" placeholder="dd/mm/yyyy">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Fournisseur</label>
+                                    <input type="text" class="form-control" id="invoiceSupplier" placeholder="Nom du fournisseur">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Type de fournisseur</label>
+                                    <input type="text" class="form-control" id="invoiceSupplierType" placeholder="Ex: Sport, transport, equipement">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Objet / facture</label>
+                                    <input type="text" class="form-control" id="invoiceLabel" placeholder="Ex: Achat de ballons">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Montant</label>
+                                    <input type="number" class="form-control" id="invoiceAmount" min="0" step="0.01" placeholder="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Observation</label>
+                                    <textarea class="form-control" id="invoiceNote" placeholder="Informations complementaires"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Piece jointe facture</label>
+                                    <div class="upload-zone">
+                                        <input type="file" id="invoiceAttachment" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg">
+                                        <i class="fas fa-file-upload"></i>
+                                        <strong>Ajouter une facture</strong>
+                                        <small>Formats acceptes: PDF, PNG, JPG, JPEG</small>
+                                    </div>
+                                    <div class="file-meta" id="invoiceAttachmentName">Aucun fichier selectionne</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <div class="card-header">
+                            <h3><i class="fas fa-file-contract"></i> Historique des factures</h3>
+                        </div>
+                        <table class="records-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Fournisseur</th>
+                                    <th>Type</th>
+                                    <th>Facture</th>
+                                    <th>Fichier</th>
+                                    <th>Montant</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoicesBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== RESULTATS ===== -->
+            <section id="resultats" class="section">
+                <div class="section-top">
+                    <h2><i class="fas fa-medal"></i> Resultats</h2>
+                    <button class="btn btn-success" onclick="app.addResultRecord()">
+                        <i class="fas fa-save"></i> Ajouter
+                    </button>
+                </div>
+
+                <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fas fa-flag-checkered"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Resultats saisis</div>
+                            <div class="stat-value" id="resultsCount">0</div>
+                            <div class="stat-change neutral">entrees</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange"><i class="fas fa-medal"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Medailles</div>
+                            <div class="stat-value" id="medalsCount">0</div>
+                            <div class="stat-change up">total</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-trophy"></i></div>
+                        <div class="stat-body">
+                            <div class="stat-label">Podiums</div>
+                            <div class="stat-value" id="podiumsCount">0</div>
+                            <div class="stat-change up">1er / 2e / 3e</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-dual-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-award"></i> Saisir un resultat</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-grid cols-1">
+                                <div class="form-group">
+                                    <label class="form-label">Date</label>
+                                    <input type="text" class="form-control" id="resultDate" placeholder="dd/mm/yyyy">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Type de sport</label>
+                                    <select class="form-select" id="resultSportType">
+                                        <option value="collectif">Collectif</option>
+                                        <option value="individuel">Individuel</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Sport</label>
+                                    <input type="text" class="form-control" id="resultSportName" placeholder="Ex: Football, judo, natation">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Niveau / discipline</label>
+                                    <input type="text" class="form-control" id="resultDiscipline" placeholder="Ex: U17, 100m nage libre, cadet">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Mon equipe / mon athlete</label>
+                                    <input type="text" class="form-control" id="resultOurSide" placeholder="Ex: Manar Sport U17 ou Nom de l'athlete">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Equipe adverse / adversaire</label>
+                                    <input type="text" class="form-control" id="resultOpponent" placeholder="Ex: MC Oran U17 ou Nom de l'adversaire">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Competition</label>
+                                    <input type="text" class="form-control" id="resultCompetition" placeholder="Ex: Championnat regional">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Resultat</label>
+                                    <input type="text" class="form-control" id="resultSummary" placeholder="Ex: Victoire 2-1 / 2e place">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Medailles</label>
+                                    <input type="number" class="form-control" id="resultMedals" min="0" value="0">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Classement</label>
+                                    <select class="form-select" id="resultRank">
+                                        <option value="">Selectionner</option>
+                                        <option value="1">1ere place</option>
+                                        <option value="2">2eme place</option>
+                                        <option value="3">3eme place</option>
+                                        <option value="autre">Autre</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Notes</label>
+                                    <textarea class="form-control" id="resultNote" placeholder="Ex: meilleur joueur, details du match, medailles obtenues"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <div class="card-header">
+                            <h3><i class="fas fa-list-ol"></i> Liste des resultats</h3>
+                        </div>
+                        <table class="records-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Sport / niveau</th>
+                                    <th>Equipes / adversaire</th>
+                                    <th>Competition</th>
+                                    <th>Resultat</th>
+                                    <th>Medailles</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- ===== PARAM?^TRES ===== -->
             <section id="parametres" class="section">
                 <div class="section-top">
@@ -1777,6 +2110,10 @@ class AdminApp {
         this.gallery = [];
         this.messages = [];
         this.transactions = [];
+        this.materials = [];
+        this.invoices = [];
+        this.results = [];
+        this.pendingInvoiceAttachment = null;
         this.currentPage = 1;
         this.itemsPerPage = 10;
         this.currentCalDate = new Date();
@@ -1791,6 +2128,9 @@ class AdminApp {
         this.initCharts();
         this.renderAll();
         this.bindEvents();
+        this.resetMaterialForm();
+        this.resetInvoiceForm();
+        this.resetResultForm();
         this.renderCalendar();
         const hash = window.location.hash.slice(1);
         if (hash) this.showSection(hash);
@@ -1833,12 +2173,24 @@ class AdminApp {
             const storedTx = localStorage.getItem('transactions');
             this.transactions = storedTx ? JSON.parse(storedTx) : this.seedTransactions();
 
+            const storedMaterials = localStorage.getItem('adminMaterials');
+            this.materials = storedMaterials ? JSON.parse(storedMaterials) : this.seedMaterials();
+
+            const storedInvoices = localStorage.getItem('adminInvoices');
+            this.invoices = storedInvoices ? JSON.parse(storedInvoices) : this.seedInvoices();
+
+            const storedResults = localStorage.getItem('adminResults');
+            this.results = storedResults ? JSON.parse(storedResults) : this.seedResults();
+
             // Sauvegarder SEULEMENT les donn?es qui n'existaient pas encore
             if (!storedEvents) localStorage.setItem('events', JSON.stringify(this.events));
             if (!storedTeams) localStorage.setItem('teams', JSON.stringify(this.teams));
             if (!storedGallery) localStorage.setItem('gallery', JSON.stringify(this.gallery));
             if (!storedMessages) localStorage.setItem('messages', JSON.stringify(this.messages));
             if (!storedTx) localStorage.setItem('transactions', JSON.stringify(this.transactions));
+            if (!storedMaterials) localStorage.setItem('adminMaterials', JSON.stringify(this.materials));
+            if (!storedInvoices) localStorage.setItem('adminInvoices', JSON.stringify(this.invoices));
+            if (!storedResults) localStorage.setItem('adminResults', JSON.stringify(this.results));
             // NE PAS r??crire users ici pour pr?server ceux de l'inscription
 
         } catch(e) {
@@ -1854,6 +2206,9 @@ class AdminApp {
         localStorage.setItem('gallery', JSON.stringify(this.gallery));
         localStorage.setItem('messages', JSON.stringify(this.messages));
         localStorage.setItem('transactions', JSON.stringify(this.transactions));
+        localStorage.setItem('adminMaterials', JSON.stringify(this.materials));
+        localStorage.setItem('adminInvoices', JSON.stringify(this.invoices));
+        localStorage.setItem('adminResults', JSON.stringify(this.results));
     }
 
     /* ===== SEED DATA ===== */
@@ -1951,6 +2306,30 @@ class AdminApp {
             {id:3, date:'2024-02-18', member:'Yacine Touati', type:'Inscription enfant', amount:3500, status:'en attente'},
             {id:4, date:'2024-02-17', member:'Mohamed Ziani', type:'Inscription', amount:5000, status:'pay?'},
             {id:5, date:'2024-02-16', member:'Sara Hadj', type:'Stage', amount:5000, status:'en attente'}
+        ];
+    }
+
+    seedMaterials() {
+        return [
+            {id:1, date:'2026-04-20', name:'Ballons football', status:'operationnel', quantity:18, note:'Utilises par les categories jeunes'},
+            {id:2, date:'2026-04-19', name:'Plots entrainement', status:'stock', quantity:30, note:'Reserve magasin'},
+            {id:3, date:'2026-04-18', name:'Filets but', status:'defectueux', quantity:2, note:'A remplacer'}
+        ];
+    }
+
+    seedInvoices() {
+        return [
+            {id:1, date:'10/04/2026', supplier:'Sport Equip DZ', supplierType:'Equipement sportif', label:'Achat de ballons', amount:42000, note:'Livraison complete', attachment:null},
+            {id:2, date:'12/04/2026', supplier:'Transport Oran', supplierType:'Transport', label:'Deplacement tournoi', amount:18000, note:'Bus athletes', attachment:null},
+            {id:3, date:'15/04/2026', supplier:'Pro Clean', supplierType:'Entretien', label:'Nettoyage salle', amount:9500, note:'Facture mensuelle', attachment:null}
+        ];
+    }
+
+    seedResults() {
+        return [
+            {id:1, date:'05/04/2026', sportType:'collectif', sportName:'Football', discipline:'U17', ourSide:'Manar Sport U17', opponent:'MC Oran U17', competition:'Championnat regional', summary:'Victoire 2-1', medals:0, rank:'1', note:'Qualification pour la finale'},
+            {id:2, date:'08/04/2026', sportType:'individuel', sportName:'Natation', discipline:'100m nage libre', ourSide:'Sara Hadj', opponent:'Nora Belkacem', competition:'Meeting de printemps', summary:'2e place', medals:1, rank:'2', note:'Medaille argent'},
+            {id:3, date:'14/04/2026', sportType:'collectif', sportName:'Athletisme', discipline:'Cadettes', ourSide:'Manar Sport filles', opponent:'Team scolaire Oran', competition:'Cross scolaire', summary:'3e place equipe filles', medals:2, rank:'3', note:'Deux medailles remportees'}
         ];
     }
 
@@ -2061,6 +2440,9 @@ class AdminApp {
         this.renderGalleryGrid();
         this.renderMessages();
         this.renderTransactions();
+        this.renderMaterials();
+        this.renderInvoices();
+        this.renderResults();
     }
 
     /* ===== RECENT USERS ===== */
@@ -2078,7 +2460,7 @@ class AdminApp {
                 </div></td>
                 <td>${u.email}</td>
                 <td><span class="badge ${this.typeBadge(u.role||u.userType)}">${this.typeLabel(u.role||u.userType)}</span></td>
-                <td>${new Date(u.createdAt).toLocaleDateString('fr-FR')}</td>
+                <td>${this.formatDate(u.createdAt)}</td>
                 <td>${this.statusBadge(u.status)}</td>
                 <td>
                     <button class="btn-action btn-view" onclick="app.viewUser(${u.id})" title="Voir"><i class="fas fa-eye"></i></button>
@@ -2176,7 +2558,7 @@ class AdminApp {
                         <span class="badge ${ev.type==='competition'?'badge-danger':ev.type==='training'?'badge-success':'badge-primary'}" style="margin-bottom:6px">${typeLabels[ev.type]||ev.type}</span>
                         <div class="event-title">${ev.title}</div>
                     </div>
-                    <span class="event-date-badge"><i class="fas fa-calendar"></i>${new Date(ev.date).toLocaleDateString('fr-FR')}${ev.endDate ? ' → ' + new Date(ev.endDate).toLocaleDateString('fr-FR') : ''}</span>
+                    <span class="event-date-badge"><i class="fas fa-calendar"></i>${this.formatDate(ev.date)}${ev.endDate ? ' → ' + this.formatDate(ev.endDate) : ''}</span>
                 </div>
                 <div class="event-meta">
                     <span class="event-meta-item"><i class="fas fa-map-marker-alt"></i>${ev.location}</span>
@@ -2259,7 +2641,7 @@ class AdminApp {
             const hasImg = item.dataUrl;
             const ph = !hasImg ? `<div class="gallery-placeholder" style="background:linear-gradient(135deg,${catColors[item.category]||'#667eea'}22,${catColors[item.category]||'#764ba2'}11)"><i class="${catIcons[item.category]||'fas fa-image'}" style="color:${catColors[item.category]||'#667eea'};font-size:2.5rem"></i><span style="color:${catColors[item.category]||'#667eea'}">${item.title.substring(0,20)}</span></div>` : '';
             const img = hasImg ? `<img class="gallery-real-img" src="${item.dataUrl}" alt="${item.title}" loading="lazy">` : '';
-            return `<div class="gallery-item" onclick="app.viewImage(${item.id})">${img}${ph}<div class="gallery-overlay"><div class="gallery-overlay-title">${item.title}</div><div class="gallery-overlay-meta"><span><i class="fas fa-heart" style="color:#f87171"></i> ${item.likes}</span><span><i class="fas fa-eye"></i> ${item.views}</span><span>${new Date(item.date).toLocaleDateString('fr-FR')}</span></div></div></div>`;
+            return `<div class="gallery-item" onclick="app.viewImage(${item.id})">${img}${ph}<div class="gallery-overlay"><div class="gallery-overlay-title">${item.title}</div><div class="gallery-overlay-meta"><span><i class="fas fa-heart" style="color:#f87171"></i> ${item.likes}</span><span><i class="fas fa-eye"></i> ${item.views}</span><span>${this.formatDate(item.date)}</span></div></div></div>`;
         }).join('');
     }
 
@@ -2287,7 +2669,7 @@ class AdminApp {
                         <span>${msg.email}</span>
                         ${!msg.read ? '<span class="badge badge-primary" style="margin-left:8px">Nouveau</span>' : ''}
                     </div>
-                    <span class="msg-date">${new Date(msg.date).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+                    <span class="msg-date">${this.formatDateTime(msg.date)}</span>
                 </div>
                 <div class="msg-subject">${msg.subject}</div>
                 <div class="msg-text">${msg.message}</div>
@@ -2304,7 +2686,7 @@ class AdminApp {
         const tbody = document.getElementById('transactionsBody'); if (!tbody) return;
         tbody.innerHTML = this.transactions.slice(0,10).map(t => `
             <tr>
-                <td>${new Date(t.date).toLocaleDateString('fr-FR')}</td>
+                <td>${this.formatDate(t.date)}</td>
                 <td>${t.member}</td>
                 <td><span class="badge badge-info">${t.type}</span></td>
                 <td><strong>${t.amount.toLocaleString()} DZD</strong></td>
@@ -2313,6 +2695,257 @@ class AdminApp {
                     ${t.status==='en attente'?`<button class="btn btn-success btn-sm" onclick="app.markPaid(${t.id})"><i class="fas fa-check"></i> Marquer pay?</button>`:''}
                 </td>
             </tr>`).join('');
+    }
+
+    /* ===== MATERIEL ===== */
+    renderMaterials() {
+        const tbody = document.getElementById('materialsBody');
+        if (!tbody) return;
+
+        const sorted = this.sortByDateDesc(this.materials);
+        if (!sorted.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:24px">Aucun materiel enregistre.</td></tr>';
+        } else {
+            tbody.innerHTML = sorted.map(item => `
+                <tr>
+                    <td>${this.formatDate(item.date)}</td>
+                    <td>
+                        <strong>${this.escapeHtml(item.name)}</strong>
+                        <small>${this.escapeHtml(item.note || 'Sans note')}</small>
+                    </td>
+                    <td>${this.materialStatusBadge(item.status)}</td>
+                    <td><strong>${item.quantity}</strong></td>
+                    <td>
+                        <button class="btn-action btn-delete" onclick="app.deleteMaterialRecord(${item.id})" title="Supprimer"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`).join('');
+        }
+
+        const operational = this.materials.filter(item => item.status === 'operationnel').reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+        const defective = this.materials.filter(item => item.status === 'defectueux').reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+        const stock = this.materials.filter(item => item.status === 'stock').reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+        this.setText('materialOperationalCount', operational);
+        this.setText('materialDefectiveCount', defective);
+        this.setText('materialStockCount', stock);
+    }
+
+    addMaterialRecord() {
+        const date = this.normalizeDateInput(document.getElementById('materialDate')?.value || '');
+        const name = document.getElementById('materialName')?.value.trim() || '';
+        const status = document.getElementById('materialStatus')?.value || 'operationnel';
+        const quantity = Number(document.getElementById('materialQuantity')?.value || 0);
+        const note = document.getElementById('materialNote')?.value.trim() || '';
+
+        if (!date || !name || quantity <= 0) {
+            this.toast('Renseignez une date valide au format dd/mm/yyyy, le nom du materiel et la quantite', 'warning');
+            return;
+        }
+
+        this.materials.unshift({
+            id: this.nextId(this.materials),
+            date,
+            name,
+            status,
+            quantity,
+            note
+        });
+        localStorage.setItem('adminMaterials', JSON.stringify(this.materials));
+        this.renderMaterials();
+        this.resetMaterialForm();
+        this.toast('Materiel enregistre avec succes', 'success');
+    }
+
+    deleteMaterialRecord(id) {
+        this.materials = this.materials.filter(item => item.id !== id);
+        localStorage.setItem('adminMaterials', JSON.stringify(this.materials));
+        this.renderMaterials();
+        this.toast('Ligne materiel supprimee', 'success');
+    }
+
+    resetMaterialForm() {
+        const today = this.todayFormatted();
+        this.setValue('materialDate', today);
+        this.setValue('materialName', '');
+        this.setValue('materialStatus', 'operationnel');
+        this.setValue('materialQuantity', 1);
+        this.setValue('materialNote', '');
+    }
+
+    /* ===== FACTURES ===== */
+    renderInvoices() {
+        const tbody = document.getElementById('invoicesBody');
+        if (!tbody) return;
+
+        const sorted = this.sortByDateDesc(this.invoices);
+        if (!sorted.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:24px">Aucune facture enregistree.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = sorted.map(item => `
+            <tr>
+                <td>${this.formatDate(item.date)}</td>
+                <td>
+                    <strong>${this.escapeHtml(item.supplier)}</strong>
+                    <small>${this.escapeHtml(item.note || 'Sans observation')}</small>
+                </td>
+                <td><span class="badge badge-info">${this.escapeHtml(item.supplierType)}</span></td>
+                <td>${this.escapeHtml(item.label)}</td>
+                <td>${item.attachment ? `<button class="btn btn-ghost btn-sm" onclick="app.openInvoiceAttachment(${item.id})"><i class="fas fa-paperclip"></i> ${this.escapeHtml(item.attachment.name)}</button>` : '<span class="badge badge-gray">Aucun</span>'}</td>
+                <td><strong>${Number(item.amount || 0).toLocaleString('fr-FR')} DZD</strong></td>
+                <td>
+                    <button class="btn-action btn-delete" onclick="app.deleteInvoiceRecord(${item.id})" title="Supprimer"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`).join('');
+    }
+
+    addInvoiceRecord() {
+        const date = this.normalizeDateInput(document.getElementById('invoiceDate')?.value || '');
+        const supplier = document.getElementById('invoiceSupplier')?.value.trim() || '';
+        const supplierType = document.getElementById('invoiceSupplierType')?.value.trim() || '';
+        const label = document.getElementById('invoiceLabel')?.value.trim() || '';
+        const amount = Number(document.getElementById('invoiceAmount')?.value || 0);
+        const note = document.getElementById('invoiceNote')?.value.trim() || '';
+
+        if (!date || !supplier || !supplierType || !label) {
+            this.toast('Renseignez une date valide au format dd/mm/yyyy, le fournisseur, le type et la facture', 'warning');
+            return;
+        }
+
+        this.invoices.unshift({
+            id: this.nextId(this.invoices),
+            date,
+            supplier,
+            supplierType,
+            label,
+            amount,
+            note,
+            attachment: this.pendingInvoiceAttachment ? { ...this.pendingInvoiceAttachment } : null
+        });
+        localStorage.setItem('adminInvoices', JSON.stringify(this.invoices));
+        this.renderInvoices();
+        this.resetInvoiceForm();
+        this.toast('Facture ajoutee avec succes', 'success');
+    }
+
+    deleteInvoiceRecord(id) {
+        this.invoices = this.invoices.filter(item => item.id !== id);
+        localStorage.setItem('adminInvoices', JSON.stringify(this.invoices));
+        this.renderInvoices();
+        this.toast('Facture supprimee', 'success');
+    }
+
+    resetInvoiceForm() {
+        const today = this.todayFormatted();
+        this.setValue('invoiceDate', today);
+        this.setValue('invoiceSupplier', '');
+        this.setValue('invoiceSupplierType', '');
+        this.setValue('invoiceLabel', '');
+        this.setValue('invoiceAmount', '');
+        this.setValue('invoiceNote', '');
+        this.pendingInvoiceAttachment = null;
+        const attachmentInput = document.getElementById('invoiceAttachment');
+        if (attachmentInput) attachmentInput.value = '';
+        this.setText('invoiceAttachmentName', 'Aucun fichier selectionne');
+    }
+
+    /* ===== RESULTATS ===== */
+    renderResults() {
+        const tbody = document.getElementById('resultsBody');
+        if (!tbody) return;
+
+        const sorted = this.sortByDateDesc(this.results);
+        if (!sorted.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:24px">Aucun resultat enregistre.</td></tr>';
+        } else {
+            tbody.innerHTML = sorted.map(item => `
+                <tr>
+                    <td>${this.formatDate(item.date)}</td>
+                    <td>
+                        <strong>${this.escapeHtml(item.sportName || '-')}</strong>
+                        <small>${this.escapeHtml(item.sportType === 'individuel' ? 'Sport individuel' : 'Sport collectif')} - ${this.escapeHtml(item.discipline || '-')}</small>
+                    </td>
+                    <td>
+                        <strong>${this.escapeHtml(item.ourSide || '-')}</strong>
+                        <small>vs ${this.escapeHtml(item.opponent || '-')}</small>
+                    </td>
+                    <td>
+                        <strong>${this.escapeHtml(item.competition || '-')}</strong>
+                        ${this.resultRankBadge(item.rank)}
+                        <small style="display:block;margin-top:4px">${this.escapeHtml(item.summary)}</small>
+                    </td>
+                    <td><strong>${Number(item.medals || 0)}</strong></td>
+                    <td>
+                        <button class="btn-action btn-delete" onclick="app.deleteResultRecord(${item.id})" title="Supprimer"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`).join('');
+        }
+
+        const medals = this.results.reduce((sum, item) => sum + Number(item.medals || 0), 0);
+        const podiums = this.results.filter(item => ['1', '2', '3'].includes(String(item.rank))).length;
+        this.setText('resultsCount', this.results.length);
+        this.setText('medalsCount', medals);
+        this.setText('podiumsCount', podiums);
+    }
+
+    addResultRecord() {
+        const date = this.normalizeDateInput(document.getElementById('resultDate')?.value || '');
+        const sportType = document.getElementById('resultSportType')?.value || 'collectif';
+        const sportName = document.getElementById('resultSportName')?.value.trim() || '';
+        const discipline = document.getElementById('resultDiscipline')?.value.trim() || '';
+        const ourSide = document.getElementById('resultOurSide')?.value.trim() || '';
+        const opponent = document.getElementById('resultOpponent')?.value.trim() || '';
+        const competition = document.getElementById('resultCompetition')?.value.trim() || '';
+        const summary = document.getElementById('resultSummary')?.value.trim() || '';
+        const medals = Number(document.getElementById('resultMedals')?.value || 0);
+        const rank = document.getElementById('resultRank')?.value || '';
+        const note = document.getElementById('resultNote')?.value.trim() || '';
+
+        if (!date || !sportName || !discipline || !ourSide || !opponent || !competition || !summary) {
+            this.toast('Renseignez une date valide dd/mm/yyyy, le sport, le niveau ou la discipline, votre equipe/athlete, l adversaire, la competition et le resultat', 'warning');
+            return;
+        }
+
+        this.results.unshift({
+            id: this.nextId(this.results),
+            date,
+            sportType,
+            sportName,
+            discipline,
+            ourSide,
+            opponent,
+            competition,
+            summary,
+            medals,
+            rank,
+            note
+        });
+        localStorage.setItem('adminResults', JSON.stringify(this.results));
+        this.renderResults();
+        this.resetResultForm();
+        this.toast('Resultat ajoute avec succes', 'success');
+    }
+
+    deleteResultRecord(id) {
+        this.results = this.results.filter(item => item.id !== id);
+        localStorage.setItem('adminResults', JSON.stringify(this.results));
+        this.renderResults();
+        this.toast('Resultat supprime', 'success');
+    }
+
+    resetResultForm() {
+        const today = this.todayFormatted();
+        this.setValue('resultDate', today);
+        this.setValue('resultSportType', 'collectif');
+        this.setValue('resultSportName', '');
+        this.setValue('resultDiscipline', '');
+        this.setValue('resultOurSide', '');
+        this.setValue('resultOpponent', '');
+        this.setValue('resultCompetition', '');
+        this.setValue('resultSummary', '');
+        this.setValue('resultMedals', 0);
+        this.setValue('resultRank', '');
+        this.setValue('resultNote', '');
     }
 
     /* ===== CALENDAR ===== */
@@ -2425,9 +3058,9 @@ class AdminApp {
                 <div class="doc-name">${doc.name}</div>
                 ${docSource}
                 ${preview}
-                <div class="doc-meta">${doc.date ? new Date(doc.date).toLocaleDateString('fr-FR') : '??"'} ??? ${doc.size||'?'}</div>
+                <div class="doc-meta">${doc.date ? this.formatDate(doc.date) : '??"'} ??? ${doc.size||'?'}</div>
                 ${doc.description ? `<div style="font-size:0.72rem;color:var(--gray-500);margin-top:3px">${doc.description}</div>` : ''}
-                ${doc.expiryDate ? `<div style="font-size:0.7rem;color:${isExpired?'var(--danger)':'var(--gray-500)'};margin-top:3px"><i class="fas fa-clock"></i> Expire: ${new Date(doc.expiryDate).toLocaleDateString('fr-FR')}</div>` : ''}
+                ${doc.expiryDate ? `<div style="font-size:0.7rem;color:${isExpired?'var(--danger)':'var(--gray-500)'};margin-top:3px"><i class="fas fa-clock"></i> Expire: ${this.formatDate(doc.expiryDate)}</div>` : ''}
                 <div class="doc-status ${st}">${stLabel}</div>
                 <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">
                     ${previewSource ? `<a class="btn btn-ghost btn-sm" href="${previewSource}" download="${doc.fileName||doc.name}" style="flex:1;justify-content:center;text-decoration:none"><i class="fas fa-download"></i> T?l?charger</a>` : ''}
@@ -2464,10 +3097,10 @@ class AdminApp {
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
                         <div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-envelope" style="color:var(--primary-light);width:14px"></i>${u.email}</div>
                         <div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-phone" style="color:var(--primary-light);width:14px"></i>${u.telephone||'Non renseign?'}</div>
-                        ${u.dateNaissance?`<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-birthday-cake" style="color:var(--primary-light);width:14px"></i>${new Date(u.dateNaissance).toLocaleDateString('fr-FR')}</div>`:''}
+                        ${u.dateNaissance?`<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-birthday-cake" style="color:var(--primary-light);width:14px"></i>${this.formatDate(u.dateNaissance)}</div>`:''}
                         ${u.adresse?`<div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-map-marker-alt" style="color:var(--primary-light);width:14px"></i>${u.adresse}</div>`:''}
-                        <div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-calendar" style="color:var(--primary-light);width:14px"></i>Inscrit le ${new Date(u.createdAt||u.registrationDate).toLocaleDateString('fr-FR')}</div>
-                        <div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-clock" style="color:var(--primary-light);width:14px"></i>${u.lastLogin?'Derni?re connexion: '+new Date(u.lastLogin).toLocaleDateString('fr-FR'):'Jamais connect?'}</div>
+                        <div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-calendar" style="color:var(--primary-light);width:14px"></i>Inscrit le ${this.formatDate(u.createdAt||u.registrationDate)}</div>
+                        <div style="display:flex;align-items:center;gap:8px;font-size:0.83rem;color:var(--gray-600)"><i class="fas fa-clock" style="color:var(--primary-light);width:14px"></i>${u.lastLogin?'Derni?re connexion: '+this.formatDate(u.lastLogin):'Jamais connect?'}</div>
                     </div>
                 </div>
             </div>
@@ -2509,7 +3142,7 @@ class AdminApp {
                     </div>
                 </div>
                 <div class="form-group"><label class="form-label">Nom du document <span class="req">*</span></label><input type="text" class="form-control" id="docName" placeholder="Ex: Carte d'identit?, Certificat m?dical..."></div>
-                <div class="form-group"><label class="form-label">Date d'expiration (si applicable)</label><input type="date" class="form-control" id="docExpiry"></div>
+                <div class="form-group"><label class="form-label">Date d'expiration (si applicable)</label><input type="text" class="form-control" id="docExpiry" placeholder="dd/mm/yyyy" inputmode="numeric"></div>
                 <div class="form-group"><label class="form-label">Notes</label><input type="text" class="form-control" id="docDesc" placeholder="Description optionnelle"></div>
             </div>`,
             `<button class="btn btn-secondary" onclick="app.closeModal();app.viewUser(${userId})">Retour</button>
@@ -2554,7 +3187,7 @@ class AdminApp {
             size: this._pendingDocData.size,
             date: new Date().toISOString().split('T')[0],
             description: document.getElementById('docDesc')?.value||'',
-            expiryDate: document.getElementById('docExpiry')?.value||undefined,
+            expiryDate: this.toStorageDateValue(document.getElementById('docExpiry')?.value) || undefined,
             verified: false
         });
         this._pendingDocData = null;
@@ -2604,7 +3237,7 @@ class AdminApp {
                 <div class="form-group"><label class="form-label">Sexe</label>
                     <select class="form-select" id="uSexe"><option value="M">Homme</option><option value="F">Femme</option></select>
                 </div>
-                <div class="form-group"><label class="form-label">Date de naissance</label><input type="date" class="form-control" id="uBirth"></div>
+                <div class="form-group"><label class="form-label">Date de naissance</label><input type="text" class="form-control" id="uBirth" placeholder="dd/mm/yyyy" inputmode="numeric"></div>
                 <div class="form-group full"><label class="form-label">Adresse</label><input type="text" class="form-control" id="uAddress" placeholder="Ville, quartier"></div>
             </div>
             <div style="margin-top:18px;padding:12px;border-radius:12px;background:var(--gray-50)">
@@ -2649,11 +3282,12 @@ class AdminApp {
         const role = document.getElementById('uRole')?.value;
         const phone = document.getElementById('uPhone')?.value.trim();
         const sexe = document.getElementById('uSexe')?.value;
-        const birth = document.getElementById('uBirth')?.value;
+        const birthInput = document.getElementById('uBirth')?.value.trim();
         const address = document.getElementById('uAddress')?.value.trim();
 
         if (!prenom || !nom || !email || !pwd || !role) { this.toast('Veuillez remplir les champs obligatoires', 'warning'); return; }
         if (pwd.length < 6) { this.toast('Mot de passe trop court (6 caract?res minimum)', 'warning'); return; }
+        if (birthInput && !this.parseDateValue(birthInput)) { this.toast('Date de naissance invalide. Utilisez le format dd/mm/yyyy', 'warning'); return; }
         const existingUser = this.users.find(u => u.email && u.email.trim().toLowerCase() === email.trim().toLowerCase());
         if (existingUser) {
             this.toast('Cet utilisateur existe déjà, affichage de sa fiche.', 'info');
@@ -2663,6 +3297,7 @@ class AdminApp {
         }
 
         const docs = Object.values(this._pendingAddUserDocs || {}).filter(doc => doc && doc.dataUrl);
+        const birth = this.toStorageDateValue(birthInput);
         const newUser = {
             id: Date.now(), prenom, nom, email, password: pwd,
             role, userType: role, telephone: phone, sexe, dateNaissance: birth, adresse: address,
@@ -2751,7 +3386,7 @@ class AdminApp {
                         <option value="inactive" ${u.status==='inactive'?'selected':''}>Inactif</option>
                     </select>
                 </div>
-                <div class="form-group"><label class="form-label">Date de naissance</label><input type="date" class="form-control" id="euBirth" value="${u.dateNaissance||''}"></div>
+                <div class="form-group"><label class="form-label">Date de naissance</label><input type="text" class="form-control" id="euBirth" value="${this.normalizeDateInput(u.dateNaissance||'')}" placeholder="dd/mm/yyyy" inputmode="numeric"></div>
                 <div class="form-group"><label class="form-label">Adresse</label><input type="text" class="form-control" id="euAddress" value="${u.adresse||''}"></div>
                 <div class="form-group full"><label class="form-label">Nouveau mot de passe (laisser vide = inchang?)</label><input type="password" class="form-control" id="euPwd" placeholder="Nouveau mot de passe"></div>
             </div>
@@ -2766,13 +3401,15 @@ class AdminApp {
 
     submitEditUser(id) {
         const u = this.users.find(x => x.id === id); if (!u) return;
+        const birthInput = document.getElementById('euBirth')?.value.trim();
+        if (birthInput && !this.parseDateValue(birthInput)) { this.toast('Date de naissance invalide. Utilisez le format dd/mm/yyyy', 'warning'); return; }
         u.prenom = document.getElementById('euPrenom')?.value.trim() || u.prenom;
         u.nom = document.getElementById('euNom')?.value.trim() || u.nom;
         u.email = document.getElementById('euEmail')?.value.trim() || u.email;
         u.telephone = document.getElementById('euPhone')?.value.trim();
         u.role = document.getElementById('euRole')?.value; u.userType = u.role;
         u.status = document.getElementById('euStatus')?.value || u.status;
-        u.dateNaissance = document.getElementById('euBirth')?.value;
+        u.dateNaissance = this.toStorageDateValue(birthInput) || '';
         u.adresse = document.getElementById('euAddress')?.value.trim();
         const newPwd = document.getElementById('euPwd')?.value;
         if (newPwd && newPwd.length >= 6) u.password = newPwd;
@@ -2787,8 +3424,8 @@ class AdminApp {
         this.openModal('', '<i class="fas fa-calendar-plus"></i> Nouvel ?v?nement', `
             <div class="form-grid">
                 <div class="form-group full"><label class="form-label">Titre <span class="req">*</span></label><input type="text" class="form-control" id="evTitle" placeholder="Titre de l'?v?nement"></div>
-                <div class="form-group"><label class="form-label">Date d?but <span class="req">*</span></label><input type="date" class="form-control" id="evDate"></div>
-                <div class="form-group"><label class="form-label">Date fin</label><input type="date" class="form-control" id="evEndDate"></div>
+                <div class="form-group"><label class="form-label">Date d?but <span class="req">*</span></label><input type="text" class="form-control" id="evDate" placeholder="dd/mm/yyyy" inputmode="numeric"></div>
+                <div class="form-group"><label class="form-label">Date fin</label><input type="text" class="form-control" id="evEndDate" placeholder="dd/mm/yyyy" inputmode="numeric"></div>
                 <div class="form-group"><label class="form-label">Heure d?but</label><input type="time" class="form-control" id="evStartTime"></div>
                 <div class="form-group"><label class="form-label">Heure fin</label><input type="time" class="form-control" id="evEndTime"></div>
                 <div class="form-group"><label class="form-label">Type <span class="req">*</span></label>
@@ -2823,8 +3460,8 @@ class AdminApp {
         this.openModal('', `<i class="fas fa-edit"></i> Modifier ??" ${ev.title}`, `
             <div class="form-grid">
                 <div class="form-group full"><label class="form-label">Titre</label><input type="text" class="form-control" id="eeTitle" value="${ev.title}"></div>
-                <div class="form-group"><label class="form-label">Date d?but</label><input type="date" class="form-control" id="eeDate" value="${ev.date}"></div>
-                <div class="form-group"><label class="form-label">Date fin</label><input type="date" class="form-control" id="eeEndDate" value="${ev.endDate||''}"></div>
+                <div class="form-group"><label class="form-label">Date d?but</label><input type="text" class="form-control" id="eeDate" value="${this.normalizeDateInput(ev.date)}" placeholder="dd/mm/yyyy" inputmode="numeric"></div>
+                <div class="form-group"><label class="form-label">Date fin</label><input type="text" class="form-control" id="eeEndDate" value="${this.normalizeDateInput(ev.endDate||'')}" placeholder="dd/mm/yyyy" inputmode="numeric"></div>
                 <div class="form-group"><label class="form-label">Type</label>
                     <select class="form-select" id="eeType">
                         <option value="competition" ${ev.type==='competition'?'selected':''}>Comp?tition</option>
@@ -2844,13 +3481,17 @@ class AdminApp {
 
     submitAddEvent() {
         const title = document.getElementById('evTitle')?.value.trim();
-        const date = document.getElementById('evDate')?.value;
+        const dateInput = document.getElementById('evDate')?.value.trim();
         const location = document.getElementById('evLocation')?.value.trim();
-        if (!title || !date || !location) { this.toast('Veuillez remplir les champs obligatoires', 'warning'); return; }
+        if (!title || !dateInput || !location) { this.toast('Veuillez remplir les champs obligatoires', 'warning'); return; }
+        const date = this.toStorageDateValue(dateInput);
+        const endDate = this.toStorageDateValue(document.getElementById('evEndDate')?.value);
+        if (!date) { this.toast('Date invalide. Utilisez le format dd/mm/yyyy', 'warning'); return; }
+        if (document.getElementById('evEndDate')?.value && !endDate) { this.toast('Date de fin invalide. Utilisez le format dd/mm/yyyy', 'warning'); return; }
         const st = document.getElementById('evStartTime')?.value;
         const et = document.getElementById('evEndTime')?.value;
         const ev = {
-            id: Date.now(), title, date, endDate: document.getElementById('evEndDate')?.value||undefined,
+            id: Date.now(), title, date, endDate: endDate || undefined,
             type: document.getElementById('evType')?.value, sport: document.getElementById('evSport')?.value,
             location, description: document.getElementById('evDesc')?.value||'',
             maxParticipants: parseInt(document.getElementById('evMax')?.value)||100,
@@ -2867,9 +3508,15 @@ class AdminApp {
 
     submitEditEvent(id) {
         const ev = this.events.find(e => e.id === id); if (!ev) return;
+        const dateInput = document.getElementById('eeDate')?.value.trim();
+        const endDateInput = document.getElementById('eeEndDate')?.value.trim();
+        const date = this.toStorageDateValue(dateInput);
+        const endDate = this.toStorageDateValue(endDateInput);
+        if (dateInput && !date) { this.toast('Date invalide. Utilisez le format dd/mm/yyyy', 'warning'); return; }
+        if (endDateInput && !endDate) { this.toast('Date de fin invalide. Utilisez le format dd/mm/yyyy', 'warning'); return; }
         ev.title = document.getElementById('eeTitle')?.value.trim() || ev.title;
-        ev.date = document.getElementById('eeDate')?.value || ev.date;
-        ev.endDate = document.getElementById('eeEndDate')?.value || undefined;
+        ev.date = date || ev.date;
+        ev.endDate = endDate || undefined;
         ev.type = document.getElementById('eeType')?.value || ev.type;
         ev.location = document.getElementById('eeLocation')?.value.trim() || ev.location;
         ev.description = document.getElementById('eeDesc')?.value || ev.description;
@@ -3023,7 +3670,7 @@ class AdminApp {
         this.openModal('small', '<i class="fas fa-clock"></i> Ajouter une s?ance', `
             <div class="form-grid">
                 <div class="form-group full"><label class="form-label">Titre <span class="req">*</span></label><input type="text" class="form-control" id="sesTitle" placeholder="Ex: Entra?nement Football U20"></div>
-                <div class="form-group"><label class="form-label">Date <span class="req">*</span></label><input type="date" class="form-control" id="sesDate"></div>
+                <div class="form-group"><label class="form-label">Date <span class="req">*</span></label><input type="text" class="form-control" id="sesDate" placeholder="dd/mm/yyyy" inputmode="numeric"></div>
                 <div class="form-group"><label class="form-label">Sport</label>
                     <select class="form-select" id="sesSport">
                         <option value="Football">Football</option>
@@ -3043,8 +3690,10 @@ class AdminApp {
 
     submitAddSession() {
         const title = document.getElementById('sesTitle')?.value.trim();
-        const date = document.getElementById('sesDate')?.value;
-        if (!title || !date) { this.toast('Titre et date obligatoires', 'warning'); return; }
+        const dateInput = document.getElementById('sesDate')?.value.trim();
+        const date = this.toStorageDateValue(dateInput);
+        if (!title || !dateInput) { this.toast('Titre et date obligatoires', 'warning'); return; }
+        if (!date) { this.toast('Date invalide. Utilisez le format dd/mm/yyyy', 'warning'); return; }
         const st = document.getElementById('sesStart')?.value;
         const et = document.getElementById('sesEnd')?.value;
         this.events.push({
@@ -3077,7 +3726,7 @@ class AdminApp {
             <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
                 <span class="badge badge-info">${item.category}</span>
                 <span class="badge badge-gray"><i class="fas fa-user"></i> ${item.author}</span>
-                <span class="badge badge-gray"><i class="fas fa-calendar"></i> ${new Date(item.date).toLocaleDateString('fr-FR')}</span>
+                <span class="badge badge-gray"><i class="fas fa-calendar"></i> ${this.formatDate(item.date)}</span>
             </div>
             ${item.description ? `<p style="color:var(--gray-600);margin-bottom:12px">${item.description}</p>` : ''}
             <div style="display:flex;gap:20px;font-size:0.85rem;color:var(--gray-500)">
@@ -3263,7 +3912,18 @@ class AdminApp {
 
     /* ===== EXPORT / IMPORT ===== */
     exportData() {
-        const data = { users:this.users, events:this.events, teams:this.teams, gallery:this.gallery, messages:this.messages, transactions:this.transactions, exportDate:new Date().toISOString() };
+        const data = {
+            users:this.users,
+            events:this.events,
+            teams:this.teams,
+            gallery:this.gallery,
+            messages:this.messages,
+            transactions:this.transactions,
+            materials:this.materials,
+            invoices:this.invoices,
+            results:this.results,
+            exportDate:new Date().toISOString()
+        };
         const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -3293,6 +3953,10 @@ class AdminApp {
                     if (data.teams) { this.teams = data.teams; localStorage.setItem('teams', JSON.stringify(this.teams)); }
                     if (data.gallery) { this.gallery = data.gallery; localStorage.setItem('gallery', JSON.stringify(this.gallery)); }
                     if (data.messages) { this.messages = data.messages; localStorage.setItem('messages', JSON.stringify(this.messages)); }
+                    if (data.transactions) { this.transactions = data.transactions; localStorage.setItem('transactions', JSON.stringify(this.transactions)); }
+                    if (data.materials) { this.materials = data.materials; localStorage.setItem('adminMaterials', JSON.stringify(this.materials)); }
+                    if (data.invoices) { this.invoices = data.invoices; localStorage.setItem('adminInvoices', JSON.stringify(this.invoices)); }
+                    if (data.results) { this.results = data.results; localStorage.setItem('adminResults', JSON.stringify(this.results)); }
                     this.renderAll(); this.toast('Donn?es import?es avec succ?s', 'success');
                 } catch(err) { this.toast("Erreur lors de l'import", 'error'); }
             };
@@ -3373,17 +4037,34 @@ class AdminApp {
         document.querySelectorAll('.nav-item').forEach(a => a.classList.remove('active'));
         const sec = document.getElementById(name); if (sec) sec.classList.add('active');
         const link = document.querySelector(`.nav-item[data-section="${name}"]`); if (link) link.classList.add('active');
-        const titles = { dashboard:'Tableau de Bord', utilisateurs:'Gestion des Utilisateurs', equipes:'Gestion des ?quipes', planning:'Planning', evenements:'Gestion des ?v?nements', galerie:'Galerie Photos', messages:'Messages', finances:'Finances', statistiques:'Statistiques', parametres:'Param?tres' };
+        const titles = {
+            dashboard:'Tableau de Bord',
+            utilisateurs:'Gestion des Utilisateurs',
+            equipes:'Gestion des ?quipes',
+            planning:'Planning',
+            evenements:'Gestion des ?v?nements',
+            materiel:'Materiel',
+            galerie:'Galerie Photos',
+            messages:'Messages',
+            factures:'Factures fournisseurs',
+            finances:'Finances',
+            statistiques:'Statistiques',
+            resultats:'Resultats',
+            parametres:'Param?tres'
+        };
         document.getElementById('sectionTitle').textContent = titles[name] || name;
         document.getElementById('breadcrumb').textContent = titles[name] || name;
         window.location.hash = name;
         if (name === 'utilisateurs') this.renderUsersTable();
         if (name === 'equipes') this.renderTeamsGrid();
         if (name === 'evenements') this.renderEventsList();
+        if (name === 'materiel') this.renderMaterials();
         if (name === 'galerie') this.renderGalleryGrid();
         if (name === 'messages') this.renderMessages();
+        if (name === 'factures') this.renderInvoices();
         if (name === 'finances') { this.renderTransactions(); this.initCharts(); }
         if (name === 'statistiques') { setTimeout(() => this.initCharts(), 100); }
+        if (name === 'resultats') this.renderResults();
     }
 
     /* ===== HELPERS ===== */
@@ -3393,6 +4074,122 @@ class AdminApp {
         const c = {active:'badge-success', pending:'badge-warning', inactive:'badge-gray'};
         const l = {active:'Actif', pending:'En attente', inactive:'Inactif'};
         return `<span class="badge ${c[status]||'badge-gray'}">${l[status]||status}</span>`;
+    }
+    materialStatusBadge(status) {
+        const map = {
+            operationnel: '<span class="badge badge-success">Operationnel</span>',
+            defectueux: '<span class="badge badge-danger">Defectueux</span>',
+            stock: '<span class="badge badge-primary">En stock</span>'
+        };
+        return map[status] || `<span class="badge badge-gray">${this.escapeHtml(status || '')}</span>`;
+    }
+    resultRankBadge(rank) {
+        const map = {
+            '1': '<span class="badge badge-success">1ere place</span>',
+            '2': '<span class="badge badge-warning">2eme place</span>',
+            '3': '<span class="badge badge-info">3eme place</span>',
+            autre: '<span class="badge badge-gray">Autre</span>'
+        };
+        return map[rank] || '<span class="badge badge-gray">Sans classement</span>';
+    }
+    nextId(list) { return list.length ? Math.max(...list.map(item => Number(item.id) || 0)) + 1 : 1; }
+    parseDateValue(value) {
+        if (!value) return null;
+        if (value instanceof Date) return value;
+        const str = String(value).trim();
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
+            const [day, month, year] = str.split('/').map(Number);
+            const date = new Date(year, month - 1, day);
+            return (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) ? date : null;
+        }
+        if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+            const [year, month, day] = str.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
+            return (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) ? date : null;
+        }
+        const parsed = new Date(str);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    normalizeDateInput(value) {
+        const date = this.parseDateValue(value);
+        if (!date) return '';
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    }
+    toStorageDateValue(value) {
+        const date = this.parseDateValue(value);
+        if (!date) return '';
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${year}-${month}-${day}`;
+    }
+    todayFormatted() { return this.normalizeDateInput(new Date()); }
+    sortByDateDesc(list) {
+        return [...list].sort((a, b) => {
+            const dateA = this.parseDateValue(a.date);
+            const dateB = this.parseDateValue(b.date);
+            return (dateB?.getTime() || 0) - (dateA?.getTime() || 0);
+        });
+    }
+    formatDate(value) {
+        const date = this.parseDateValue(value);
+        return date ? this.normalizeDateInput(date) : (value ? this.escapeHtml(value) : '-');
+    }
+    formatDateTime(value) {
+        const date = this.parseDateValue(value);
+        return date
+            ? `${this.normalizeDateInput(date)} ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+            : (value ? this.escapeHtml(value) : '-');
+    }
+    setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
+    setValue(id, value) { const el = document.getElementById(id); if (el) el.value = value; }
+    escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+    openInvoiceAttachment(id) {
+        const invoice = this.invoices.find(item => item.id === id);
+        if (!invoice?.attachment?.dataUrl) {
+            this.toast('Aucune piece jointe disponible', 'warning');
+            return;
+        }
+        const link = document.createElement('a');
+        link.href = invoice.attachment.dataUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.click();
+    }
+    handleInvoiceAttachmentChange(event) {
+        const file = event.target.files?.[0];
+        if (!file) {
+            this.pendingInvoiceAttachment = null;
+            this.setText('invoiceAttachmentName', 'Aucun fichier selectionne');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            this.pendingInvoiceAttachment = {
+                name: file.name,
+                type: file.type || '',
+                size: file.size || 0,
+                dataUrl: reader.result
+            };
+            this.setText('invoiceAttachmentName', `${file.name} (${Math.round((file.size || 0) / 1024)} Ko)`);
+        };
+        reader.onerror = () => {
+            this.pendingInvoiceAttachment = null;
+            this.setText('invoiceAttachmentName', 'Erreur de lecture du fichier');
+            this.toast('Impossible de charger le fichier selectionne', 'error');
+        };
+        reader.readAsDataURL(file);
     }
 
     /* ===== EVENT BINDING ===== */
@@ -3421,6 +4218,7 @@ class AdminApp {
         document.getElementById('filterDocStatus')?.addEventListener('change', () => { this.currentPage = 1; this.renderUsersTable(); });
         document.getElementById('filterMsgStatus')?.addEventListener('change', () => this.renderMessages());
         document.getElementById('searchMsg')?.addEventListener('input', () => this.renderMessages());
+        document.getElementById('invoiceAttachment')?.addEventListener('change', e => this.handleInvoiceAttachmentChange(e));
 
         document.getElementById('globalSearch')?.addEventListener('input', e => {
             const q = e.target.value.trim();

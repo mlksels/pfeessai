@@ -3,6 +3,65 @@
  * Version complÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¨te avec gestion des rÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â´les et redirection intelligente
  */
 
+window.ManarDate = window.ManarDate || {
+    parse(value) {
+        if (!value) return null;
+        if (value instanceof Date) {
+            return Number.isNaN(value.getTime()) ? null : new Date(value);
+        }
+
+        const str = String(value).trim();
+        let match = str.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (match) {
+            const [, day, month, year] = match.map(Number);
+            const date = new Date(year, month - 1, day);
+            return (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) ? date : null;
+        }
+
+        match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (match) {
+            const [, year, month, day] = match.map(Number);
+            const date = new Date(year, month - 1, day);
+            return (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) ? date : null;
+        }
+
+        const parsed = new Date(str);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    },
+    format(value) {
+        const date = this.parse(value);
+        return !date || Number.isNaN(date.getTime())
+            ? ''
+            : date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    },
+    formatMonthYear(value) {
+        const date = this.parse(value);
+        return !date || Number.isNaN(date.getTime())
+            ? ''
+            : date.toLocaleDateString('fr-FR', { month: '2-digit', year: 'numeric' });
+    },
+    formatDateTime(value) {
+        const date = this.parse(value);
+        return !date || Number.isNaN(date.getTime())
+            ? ''
+            : `${date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+    },
+    toStorage(value) {
+        const date = this.parse(value);
+        if (!date) return '';
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    },
+    toInputValue(value) {
+        return this.format(value);
+    },
+    isValid(value) {
+        return !!this.parse(value);
+    }
+};
+
 // ============ CLASSE PRINCIPALE DE L'APPLICATION ============
 class ManarSportApp {
     constructor() {
@@ -1895,7 +1954,7 @@ class FormManager {
 
     validateField(field) {
         const value = field.value ? field.value.trim() : '';
-        const type = field.type;
+        const type = field.dataset.dateFormat === 'dd/mm/yyyy' ? 'date' : field.type;
         const name = field.name;
         
         this.clearFieldError(field);
@@ -1970,13 +2029,9 @@ class FormManager {
         if (!dateString) return false;
         
         try {
-            const [year, month, day] = dateString.split('-').map(Number);
+            const birthDate = window.ManarDate.parse(dateString);
             
-            if (!year || !month || !day) return false;
-            
-            const birthDate = new Date(year, month - 1, day);
-            
-            if (isNaN(birthDate.getTime())) return false;
+            if (!birthDate || isNaN(birthDate.getTime())) return false;
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -2036,8 +2091,7 @@ class FormManager {
 
     validateDate(date) {
         if (!date) return false;
-        const timestamp = Date.parse(date);
-        return !isNaN(timestamp);
+        return !!window.ManarDate.parse(date);
     }
 
     validateCodeOption(code) {
@@ -2084,6 +2138,7 @@ class FormManager {
             data.files = files;
             data.userType = formElement.querySelector('#userType')?.value || 'athlete';
             data.role = data.userType;
+            data.dateNaissance = window.ManarDate.toStorage(data.dateNaissance);
             data.registrationDate = new Date().toISOString();
             data.status = 'active';
             
@@ -2265,14 +2320,14 @@ class FormManager {
         
         const dateNaissance = document.getElementById('dateNaissance');
         if (dateNaissance) {
-            dateNaissance.max = adultMaxDate;
-            dateNaissance.min = adultMinDate;
+            dateNaissance.dataset.maxDate = adultMaxDate;
+            dateNaissance.dataset.minDate = adultMinDate;
         }
         
         const enfantDateFields = document.querySelectorAll('[id^="dateNaissanceEnfant"]');
         enfantDateFields.forEach(field => {
-            field.max = childMaxDate;
-            field.min = childMinDate;
+            field.dataset.maxDate = childMaxDate;
+            field.dataset.minDate = childMinDate;
         });
     }
 
@@ -2379,8 +2434,8 @@ class FormManager {
             <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div class="form-group">
                     <label for="dateNaissanceEnfant${index}" class="form-label">Date de naissance *</label>
-                    <input type="date" id="dateNaissanceEnfant${index}" name="dateNaissanceEnfant[]" 
-                           class="form-control" required max="${childMaxDate}" min="${childMinDate}">
+                    <input type="text" id="dateNaissanceEnfant${index}" name="dateNaissanceEnfant[]" 
+                           class="form-control" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" data-date-format="dd/mm/yyyy" required data-max-date="${childMaxDate}" data-min-date="${childMinDate}">
                     <small class="date-info-child" style="display: block; color: #6c757d; font-size: 0.85rem; margin-top: 5px;">
                         <i class="fas fa-info-circle"></i> L'enfant doit avoir entre 3 et 18 ans (nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©(e) entre ${childMinYear} et ${childMaxYear})
                     </small>
@@ -3123,7 +3178,7 @@ class PlanningManager {
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <i class="fas fa-calendar" style="color: #6c757d;"></i>
-                                <strong>Date:</strong> ${event.start.toLocaleDateString('fr-FR')}
+                                <strong>Date:</strong> ${window.ManarDate.format(event.start)}
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px;">
                                 <i class="fas fa-clock" style="color: #6c757d;"></i>

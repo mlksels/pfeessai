@@ -39,6 +39,7 @@ const LEGACY_MAP = {
   'events':          KEYS.events,
   'eventsData':      KEYS.events,
   'planningEvents':  KEYS.planning,
+  'news':            KEYS.news,
   'teams':           KEYS.teams,
   'teamsData':       KEYS.teams,
   'equipesData':     KEYS.teams,
@@ -481,9 +482,32 @@ class DataStore {
       _setItem.call(this, mapped, value);
       _setItem.call(this, key, value);
       // Propager via DataStore
-      window.DS && window.DS._broadcast && window.DS._broadcast(mapped, JSON.parse(value));
+      try {
+        window.DS && window.DS._broadcast && window.DS._broadcast(mapped, JSON.parse(value));
+      } catch(_) {}
     } else {
       _setItem.call(this, key, value);
+    }
+
+    // Synchronisation croisee entre dashboard et pages publiques.
+    if (key === KEYS.events || key === 'events' || key === KEYS.planning || key === 'planningEvents') {
+      _setItem.call(this, KEYS.events, value);
+      _setItem.call(this, 'events', value);
+      _setItem.call(this, KEYS.planning, value);
+      _setItem.call(this, 'planningEvents', value);
+    }
+
+    if (key === KEYS.gallery || key === 'gallery' || key === 'galleryPhotos') {
+      _setItem.call(this, KEYS.gallery, value);
+      _setItem.call(this, 'gallery', value);
+      _setItem.call(this, 'galleryPhotos', value);
+    }
+
+    if (key === KEYS.news || key === 'news' || key === 'actualitesData' || key === 'newsData') {
+      _setItem.call(this, KEYS.news, value);
+      _setItem.call(this, 'news', value);
+      _setItem.call(this, 'actualitesData', value);
+      _setItem.call(this, 'newsData', value);
     }
   };
 
@@ -491,6 +515,26 @@ class DataStore {
     const mapped = LEGACY_MAP[key];
     if (mapped) _removeItem.call(this, mapped);
     _removeItem.call(this, key);
+
+    if (key === KEYS.events || key === 'events' || key === KEYS.planning || key === 'planningEvents') {
+      _removeItem.call(this, KEYS.events);
+      _removeItem.call(this, 'events');
+      _removeItem.call(this, KEYS.planning);
+      _removeItem.call(this, 'planningEvents');
+    }
+
+    if (key === KEYS.gallery || key === 'gallery' || key === 'galleryPhotos') {
+      _removeItem.call(this, KEYS.gallery);
+      _removeItem.call(this, 'gallery');
+      _removeItem.call(this, 'galleryPhotos');
+    }
+
+    if (key === KEYS.news || key === 'news' || key === 'actualitesData' || key === 'newsData') {
+      _removeItem.call(this, KEYS.news);
+      _removeItem.call(this, 'news');
+      _removeItem.call(this, 'actualitesData');
+      _removeItem.call(this, 'newsData');
+    }
   };
 })();
 
@@ -557,9 +601,362 @@ function showToast(msg, type = 'info') {
   setTimeout(() => t.remove && t.remove(), 4500);
 }
 
+function createManarDateHelper() {
+  const pad = (value) => String(value).padStart(2, '0');
+
+  function parse(value) {
+    if (!value) return null;
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : new Date(value.getTime());
+    }
+
+    const text = String(value).trim();
+    let match = text.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (match) {
+      const day = Number(match[1]);
+      const month = Number(match[2]);
+      const year = Number(match[3]);
+      const date = new Date(year, month - 1, day);
+      return (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) ? date : null;
+    }
+
+    match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (match) {
+      const year = Number(match[1]);
+      const month = Number(match[2]);
+      const day = Number(match[3]);
+      const date = new Date(year, month - 1, day);
+      return (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) ? date : null;
+    }
+
+    const parsed = new Date(text);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  function format(value) {
+    const date = parse(value);
+    if (!date) return '';
+    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+  }
+
+  function toStorage(value) {
+    const date = parse(value);
+    if (!date) return '';
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+
+  function toInputValue(value) {
+    return format(value || new Date());
+  }
+
+  function formatDateTime(value) {
+    const date = parse(value);
+    if (!date) return '';
+    return `${format(date)} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  function formatMonthYear(value) {
+    const date = parse(value);
+    if (!date) return '';
+    return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  }
+
+  return {
+    parse,
+    format,
+    toStorage,
+    toInputValue,
+    formatDateTime,
+    formatMonthYear,
+    isValid: (value) => !!parse(value)
+  };
+}
+
+function createManarTextHelper() {
+  const suspiciousPattern = /Ã|Â|â€™|â€œ|â€|�|Actualità|informà|àv\?|Chargà|d\?but|év\?|àquipe/i;
+  const directReplacements = [
+    ['Ã©', 'é'],
+    ['Ã¨', 'è'],
+    ['Ãª', 'ê'],
+    ['Ã«', 'ë'],
+    ['Ã ', 'à'],
+    ['Ã ', 'à'],
+    ['Ã¢', 'â'],
+    ['Ã®', 'î'],
+    ['Ã¯', 'ï'],
+    ['Ã´', 'ô'],
+    ['Ã¶', 'ö'],
+    ['Ã¹', 'ù'],
+    ['Ã»', 'û'],
+    ['Ã¼', 'ü'],
+    ['Ã§', 'ç'],
+    ['Ã‰', 'É'],
+    ['Ã€', 'À'],
+    ['Ãˆ', 'È'],
+    ['ÃŠ', 'Ê'],
+    ['Ã‡', 'Ç'],
+    ['Å“', 'œ'],
+    ['â€™', '’'],
+    ['â€œ', '“'],
+    ['â€', '”'],
+    ['â€“', '–'],
+    ['â€”', '—'],
+    ['â€¦', '…'],
+    ['Â°', '°'],
+    ['Â«', '«'],
+    ['Â»', '»'],
+    ['Â', '']
+  ];
+  const phraseReplacements = [
+    [/\bActualità\b/g, 'Actualités'],
+    [/\binformà\b/gi, 'informé'],
+    [/\bChargà\b/gi, 'Chargé'],
+    [/\bchargà\b/g, 'chargé'],
+    [/àv\?nement/gi, 'événement'],
+    [/àv\?nements/gi, 'événements'],
+    [/\?à la une/gi, 'À la une'],
+    [/\bàquipe\b/gi, 'équipe'],
+    [/\bd\?but\b/gi, 'début'],
+    [/\bD\?but\b/g, 'Début'],
+    [/\bR\?initialiser\b/g, 'Réinitialiser'],
+    [/\bS\?lectionnez\b/g, 'Sélectionnez'],
+    [/\bD\?tails\b/g, 'Détails']
+  ];
+  const skipTags = new Set(['SCRIPT', 'STYLE', 'TEXTAREA']);
+
+  const score = (text) => (text.match(/Ã|Â|â€™|â€œ|â€|�/g) || []).length;
+
+  function decodeLatin1(value) {
+    try {
+      const bytes = Uint8Array.from(Array.from(value), (char) => char.charCodeAt(0) & 0xff);
+      return new TextDecoder('utf-8').decode(bytes);
+    } catch(_) {
+      return value;
+    }
+  }
+
+  function repair(value) {
+    if (typeof value !== 'string' || !value.trim()) return value;
+    let output = value;
+
+    if (suspiciousPattern.test(output)) {
+      const decoded = decodeLatin1(output);
+      if (decoded && score(decoded) <= score(output)) {
+        output = decoded;
+      }
+    }
+
+    directReplacements.forEach(([search, replacement]) => {
+      output = output.split(search).join(replacement);
+    });
+    phraseReplacements.forEach(([pattern, replacement]) => {
+      output = output.replace(pattern, replacement);
+    });
+
+    return output;
+  }
+
+  function repairAttributes(element) {
+    ['placeholder', 'title', 'aria-label', 'alt', 'value'].forEach((attribute) => {
+      if (!element.hasAttribute(attribute)) return;
+      const current = element.getAttribute(attribute);
+      const next = repair(current);
+      if (next !== current) {
+        element.setAttribute(attribute, next);
+      }
+    });
+  }
+
+  function repairNode(node) {
+    if (!node) return;
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      const fixed = repair(node.nodeValue);
+      if (fixed !== node.nodeValue) {
+        node.nodeValue = fixed;
+      }
+      return;
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE || skipTags.has(node.tagName)) return;
+
+    repairAttributes(node);
+    Array.from(node.childNodes).forEach(repairNode);
+  }
+
+  function repairDocument(root = document.body) {
+    if (!root) return;
+    repairNode(root);
+    if (document.title) {
+      document.title = repair(document.title);
+    }
+  }
+
+  function observe() {
+    const start = () => {
+      repairDocument(document.body);
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'characterData') {
+            repairNode(mutation.target);
+            return;
+          }
+
+          if (mutation.type === 'attributes' && mutation.target instanceof Element) {
+            repairAttributes(mutation.target);
+            return;
+          }
+
+          mutation.addedNodes.forEach((node) => repairNode(node));
+        });
+      });
+
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ['placeholder', 'title', 'aria-label', 'alt', 'value']
+      });
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', start, { once: true });
+    } else {
+      start();
+    }
+  }
+
+  return { repair, repairDocument, observe };
+}
+
+function createManarDatePickerHelper() {
+  const selector = 'input[data-date-format="dd/mm/yyyy"], input[type="text"][placeholder*="dd/mm"], input[type="text"][placeholder*="DD/MM"]';
+
+  function syncValueFromHidden(textInput, hiddenInput) {
+    if (!window.ManarDate) return;
+    const formatted = window.ManarDate.format(hiddenInput.value);
+    if (!formatted) return;
+    textInput.value = formatted;
+    textInput.dispatchEvent(new Event('input', { bubbles: true }));
+    textInput.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function normalizeManualValue(input) {
+    if (!window.ManarDate) return;
+    if (!input.value.trim()) return;
+    const formatted = window.ManarDate.format(input.value);
+    if (formatted) {
+      input.value = formatted;
+    }
+  }
+
+  function enhanceInput(input) {
+    if (!(input instanceof HTMLInputElement)) return;
+    if (input.dataset.calendarEnhanced === 'true') return;
+    if (input.type !== 'text') return;
+    if (!input.dataset.dateFormat && !/dd\/mm\/yyyy/i.test(input.placeholder || '')) return;
+
+    input.dataset.calendarEnhanced = 'true';
+    input.dataset.dateFormat = 'dd/mm/yyyy';
+    input.setAttribute('autocomplete', 'off');
+    if (!input.getAttribute('inputmode')) input.setAttribute('inputmode', 'numeric');
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'ms-date-field';
+    wrapper.style.display = 'flex';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.gap = '8px';
+    wrapper.style.width = '100%';
+
+    const parent = input.parentNode;
+    if (!parent) return;
+    parent.insertBefore(wrapper, input);
+    wrapper.appendChild(input);
+    input.style.flex = '1 1 auto';
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'ms-date-picker-button';
+    button.setAttribute('aria-label', 'Ouvrir le calendrier');
+    button.innerHTML = '<i class="fas fa-calendar-alt" aria-hidden="true"></i>';
+    button.style.flex = '0 0 auto';
+    button.style.width = '42px';
+    button.style.height = '42px';
+    button.style.border = '1px solid #d1d5db';
+    button.style.borderRadius = '10px';
+    button.style.background = '#f8fafc';
+    button.style.color = '#1d4ed8';
+    button.style.cursor = 'pointer';
+
+    const hidden = document.createElement('input');
+    hidden.type = 'date';
+    hidden.tabIndex = -1;
+    hidden.setAttribute('aria-hidden', 'true');
+    hidden.style.position = 'absolute';
+    hidden.style.width = '1px';
+    hidden.style.height = '1px';
+    hidden.style.opacity = '0';
+    hidden.style.pointerEvents = 'none';
+    hidden.style.border = '0';
+    hidden.style.padding = '0';
+
+    const openPicker = () => {
+      const parsed = window.ManarDate?.parse(input.value);
+      hidden.value = window.ManarDate?.toStorage(parsed || new Date()) || '';
+      hidden.min = input.dataset.minDate || input.min || '';
+      hidden.max = input.dataset.maxDate || input.max || '';
+      if (typeof hidden.showPicker === 'function') {
+        hidden.showPicker();
+      } else {
+        hidden.focus();
+        hidden.click();
+      }
+    };
+
+    button.addEventListener('click', openPicker);
+    hidden.addEventListener('change', () => syncValueFromHidden(input, hidden));
+    input.addEventListener('blur', () => normalizeManualValue(input));
+
+    wrapper.appendChild(button);
+    wrapper.appendChild(hidden);
+  }
+
+  function refresh(root = document) {
+    root.querySelectorAll(selector).forEach(enhanceInput);
+  }
+
+  function observe() {
+    const start = () => {
+      refresh(document);
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (!(node instanceof Element)) return;
+            if (node.matches?.(selector)) enhanceInput(node);
+            refresh(node);
+          });
+        });
+      });
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', start, { once: true });
+    } else {
+      start();
+    }
+  }
+
+  return { refresh, observe };
+}
+
 /* ============================================================
    EXPOSITION GLOBALE
    ============================================================ */
+window.ManarDate       = window.ManarDate || createManarDateHelper();
+window.ManarText       = window.ManarText || createManarTextHelper();
+window.ManarDatePicker = window.ManarDatePicker || createManarDatePickerHelper();
 window.DS              = new DataStore();
 window.getCurrentUser  = getCurrentUser;
 window.redirectToUserSpace = redirectToUserSpace;
@@ -567,5 +964,7 @@ window.showToast       = showToast;
 
 /* Alias pour les classes existantes qui appelaient window.app.notifications.show() */
 window.DS.notify = showToast;
+window.ManarText.observe();
+window.ManarDatePicker.observe();
 
 console.log('[Manar Sport] sync.js chargé — DS prêt.', window.DS.stats());

@@ -211,13 +211,13 @@
                     <h3>Demande d'information</h3>
                     <form id="teamContactForm">
                         <div class="form-group">
-                            <input type="text" placeholder="Votre nom" required>
+                            <input type="text" name="name" placeholder="Votre nom" required>
                         </div>
                         <div class="form-group">
-                            <input type="email" placeholder="Votre email" required>
+                            <input type="email" name="email" placeholder="Votre email" required>
                         </div>
                         <div class="form-group">
-                            <select required>
+                            <select name="sport" required>
                                 <option value="">Sport d'int&eacute;r&ecirc;t</option>
                                 <option value="football">Football</option>
                                 <option value="basketball">Basketball</option>
@@ -228,7 +228,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <select required>
+                            <select name="level" required>
                                 <option value="">Niveau actuel</option>
                                 <option value="debutant">Débutant</option>
                                 <option value="intermediaire">Intermédiaire</option>
@@ -236,7 +236,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <textarea placeholder="Votre message (optionnel)" rows="3"></textarea>
+                            <textarea name="message" placeholder="Votre message (optionnel)" rows="3"></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-paper-plane"></i> Envoyer la demande

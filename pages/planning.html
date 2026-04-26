@@ -182,7 +182,7 @@
                 
                 <div class="filter-group">
                     <label for="dateFilter"><i class="fas fa-calendar"></i> Date</label>
-                    <input type="date" id="dateFilter" class="form-control">
+                    <input type="text" id="dateFilter" class="form-control" placeholder="dd/mm/yyyy">
                 </div>
                 
                 <div class="filter-group">
@@ -235,7 +235,7 @@
                     <button class="btn-day-nav" id="prevDay">
                         <i class="fas fa-chevron-left"></i>
                     </button>
-                    <input type="date" id="currentDay" class="form-control">
+                    <input type="text" id="currentDay" class="form-control" placeholder="dd/mm/yyyy">
                     <button class="btn-day-nav" id="nextDay">
                         <i class="fas fa-chevron-right"></i>
                     </button>
@@ -397,7 +397,7 @@
                     <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
                         <div class="form-group">
                             <label class="form-label">Date *</label>
-                            <input type="date" id="eventDate" name="date" class="form-control" required>
+                            <input type="text" id="eventDate" name="date" class="form-control" placeholder="dd/mm/yyyy" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Heure d&eacute;but *</label>
@@ -520,7 +520,7 @@
                     <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
                         <div class="form-group">
                             <label class="form-label">Date *</label>
-                            <input type="date" id="editEventDate" class="form-control" required>
+                            <input type="text" id="editEventDate" class="form-control" placeholder="dd/mm/yyyy" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Heure d&eacute;but *</label>

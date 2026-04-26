@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Forms.js chargé');
     initRegistrationForm();
     initFileUploads();
+    initDateTextInputs();
     initPasswordToggles();
     initModals();
 
@@ -318,6 +319,7 @@ function initRegistrationForm() {
             userData.id               = Date.now();
             userData.role             = userType;
             userData.userType         = userType;
+            userData.dateNaissance    = normalizeStorageDate(userData.dateNaissance);
             userData.status           = userType === 'admin' ? 'active' : 'pending';
             userData.registrationDate = new Date().toISOString();
             userData.createdAt        = new Date().toISOString();
@@ -430,12 +432,14 @@ function setMaxDateForBirthFields() {
 
     const dn = document.getElementById('dateNaissance');
     if (dn) {
-        dn.max = adultMax; dn.min = adultMin;
+        dn.dataset.maxDate = adultMax;
+        dn.dataset.minDate = adultMin;
         const info = document.getElementById('dateNaissanceInfo');
         if (info) info.innerHTML = `<i class="fas fa-info-circle"></i> Vous devez avoir entre 18 et 100 ans (${y-100}–${y-18})`;
     }
     document.querySelectorAll('[id^="dateNaissanceEnfant"]').forEach(f => {
-        f.max = childMax; f.min = childMin;
+        f.dataset.maxDate = childMax;
+        f.dataset.minDate = childMin;
         let msg = f.closest('.form-group')?.querySelector('.date-info-child');
         if (!msg) {
             msg = document.createElement('small');
@@ -450,9 +454,8 @@ function setMaxDateForBirthFields() {
 function validateBirthDate(dateString, isChild = false) {
     if (!dateString) return false;
     try {
-        const [yr, mo, dy] = dateString.split('-').map(Number);
-        const birth = new Date(yr, mo-1, dy);
-        if (isNaN(birth.getTime())) return false;
+        const birth = window.ManarDate?.parse(dateString);
+        if (!birth || isNaN(birth.getTime())) return false;
         const today = new Date(); today.setHours(0,0,0,0);
         if (birth > today) return false;
         let age = today.getFullYear() - birth.getFullYear();
@@ -482,7 +485,8 @@ function validateField(field) {
 
     if (field.type === 'email' && !validateEmail(val))   { showFieldError(field, 'Email invalide'); return false; }
     if (field.type === 'tel'   && !validatePhone(val))   { showFieldError(field, 'Numéro invalide (ex: 0550123456)'); return false; }
-    if (field.type === 'date') {
+    const isDateField = field.dataset.dateFormat === 'dd/mm/yyyy';
+    if (isDateField) {
         if (!validateDate(val)) { showFieldError(field, 'Date invalide'); return false; }
         if (field.name?.includes('dateNaissance')) {
             const isChild = field.name.includes('Enfant');
@@ -580,7 +584,7 @@ function getEnfantsData() {
         id:            Date.now() + i,
         nom:           form.querySelector('[name="nomEnfant[]"]')?.value           || '',
         prenom:        form.querySelector('[name="prenomEnfant[]"]')?.value        || '',
-        dateNaissance: form.querySelector('[name="dateNaissanceEnfant[]"]')?.value || '',
+        dateNaissance: normalizeStorageDate(form.querySelector('[name="dateNaissanceEnfant[]"]')?.value || ''),
         sexe:          form.querySelector('[name="sexeEnfant[]"]')?.value          || '',
         sport:         form.querySelector('[name="sportEnfant[]"]')?.value         || '',
         niveau:        'debutant',
@@ -614,8 +618,9 @@ function ajouterEnfant() {
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Date de naissance *</label>
-                    <input type="date" id="dateNaissanceEnfant${n}" name="dateNaissanceEnfant[]"
-                           class="form-control" required max="${y-3}-${m}-${d}" min="${y-18}-${m}-${d}">
+                    <input type="text" id="dateNaissanceEnfant${n}" name="dateNaissanceEnfant[]"
+                           class="form-control" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10"
+                           data-date-format="dd/mm/yyyy" required data-max-date="${y-3}-${m}-${d}" data-min-date="${y-18}-${m}-${d}">
                     <small class="date-info-child"><i class="fas fa-info-circle"></i> Entre 3 et 18 ans (${y-18}–${y-3})</small>
                 </div>
                 <div class="form-group">
@@ -675,6 +680,7 @@ function ajouterEnfant() {
 
     setupMaladieToggle(`hasMaladieEnfant${n}`, `nomMaladieEnfant${n}`);
     addFileNamePreviews(document.getElementById(`enfant-form-${n}`));
+    initDateTextInputs(document.getElementById(`enfant-form-${n}`));
     setTimeout(() => document.getElementById(`enfant-form-${n}`)?.scrollIntoView({ behavior:'smooth', block:'center' }), 100);
 }
 
@@ -698,6 +704,21 @@ function addFileNamePreviews(container = document) {
 }
 
 function initFileUploads()     { addFileNamePreviews(document); }
+
+function initDateTextInputs(container = document) {
+    container.querySelectorAll('[data-date-format="dd/mm/yyyy"]').forEach(input => {
+        if (input.dataset.dateBound === 'true') return;
+        input.dataset.dateBound = 'true';
+        if (input.value) {
+            const normalized = formatDateForInput(input.value);
+            if (normalized) input.value = normalized;
+        }
+        input.addEventListener('blur', function() {
+            const normalized = formatDateForInput(this.value);
+            if (normalized || !this.value.trim()) this.value = normalized;
+        });
+    });
+}
 
 /* =========================================================
    PASSWORD TOGGLE / MODALS
@@ -739,9 +760,17 @@ function initModals() {
 
 function validateEmail(email)  { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
 function validatePhone(phone)  { return /^(\+213|0)[5-7][0-9]{8}$/.test(phone.replace(/[\s\-()]/g,'')); }
-function validateDate(date)    { return !isNaN(Date.parse(date)); }
+function validateDate(date)    { return !!window.ManarDate?.parse(date); }
 function validateCodeOption(c) { return /^[A-Z]{3}\d{3}$/.test(c); }
 function validateCCP(ccp)      { return /^\d{3}-\d{3}-\d{3}-\d{3}$/.test(ccp); }
+
+function formatDateForInput(value) {
+    return window.ManarDate?.toInputValue(value) || '';
+}
+
+function normalizeStorageDate(value) {
+    return window.ManarDate?.toStorage(value) || '';
+}
 
 /* =========================================================
    REDIRECTION / NOTIFICATIONS

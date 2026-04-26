@@ -241,7 +241,7 @@
                     const end = res.end ? new Date(res.end) : null;
                     return `
                         <div class="seance-item">
-                            <div class="seance-date"><div class="jour">${start.toLocaleDateString('fr-FR', { day: '2-digit' })}</div><div class="mois">${start.toLocaleDateString('fr-FR', { month: 'short' })}</div></div>
+                            <div class="seance-date"><div class="jour">${start.toLocaleDateString('fr-FR', { day: '2-digit' })}</div><div class="mois">${start.toLocaleDateString('fr-FR', { month: '2-digit', year: 'numeric' })}</div></div>
                             <div class="seance-info">
                                 <h4>${res.title}</h4>
                                 <p><i class="fas fa-clock" style="width:14px"></i> ${start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}${end ? ` - ${end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : ''} &nbsp;|&nbsp; <i class="fas fa-map-marker-alt" style="width:14px"></i> ${res.location || 'Lieu ?f? d?f?finir'}</p>

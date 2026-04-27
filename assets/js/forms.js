@@ -62,7 +62,7 @@ function readFileAsBase64(file, options = {}) {
                         size: formatFileSize(Math.round(dataUrl.length * 3 / 4))
                     });
                 };
-                img.onerror = () => reject(new Error('Impossible de charger l’image : ' + file.name));
+                img.onerror = () => reject(new Error('Impossible de charger l'image : ' + file.name));
                 img.src = e.target.result;
             } else {
                 resolve({
@@ -435,7 +435,7 @@ function setMaxDateForBirthFields() {
         dn.dataset.maxDate = adultMax;
         dn.dataset.minDate = adultMin;
         const info = document.getElementById('dateNaissanceInfo');
-        if (info) info.innerHTML = `<i class="fas fa-info-circle"></i> Vous devez avoir entre 18 et 100 ans (${y-100}–${y-18})`;
+        if (info) info.innerHTML = `<i class="fas fa-info-circle"></i> Âge requis : 18 à 100 ans (${y-100}–${y-18})`;
     }
     document.querySelectorAll('[id^="dateNaissanceEnfant"]').forEach(f => {
         f.dataset.maxDate = childMax;
@@ -447,7 +447,7 @@ function setMaxDateForBirthFields() {
             msg.style.cssText = 'display:block;color:#6c757d;font-size:.85rem;margin-top:5px;';
             f.closest('.form-group')?.appendChild(msg);
         }
-        msg.innerHTML = `<i class="fas fa-info-circle"></i> L'enfant doit avoir entre 3 et 18 ans (${y-18}–${y-3})`;
+        msg.innerHTML = `<i class="fas fa-info-circle"></i> Âge requis : 3 à 18 ans (${y-18}–${y-3})`;
     });
 }
 
@@ -491,7 +491,7 @@ function validateField(field) {
         if (field.name?.includes('dateNaissance')) {
             const isChild = field.name.includes('Enfant');
             if (!validateBirthDate(val, isChild)) {
-                showFieldError(field, isChild ? 'L\'enfant doit avoir entre 3 et 18 ans' : 'Vous devez avoir entre 18 et 100 ans');
+                showFieldError(field, isChild ? 'L\'enfant doit avoir entre 3 et 18 ans' : 'Âge requis : 18 à 100 ans');
                 return false;
             }
         }
@@ -621,7 +621,7 @@ function ajouterEnfant() {
                     <input type="text" id="dateNaissanceEnfant${n}" name="dateNaissanceEnfant[]"
                            class="form-control" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10"
                            data-date-format="dd/mm/yyyy" required data-max-date="${y-3}-${m}-${d}" data-min-date="${y-18}-${m}-${d}">
-                    <small class="date-info-child"><i class="fas fa-info-circle"></i> Entre 3 et 18 ans (${y-18}–${y-3})</small>
+                    <small class="date-info-child"><i class="fas fa-info-circle"></i> Âge requis : 3 à 18 ans (${y-18}–${y-3})</small>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Sexe *</label>
@@ -798,7 +798,7 @@ function showNotification(message, type = 'info') {
     const c = colors[type] || colors.info;
     const n = document.createElement('div');
     n.innerHTML = `<div style="display:flex;align-items:center;gap:10px;"><i class="fas ${icons[type]}"></i><span>${message}</span></div><button onclick="this.parentElement.remove()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:18px;">&times;</button>`;
-    n.style.cssText = `padding:14px 18px;margin-bottom:10px;border-radius:8px;font-size:14px;display:flex;align-items:center;justify-content:space-between;background:${c.bg};color:${c.color};border:1px solid ${c.border};box-shadow:0 4px 12px rgba(0,0,0,.15);animation:slideIn .3s ease;`;
+    n.style.cssText = `padding:14px 18px;margin-bottom:10px;border-radius:8px;font-size:14px;display:flex;align-items:center;justify-content:space-between;background:${c.bg};color:${c.color};border:1px solid ${c.border};animation:slideIn .3s ease;`;
     container.appendChild(n);
     setTimeout(() => n.remove(), 5000);
     if (!document.getElementById('notif-anim')) {
